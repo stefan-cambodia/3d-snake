@@ -9,6 +9,9 @@ extends Node
 ##   --shot=PATH --shot-at=SECONDS   save a screenshot then continue
 ##   --quit-after=SECONDS quit automatically (exit code 0)
 ##   --quality=0..2       override graphics quality
+##   --showcase           demo/screenshot mode (export preset "Android Showcase"): an
+##                        empty profile is filled with a demo history, quality is set to
+##                        high, and the autopilot plays every run started from the menu
 
 enum State { MENU, INTRO, PLAYING, PAUSED, DYING, GAME_OVER }
 
@@ -45,6 +48,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_rng.randomize()
 	_parse_args()
+	if _args.has("showcase"):
+		_seed_showcase_profile()
 	_quality = int(Profile.get_setting("quality"))
 	if _quality < 0:
 		_quality = 1 if OS.has_feature("mobile") else 2
@@ -334,7 +339,7 @@ func _process(delta: float) -> void:
 					ui.hud.banner(tr("HUD_GO"), "", UiTheme.CREAM)
 		State.PLAYING:
 			_update_tutorial()
-			if _args.has("autoplay"):
+			if _args.has("autoplay") or _args.has("showcase"):
 				autopilot.update(session, delta)
 				session.steer_input = autopilot.steer
 				session.boost_input = autopilot.boost
@@ -517,6 +522,29 @@ func _finish_death() -> void:
 
 
 # --- Automation (validation & screenshots) ------------------------------------------
+
+## Demo history for --showcase: a believable records table and lifetime stats that
+## unlock every skin and sanctuary. Only applied to an empty profile.
+func _seed_showcase_profile() -> void:
+	if int(Profile.stats["runs"]) > 0:
+		return
+	Profile.stats["runs"] = 77
+	Profile.stats["total_food"] = 1180
+	Profile.stats["total_energy"] = 96
+	Profile.stats["total_rare"] = 11
+	Profile.stats["near_misses"] = 214
+	Profile.stats["play_time"] = 14200.0
+	# score, length, stage, food, relics, seconds
+	for r in [[2480, 58.4, 7, 61, 3, 412.0], [1935, 47.1, 6, 48, 2, 344.0], [1610, 41.8, 5, 42, 2, 301.0],
+			[1288, 35.0, 5, 36, 1, 266.0], [1040, 30.2, 4, 30, 1, 228.0], [870, 26.9, 4, 27, 1, 197.0],
+			[655, 22.3, 3, 21, 0, 160.0], [520, 19.6, 3, 18, 1, 131.0], [410, 16.4, 2, 15, 0, 104.0],
+			[260, 12.5, 2, 10, 0, 77.0]]:
+		Profile.record_run({"score": r[0], "length": r[1], "stage": r[2], "food": r[3], "rare": r[4],
+			"time": r[5], "energy": 3, "combo": 9, "near_misses": 6})
+	Profile.tutorial_done = true
+	Profile.set_setting("quality", 2)
+	Profile.save_profile()
+
 
 func _parse_args() -> void:
 	for a in OS.get_cmdline_user_args():

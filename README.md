@@ -5,7 +5,17 @@ A third-person 3D snake game for Android, built with **Godot 4.7** and GDScript.
 You guide a living serpent across a lakeside island sanctuary: eat sunfruit to grow, chain pickups
 for combos, grab Surge crystals and rare relics, and dodge pillars, the barrier, your own body and
 monoliths that rise out of the ground as the stages climb. Every model, texture, sound and music
-track is generated procedurally (see `tools/`). The only third-party assets are the two OFL fonts.
+track is generated procedurally (see `tools/`). The only third-party assets are the fonts (Cinzel, Outfit and Noto, all under the SIL OFL).
+
+![Serpent Sanctum main menu](docs/screenshots/01-main-menu.jpg)
+
+| | | |
+|---|---|---|
+| ![Surge](docs/screenshots/02-gameplay-surge.jpg) | ![Stage up](docs/screenshots/03-gameplay-stage-up.jpg) | ![Long serpent](docs/screenshots/04-gameplay-long-serpent.jpg) |
+| ![Moonlit Shrine relic](docs/screenshots/07-night-relic.jpg) | ![Misty Morning](docs/screenshots/10-mist-stage-up.jpg) | ![Skins and sanctuaries](docs/screenshots/13-skins-sanctuaries.jpg) |
+| ![Game over](docs/screenshots/14-game-over-new-best.jpg) | ![Languages](docs/screenshots/17-settings-languages.jpg) | ![Khmer](docs/screenshots/18-khmer-main-menu.jpg) |
+
+More in [docs/screenshots](docs/screenshots/README.md) (20 images, 1920×1080, plus a contact sheet).
 
 - Package id: `com.studio.snake3d`, version 1.0.0 (code 1)
 - Android 7.0+ (API 24), arm64-v8a, landscape
@@ -106,7 +116,11 @@ fonts covering every character, and every screen fitting on a phone in every lan
 tools/build_android.sh                # release build -> build/android/snake3d.apk
 tools/build_android.sh debug          # debug build (debug keystore)
 tools/build_android.sh --emulator     # x86_64 build for the Android emulator -> build/android/snake3d-x86_64.apk
+tools/build_android.sh --showcase     # demo build for screenshots -> build/android/snake3d-showcase.apk
 ```
+
+The showcase build installs as a separate app (*Serpent Sanctum Showcase*) with a demo profile, and
+the autopilot plays every run: see [docs/screenshots](docs/screenshots/README.md).
 
 The script imports the project, exports with the `Android` preset from `export_presets.cfg`, and
 checks the APK signature with `apksigner`.
@@ -155,6 +169,7 @@ scripts/ui/               HUD and menus (theme, screens, game over, settings, sk
 scripts/save/             player profile: settings, stats, high scores, unlocks
 assets/                   generated audio, textures, icons; shaders; fonts; i18n/strings.csv
 tests/                    headless test runner and suites
+docs/screenshots/         screenshots for documentation and presentations
 tools/                    setup/build/test scripts and the asset generators
 ```
 

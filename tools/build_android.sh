@@ -5,6 +5,9 @@
 #   tools/build_android.sh debug      # debug build, signed with the Android debug keystore
 #   tools/build_android.sh --emulator # x86_64 build (build/android/snake3d-x86_64.apk) for the
 #                                     # Android emulator; combinable with "debug"
+#   tools/build_android.sh --showcase # demo build for screenshots (build/android/snake3d-showcase.apk):
+#                                     # package com.studio.snake3d.showcase installs next to the game,
+#                                     # with a demo profile and the autopilot playing (main.gd --showcase)
 #
 # Environment overrides:
 #   GODOT                                   path to a Godot 4.7.x editor binary (default tools/godot/godot)
@@ -24,7 +27,8 @@ for arg in "$@"; do
 	case "$arg" in
 		debug|release) MODE="$arg" ;;
 		--emulator) PRESET="Android Emulator x86_64"; OUT="build/android/snake3d-x86_64.apk" ;;
-		*) echo "usage: $0 [release|debug] [--emulator]" >&2; exit 2 ;;
+		--showcase) PRESET="Android Showcase"; OUT="build/android/snake3d-showcase.apk" ;;
+		*) echo "usage: $0 [release|debug] [--emulator|--showcase]" >&2; exit 2 ;;
 	esac
 done
 GODOT="${GODOT:-tools/godot/godot}"

@@ -112,6 +112,15 @@ them (see Known issues).
   exists, device-language detection (`fr_BE`→fr, `km_KH`→km, `zh_TW`→zh_CN, legacy `in`→id…), the fonts
   cover every character of every language, and every screen fits at 1280×720 in every language.
 
+## Changes: screenshots (2026-11-07)
+
+- `docs/screenshots/`: 20 screenshots (1920×1080 JPEG) covering the three sanctuaries, several
+  skins, Surge, relics, stage-ups, the barrier, every menu screen, and Khmer; plus `overview.jpg`
+  (contact sheet). Captured on the Android emulator with the autopilot playing.
+- `--showcase` mode in `main.gd` and the `Android Showcase` export preset
+  (`tools/build_android.sh --showcase`): a separate package with a demo profile and autopilot-driven
+  runs, for future screenshot or demo sessions.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
