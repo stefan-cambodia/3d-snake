@@ -4,6 +4,9 @@ extends SceneTree
 ## Runs every `test_*` method of every tests/test_*.gd suite. Exit code 0 = pass.
 
 func _initialize() -> void:
+	# Wait until the root viewport is inside the tree, so suites can instance real
+	# scenes (their _ready() runs on add_child).
+	await process_frame
 	var filter := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--filter="):

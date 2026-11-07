@@ -200,11 +200,13 @@ func _begin_run() -> void:
 		items_view.spawn(it.id, it.kind, it.pos)
 	snake_view.idle_amount = 0.0
 	snake_view.apply_skin(SkinCatalog.get_skin(Profile.selected_skin))
+	# Hide menus first: show_only() emits screen_changed, which must not be able to
+	# put the camera back into a menu framing after the intro has been set up.
+	ui.show_only(null)
 	# Intro: sweep in from a high establishing shot behind the spawn.
 	camera.snap_to_chase()
 	camera.global_position = Vector3(-14, 15, -26)
 	camera.set_mode(ChaseCamera.Mode.INTRO)
-	ui.show_only(null)
 	ui.hud.visible = true
 	ui.hud.reset_for_run(Profile.best_score())
 	ui.hud.configure(bool(Profile.get_setting("left_handed")), int(Profile.get_setting("control_scheme")))
@@ -259,7 +261,8 @@ func _on_pause_requested() -> void:
 
 
 func _on_screen_changed(screen: String) -> void:
-	if state != State.MENU:
+	# "" = no menu screen (a run is starting): the run owns the camera then.
+	if state != State.MENU or screen == "":
 		return
 	camera.set_mode(ChaseCamera.Mode.SHOWCASE if screen == "skins" else ChaseCamera.Mode.MENU)
 	if screen != "skins":

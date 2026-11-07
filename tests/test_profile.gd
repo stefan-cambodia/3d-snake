@@ -66,7 +66,8 @@ func test_unlocks_are_announced_once() -> void:
 func test_corrupt_file_falls_back_to_defaults() -> void:
 	var p := _fresh_profile()
 	var f := FileAccess.open(p.save_path, FileAccess.WRITE)
-	f.store_string("[[[ this is not a config file \u0000\u0001")
+	f.store_string("[[[ this is not a config file ")
+	f.store_buffer(PackedByteArray([0, 1, 255, 254]))
 	f.close()
 	p.load_profile()
 	check_eq(p.best_score(), 0, "defaults after corruption")
