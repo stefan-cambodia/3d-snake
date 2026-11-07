@@ -89,10 +89,11 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-39 tests cover snake movement and steering, the spine (body path) maths, collisions, scoring and
+40 tests cover snake movement and steering, the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
-autopilot run, and the real main scene's state machine and camera.
+autopilot run, and the real main scene's state machine, camera, and HUD/touch layout around display
+cut-outs.
 
 ## Build the Android APK
 
@@ -145,6 +146,9 @@ tools/                    setup/build/test scripts and the asset generators
   here (tested with both SwiftShader and host-GPU modes). The `--emulator` build therefore starts with
   the OpenGL (Compatibility) renderer. Real phones use Vulkan.
 - **First launch is slow**: shaders are compiled and cached on first run. Later launches are faster.
+- **Wireless debugging (`adb pair` / `adb connect`)**: pair with the code and the address shown under
+  *Wireless debugging → Pair device with pairing code*, then `adb connect <phone-ip>:<port>` using the
+  port on the main *Wireless debugging* screen. That port differs from the pairing port.
 - **`adb: more than one device/emulator`**: pick one with `adb -s <serial> install ...`
   (`adb devices` lists the serials).
 - **Profile looks wrong or a save got corrupted**: the game backs up an unreadable profile as

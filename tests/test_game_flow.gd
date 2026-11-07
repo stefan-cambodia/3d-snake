@@ -77,3 +77,38 @@ func test_menu_screens_drive_camera_only_in_menu() -> void:
 	main.ui.back()
 	check_eq(main.camera.mode, ChaseCamera.Mode.MENU, "back to the menu orbit")
 	_dispose(main)
+
+
+## A display cut-out on the left (as on phones held with the camera hole on that
+## side) must not shift the touch zones away from the drawn buttons, and
+## full-screen layers must still cover the whole screen.
+func test_safe_area_insets_keep_hud_and_touch_aligned() -> void:
+	var main := _make_main()
+	var ui: UiRoot = main.ui
+	var hud: Hud = ui.hud
+	ui.set_safe_insets(Vector4(61, 0, 0, 0))
+	main._begin_run()
+	await tree.create_timer(0.5).timeout # let the main menu finish closing
+	var vp: Rect2 = main.get_viewport().get_visible_rect()
+	check(hud.get_global_rect().is_equal_approx(vp), "HUD spans the whole screen")
+	var xf := hud.get_global_transform_with_canvas()
+	check(main.touch.boost_zone.get_center().is_equal_approx(xf * hud.boost_center()), "boost touch zone centred on the drawn button")
+	check(main.touch.pause_zone.get_center().is_equal_approx(xf * hud.pause_center()), "pause touch zone centred on the drawn button")
+	check(hud.safe_rect().position.x >= 61.0, "HUD safe rect excludes the cut-out")
+	check(hud._score_label.get_global_rect().position.x >= 61.0, "score label clear of the cut-out")
+	hud.configure(true, 0) # left-handed: boost moves next to the cut-out
+	check((xf * hud.boost_center()).x - Hud.BOOST_RADIUS >= 61.0, "left-handed boost button clear of the cut-out")
+	check(main.touch.boost_zone.get_center().is_equal_approx(xf * hud.boost_center()), "left-handed boost zone aligned")
+	check(tree.get_nodes_in_group(UiRoot.FULL_BLEED_GROUP).size() >= 6, "menu backdrops are full-bleed layers")
+	main.pause_game()
+	await tree.create_timer(0.5).timeout # pause menu open animation
+	var shown := 0
+	for n in tree.get_nodes_in_group(UiRoot.FULL_BLEED_GROUP):
+		var c := n as Control
+		if c.is_visible_in_tree():
+			shown += 1
+			check(c.get_global_rect().is_equal_approx(vp), "visible backdrop covers the whole screen, cut-out included")
+	check_eq(shown, 1, "only the pause menu backdrop is showing")
+	main.resume()
+	ui.set_safe_insets(Vector4.ZERO)
+	_dispose(main)

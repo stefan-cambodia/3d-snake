@@ -11,6 +11,12 @@ signal skin_previewed(id: String)
 signal theme_selected(id: String)
 signal screen_changed(name: String)
 
+const FULL_BLEED_GROUP := &"ui_full_bleed"
+const SAFE_AREA_POLL := 0.5
+
+## Display cut-out insets currently applied, in UI units (left, top, right, bottom).
+static var safe_insets := Vector4.ZERO
+
 var safe_root: MarginContainer
 var hud: Hud
 var main_menu: MainMenu
@@ -26,11 +32,20 @@ var _fade: ColorRect
 var _fps: Label
 var _toast: PanelContainer
 var _toast_label: Label
+var _safe_poll: float = 0.0
+var _last_safe_area := Rect2i()
 
 
 func _ready() -> void:
 	layer = 10
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# The HUD spans the whole screen (its local coordinates are viewport coordinates,
+	# like touch positions and Camera3D.unproject_position) and insets its own corner
+	# widgets. Menus live inside the safe-area margins.
+	hud = Hud.new()
+	hud.visible = false
+	hud.theme = UiTheme.get_theme()
+	add_child(hud)
 	safe_root = MarginContainer.new()
 	safe_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	safe_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -40,9 +55,6 @@ func _ready() -> void:
 	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	safe_root.add_child(stack)
 
-	hud = Hud.new()
-	hud.visible = false
-	stack.add_child(hud)
 	main_menu = MainMenu.new()
 	pause_menu = PauseMenu.new()
 	game_over = GameOverScreen.new()
@@ -108,25 +120,48 @@ func _screen_by_name(n: String) -> UiScreen:
 
 ## Respect display cut-outs / rounded corners (Android safe area).
 func _apply_safe_area() -> void:
-	var win := DisplayServer.window_get_size()
-	var safe := DisplayServer.get_display_safe_area()
-	var vp := get_viewport().get_visible_rect().size
-	if win.x <= 0 or win.y <= 0 or safe.size.x <= 0:
-		return
-	var k := vp / Vector2(win)
-	var left := maxf(float(safe.position.x), 0.0) * k.x
-	var top := maxf(float(safe.position.y), 0.0) * k.y
-	var right := maxf(float(win.x - safe.end.x), 0.0) * k.x
-	var bottom := maxf(float(win.y - safe.end.y), 0.0) * k.y
-	if OS.get_name() != "Android" and OS.get_name() != "iOS":
-		left = 0
-		top = 0
-		right = 0
-		bottom = 0
-	safe_root.add_theme_constant_override("margin_left", int(left))
-	safe_root.add_theme_constant_override("margin_top", int(top))
-	safe_root.add_theme_constant_override("margin_right", int(right))
-	safe_root.add_theme_constant_override("margin_bottom", int(bottom))
+	var insets := Vector4.ZERO
+	if OS.has_feature("mobile"):
+		var win := DisplayServer.window_get_size()
+		var safe := DisplayServer.get_display_safe_area()
+		var vp := get_viewport().get_visible_rect().size
+		_last_safe_area = safe
+		if win.x > 0 and win.y > 0 and safe.size.x > 0:
+			var k := vp / Vector2(win)
+			insets = Vector4(
+				maxf(float(safe.position.x), 0.0) * k.x,
+				maxf(float(safe.position.y), 0.0) * k.y,
+				maxf(float(win.x - safe.end.x), 0.0) * k.x,
+				maxf(float(win.y - safe.end.y), 0.0) * k.y)
+	set_safe_insets(insets)
+
+
+## Apply display cut-out insets (UI units: left, top, right, bottom): menus get
+## margins, full-bleed layers extend under the cut-out, the HUD moves its widgets.
+func set_safe_insets(insets: Vector4) -> void:
+	safe_insets = insets.ceil()
+	safe_root.add_theme_constant_override("margin_left", int(safe_insets.x))
+	safe_root.add_theme_constant_override("margin_top", int(safe_insets.y))
+	safe_root.add_theme_constant_override("margin_right", int(safe_insets.z))
+	safe_root.add_theme_constant_override("margin_bottom", int(safe_insets.w))
+	for n in get_tree().get_nodes_in_group(FULL_BLEED_GROUP):
+		_apply_bleed(n as Control)
+	hud.set_safe_insets(safe_insets)
+
+
+## Make a decorative full-screen layer (backdrop, gradient) that lives inside the
+## safe-area margins also cover the area under the display cut-out.
+static func full_bleed(c: Control) -> void:
+	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	c.add_to_group(FULL_BLEED_GROUP)
+	_apply_bleed(c)
+
+
+static func _apply_bleed(c: Control) -> void:
+	c.offset_left = -safe_insets.x
+	c.offset_top = -safe_insets.y
+	c.offset_right = safe_insets.z
+	c.offset_bottom = safe_insets.w
 
 
 func fade_in(duration: float = 0.6) -> void:
@@ -202,6 +237,14 @@ func set_fps_visible(v: bool) -> void:
 	_fps.visible = v
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# Flipping the phone between the two landscape orientations moves the cut-out
+	# without resizing the viewport, so the safe area is re-checked periodically.
+	if OS.has_feature("mobile"):
+		_safe_poll -= delta
+		if _safe_poll <= 0.0:
+			_safe_poll = SAFE_AREA_POLL
+			if DisplayServer.get_display_safe_area() != _last_safe_area:
+				_apply_safe_area()
 	if _fps.visible:
 		_fps.text = "%d FPS" % Engine.get_frames_per_second()

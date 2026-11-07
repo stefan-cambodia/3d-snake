@@ -38,9 +38,8 @@ func _initialize() -> void:
 			var suite: TestCase = script.new()
 			suite.tree = self
 			var start := Time.get_ticks_usec()
-			var ret: Variant = suite.call(mname)
-			if ret is Object and ret.get_class() == "GDScriptFunctionState":
-				await ret.completed
+			# Awaiting also lets a test wait for frames (e.g. container layout).
+			await suite.call(mname)
 			var ms := float(Time.get_ticks_usec() - start) / 1000.0
 			total += 1
 			checks += suite.checks

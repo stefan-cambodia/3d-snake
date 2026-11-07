@@ -73,10 +73,13 @@ wanted = {
     "export/android/debug_keystore": keystore,
     "export/android/debug_keystore_user": "androiddebugkey",
     "export/android/debug_keystore_pass": "android",
+    # Otherwise every headless export ends with "adb kill-server", which drops
+    # wireless-debugging connections to phones.
+    "export/android/shutdown_adb_on_exit": "false",
 }
 text = open(path).read() if os.path.exists(path) else '[gd_resource type="EditorSettings" format=3]\n\n[resource]\n'
 for key, value in wanted.items():
-    line = f'{key} = "{value}"'
+    line = f'{key} = {value}' if value in ("true", "false") else f'{key} = "{value}"'
     pattern = re.compile(rf"^{re.escape(key)} = .*$", re.M)
     text = pattern.sub(line, text) if pattern.search(text) else text.rstrip("\n") + "\n" + line + "\n"
 open(path, "w").write(text)

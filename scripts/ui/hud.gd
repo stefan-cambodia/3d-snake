@@ -3,6 +3,10 @@ extends Control
 ## In-game HUD: score, best, stage progress, combo, length, boost/stamina
 ## button, pause button, steering feedback, popups, banners, off-screen
 ## markers for special collectibles, speed lines and danger vignette.
+##
+## The HUD covers the whole viewport, so its local coordinates are viewport
+## coordinates (touch positions, Camera3D.unproject_position). Corner widgets are
+## placed inside the safe area (display cut-outs) given by set_safe_insets().
 
 const BOOST_RADIUS := 78.0
 const PAUSE_RADIUS := 38.0
@@ -37,6 +41,7 @@ var _combo_t: float = 0.0
 var _combo_mult: float = 1.0
 var _markers: Array = [] # [{pos: Vector2, color: Color, angle: float, edge: bool}]
 var _speed_lines: float = 0.0
+var _insets := Vector4.ZERO # left, top, right, bottom
 var _danger: float = 0.0
 var _time: float = 0.0
 var _tutorial_t: float = 0.0
@@ -44,7 +49,7 @@ var _score_pulse: float = 0.0
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_vignette = TextureRect.new()
@@ -71,32 +76,22 @@ func _ready() -> void:
 	add_child(_canvas)
 
 	_score_label = UiTheme.label("0", 56, "title", UiTheme.CREAM)
-	_score_label.position = Vector2(40, 18)
 	_score_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.55))
 	_score_label.add_theme_constant_override("outline_size", 8)
 	add_child(_score_label)
 	_best_label = UiTheme.label("", 20, "semibold", UiTheme.GOLD)
-	_best_label.position = Vector2(44, 88)
 	_best_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.5))
 	_best_label.add_theme_constant_override("outline_size", 5)
 	add_child(_best_label)
 
 	_stage_label = UiTheme.label("", 21, "semibold", UiTheme.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
-	_stage_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_stage_label.offset_left = -140
-	_stage_label.offset_right = 140
-	_stage_label.offset_top = 16
-	_stage_label.offset_bottom = 46
+	_stage_label.size = Vector2(280, 30)
 	_stage_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.5))
 	_stage_label.add_theme_constant_override("outline_size", 5)
 	add_child(_stage_label)
 
 	_combo_label = UiTheme.label("", 30, "bold", UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-	_combo_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_combo_label.offset_left = -140
-	_combo_label.offset_right = 140
-	_combo_label.offset_top = 66
-	_combo_label.offset_bottom = 104
+	_combo_label.size = Vector2(280, 38)
 	_combo_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
 	_combo_label.add_theme_constant_override("outline_size", 6)
 	add_child(_combo_label)
@@ -145,23 +140,41 @@ func _ready() -> void:
 	_layout()
 
 
+func set_safe_insets(insets: Vector4) -> void:
+	_insets = insets
+	_layout()
+
+
+## The part of the HUD not covered by display cut-outs, in local coordinates.
+func safe_rect() -> Rect2:
+	return Rect2(Vector2(_insets.x, _insets.y), size - Vector2(_insets.x + _insets.z, _insets.y + _insets.w))
+
+
 func _layout() -> void:
-	var s := size
-	_length_label.position = Vector2(44 if not left_handed else s.x - 260, s.y - 64)
+	var r := safe_rect()
+	_score_label.position = r.position + Vector2(40, 18)
+	_best_label.position = r.position + Vector2(44, 88)
+	_stage_label.position = Vector2(r.get_center().x - _stage_label.size.x * 0.5, r.position.y + 16)
+	_combo_label.position = Vector2(r.get_center().x - _combo_label.size.x * 0.5, r.position.y + 66)
+	_length_label.position = Vector2(r.position.x + 44 if not left_handed else r.end.x - 260, r.end.y - 64)
 	_length_label.size = Vector2(220, 40)
 	_length_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if not left_handed else HORIZONTAL_ALIGNMENT_RIGHT
 	if touch:
-		touch.boost_zone = Rect2(boost_center() - Vector2.ONE * (BOOST_RADIUS + 34.0), Vector2.ONE * (BOOST_RADIUS + 34.0) * 2.0)
-		touch.pause_zone = Rect2(pause_center() - Vector2.ONE * (PAUSE_RADIUS + 22.0), Vector2.ONE * (PAUSE_RADIUS + 22.0) * 2.0)
+		# Touch zones are compared with event positions, i.e. viewport coordinates.
+		var xf := get_global_transform_with_canvas()
+		touch.boost_zone = xf * Rect2(boost_center() - Vector2.ONE * (BOOST_RADIUS + 34.0), Vector2.ONE * (BOOST_RADIUS + 34.0) * 2.0)
+		touch.pause_zone = xf * Rect2(pause_center() - Vector2.ONE * (PAUSE_RADIUS + 22.0), Vector2.ONE * (PAUSE_RADIUS + 22.0) * 2.0)
 
 
 func boost_center() -> Vector2:
-	var x := size.x - 150.0 if not left_handed else 150.0
-	return Vector2(x, size.y - 140.0)
+	var r := safe_rect()
+	var x := r.end.x - 150.0 if not left_handed else r.position.x + 150.0
+	return Vector2(x, r.end.y - 140.0)
 
 
 func pause_center() -> Vector2:
-	return Vector2(size.x - 66.0, 62.0)
+	var r := safe_rect()
+	return Vector2(r.end.x - 66.0, r.position.y + 62.0)
 
 
 func configure(p_left_handed: bool, p_scheme: int) -> void:
@@ -230,7 +243,8 @@ func update_hud(delta: float, session: GameSession) -> void:
 	# Off-screen markers for special collectibles.
 	_markers.clear()
 	if camera:
-		var vs := size
+		var margin := 56.0
+		var area := safe_rect().grow(-margin)
 		for it in session.items:
 			if it.kind == Collectible.Kind.FOOD:
 				continue
@@ -238,17 +252,15 @@ func update_hud(delta: float, session: GameSession) -> void:
 			var p := it.pos + Vector3.UP * 0.4
 			var behind := camera.is_position_behind(p)
 			var sp := camera.unproject_position(p)
-			var margin := 56.0
-			var inside := not behind and sp.x > margin and sp.y > margin and sp.x < vs.x - margin and sp.y < vs.y - margin
-			if inside:
+			if not behind and area.has_point(sp):
 				continue
-			var c := vs * 0.5
+			var c := area.get_center()
 			var dir := sp - c
 			if behind:
 				dir = -dir
 			if dir.length() < 1.0:
 				dir = Vector2(0, 1)
-			var scale_k := minf((vs.x * 0.5 - margin) / maxf(absf(dir.x), 0.001), (vs.y * 0.5 - margin) / maxf(absf(dir.y), 0.001))
+			var scale_k := minf(area.size.x * 0.5 / maxf(absf(dir.x), 0.001), area.size.y * 0.5 / maxf(absf(dir.y), 0.001))
 			_markers.append({"pos": c + dir * scale_k, "color": col, "angle": dir.angle(), "life": it.time_left()})
 
 	if _tutorial_t > 0.0:
@@ -313,13 +325,15 @@ func _draw_canvas() -> void:
 			c.draw_line(centre + dir * r0, centre + dir * r1, col, 2.0, true)
 
 	# Stage progress bar under the stage label.
+	var sr := safe_rect()
 	var bw := 220.0
-	var bx := vs.x * 0.5 - bw * 0.5
-	c.draw_rect(Rect2(bx, 50, bw, 6), Color(0, 0, 0, 0.35))
-	c.draw_rect(Rect2(bx, 50, bw * _stage_progress, 6), UiTheme.GOLD)
+	var bx := sr.get_center().x - bw * 0.5
+	var by := sr.position.y + 50.0
+	c.draw_rect(Rect2(bx, by, bw, 6), Color(0, 0, 0, 0.35))
+	c.draw_rect(Rect2(bx, by, bw * _stage_progress, 6), UiTheme.GOLD)
 	# Combo timer ring.
 	if _combo_mult > 1.0 and _combo_t > 0.0:
-		var cc := Vector2(vs.x * 0.5, 120)
+		var cc := Vector2(sr.get_center().x, sr.position.y + 120.0)
 		c.draw_arc(cc, 16, -PI * 0.5, -PI * 0.5 + TAU * _combo_t, 32, Color(UiTheme.GOLD, 0.8), 3.0, true)
 
 	# Pause button.

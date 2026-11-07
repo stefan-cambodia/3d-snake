@@ -117,5 +117,5 @@ func make_panel(title_key: String, width: float = 760.0) -> VBoxContainer:
 func add_backdrop(alpha: float = 0.55) -> void:
 	var bg := ColorRect.new()
 	bg.color = Color(0.0, 0.02, 0.015, alpha)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	UiRoot.full_bleed(bg)
 	add_child(bg)

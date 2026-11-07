@@ -5,21 +5,21 @@ _Last updated: 2026-11-07_
 ## Summary
 
 The game is feature-complete for a 1.0 sideload release. The test suite passes, a signed release
-APK builds reproducibly, and the full flow has been played on an Android emulator. It has **not yet
-been run on a physical phone**, and the Vulkan renderer has not been seen working on Android (see
-Known issues).
+APK builds reproducibly, and the game has been played on a real phone (Samsung Galaxy A56) with the
+Vulkan renderer at a steady 60 fps. Testing on that phone found and fixed two display cut-out bugs.
+It has been tested on only one phone model so far.
 
 ## Build and test status
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **39 tests, 23,721 checks, 0 failures** (about 11 s) |
+| Headless test suite (`tools/run_tests.sh`) | **40 tests, 23,731 checks, 0 failures** (about 11 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 30 MB, arm64-v8a**. Signature verified with apksigner (v2 + v3 schemes) |
 | Manifest | `com.studio.snake3d`, version 1.0.0 (1), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
-| Physical Android device | **Not tested** |
+| Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen |
 
 ## Features
 
@@ -67,17 +67,28 @@ Known issues).
   `tools/setup_godot.sh`, `tools/build_android.sh` and `tools/run_tests.sh`.
 - Release signing uses a generated local keystore in `signing/` (git-ignored).
 - Removed a NUL-character literal in a test that caused "Unicode parsing error" noise.
+- **Fixed (found on the phone): the screen edge on the camera-hole side.** With the cut-out on the
+  left, a 92 px strip there was not covered by the danger vignette, the dimmed menu backdrops or the
+  main menu gradient. Worse, the HUD sat inside the safe-area margins, so the **boost and pause touch
+  areas were about 60 UI units left of the drawn buttons**, and the steer indicator, off-screen item
+  markers and score popups were drawn shifted. The HUD now spans the whole screen (its coordinates
+  equal touch and camera coordinates) and insets only its buttons and labels. Backdrops use
+  `UiRoot.full_bleed()` to extend under the cut-out. The safe area is re-checked every 0.5 s, so
+  flipping the phone to the other landscape side moves the layout too.
+  `test_safe_area_insets_keep_hud_and_touch_aligned` covers this.
+- The test runner awaits each test, so a test can wait for frames.
+- `export/android/shutdown_adb_on_exit` is now off (also in `tools/setup_godot.sh`). Before this,
+  every headless export ran `adb kill-server`, which dropped wireless-debugging connections.
 
 ## Known issues and limitations
 
-- **Vulkan shows a black screen on the Android emulator.** Godot logs
-  `Couldn't present to Vulkan queue (VkResult error 5)`, with both SwiftShader and host-GPU
-  emulation. With the OpenGL Compatibility renderer, the same build renders correctly, so the
-  emulator build uses that renderer. Phones use the Mobile (Vulkan) renderer, which has **not been
-  checked on real hardware**. If a phone has no usable Vulkan driver at startup, Godot falls back to
-  OpenGL automatically. That does not cover a driver that starts but then fails to present.
-- First launch is slow while shaders compile: about 35 s on the emulator with the OpenGL renderer.
-  It is likely much shorter on a real GPU, but this has not been measured.
+- **Vulkan shows a black screen on the Android emulator** (not on real phones). Godot logs
+  `Couldn't present to Vulkan queue (VkResult error 5)` with both SwiftShader and host-GPU
+  emulation, so the emulator build uses the OpenGL Compatibility renderer. On the Galaxy A56
+  (Xclipse 540) Vulkan works. Other GPU families (Adreno, Mali, PowerVR) are untested. If a phone
+  has no usable Vulkan driver at startup, Godot falls back to OpenGL automatically.
+- The very first launch after install compiles shaders. On the emulator's OpenGL renderer that took
+  about 35 s. It was not timed on the phone; a warm start reaches the main loop in 2.5 s.
 - Headless runs print "ObjectDB instances leaked / resources still in use at exit". These are the
   looping Ogg streams that the engine's audio server is still holding at shutdown. Stopping the
   players in `_exit_tree` did not remove the warning. It only happens at exit and does not affect
@@ -87,16 +98,15 @@ Known issues).
   Vulkan.
 - With no steering, the snake reaches the barrier about 6 s after "GO!". This is intended: the
   first-run tutorial shows how to steer.
-- Audio was not heard on Android: the emulator ran without audio output. Desktop audio uses the
-  same streams.
+- Audio output and haptics on the phone were not checked in this session: the tests here can't
+  hear sound or feel vibration.
 
 ## Remaining work
 
-1. **Test on physical phones** (low-end, mid-range and flagship). Confirm Vulkan rendering, touch
-   feel, frame rate at each quality level, haptics and audio. Tune the quality auto-detection with
-   real numbers.
-2. Measure first-launch shader compile time on a real device. If it is long, add a loading
-   indicator or precompile shaders behind the title card.
+1. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
+   Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
+   runs the default (medium) at 60 fps, so it could probably default to high.
+2. Check audio and haptics on a phone, and time a cold first launch after a fresh install.
 3. For a Play Store release: switch to a Gradle build to produce an AAB, decide whether the Vulkan
    features should be marked optional, add store assets and a privacy policy (the game collects no
    data), and use a long-lived upload key.

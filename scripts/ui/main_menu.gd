@@ -21,7 +21,7 @@ func _ready() -> void:
 	gt.fill_to = Vector2(0.62, 0.5)
 	grad.texture = gt
 	grad.stretch_mode = TextureRect.STRETCH_SCALE
-	grad.set_anchors_preset(Control.PRESET_FULL_RECT)
+	UiRoot.full_bleed(grad)
 	grad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(grad)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
