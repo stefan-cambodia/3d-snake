@@ -5,9 +5,19 @@ extends UiScreen
 
 signal play_requested
 signal screen_requested(screen: String)
+signal quit_requested
+
+## Top + bottom margins around the column.
+const V_MARGINS := 48.0
+## Never shrink the menu below this (readability).
+const MIN_FIT_SCALE := 0.8
 
 var _best: Label
 var _buttons: Array[Button] = []
+var _col: VBoxContainer
+## Scaled as a whole when the column is too tall (a container would reset the
+## scale of its children, so the scale goes on this non-container child).
+var _margin: MarginContainer
 
 
 func _ready() -> void:
@@ -33,11 +43,13 @@ func _ready() -> void:
 	margin.add_theme_constant_override("margin_bottom", 22)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(margin)
+	_margin = margin
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 10)
+	col.add_theme_constant_override("separation", 8)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	margin.add_child(col)
+	_col = col
 
 	var t1 := UiTheme.label("SERPENT", 66, "title", UiTheme.GOLD)
 	var t2 := UiTheme.label("SANCTUM", 66, "title", UiTheme.GOLD)
@@ -58,17 +70,42 @@ func _ready() -> void:
 	_buttons.append(play)
 	for entry in [["MENU_SKINS", "skins"], ["MENU_RECORDS", "records"], ["MENU_SETTINGS", "settings"], ["MENU_ABOUT", "about"]]:
 		var b := make_button(entry[0], false, 380)
-		b.custom_minimum_size.y = 56
+		b.custom_minimum_size.y = 52
 		var scr: String = entry[1]
 		b.pressed.connect(func() -> void: screen_requested.emit(scr))
 		col.add_child(b)
 		_buttons.append(b)
+	# A quit button everywhere except iOS and the web, where apps don't close themselves.
+	if not (OS.has_feature("ios") or OS.has_feature("web")):
+		var quit := make_button("MENU_QUIT", false, 380)
+		quit.name = "QuitButton"
+		quit.custom_minimum_size.y = 52
+		quit.add_theme_color_override("font_color", UiTheme.MUTED)
+		quit.pressed.connect(func() -> void: quit_requested.emit())
+		col.add_child(quit)
+		_buttons.append(quit)
 	var filler := Control.new()
 	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	filler.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(filler)
 	_best = UiTheme.label("", 22, "semibold", UiTheme.CREAM)
 	col.add_child(_best)
+	# Scripts with tall lines (Thai, CJK...) can need more height than a phone has.
+	col.minimum_size_changed.connect(_fit_column)
+	resized.connect(_fit_column)
+
+
+## Scale that makes the menu fit in the given height (1 when it already fits).
+func fit_scale(available_height: float) -> float:
+	var need := _col.get_combined_minimum_size().y + V_MARGINS
+	return clampf(available_height / need, MIN_FIT_SCALE, 1.0)
+
+
+func _fit_column() -> void:
+	var k := fit_scale(size.y)
+	_margin.scale = Vector2(k, k)
+	# Keep the scaled menu filling the screen height (its anchors span the menu).
+	_margin.size = size / k
 
 
 func _on_open() -> void:

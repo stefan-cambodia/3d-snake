@@ -7,6 +7,7 @@ signal play_requested
 signal resume_requested
 signal restart_requested
 signal quit_to_menu_requested
+signal quit_game_requested
 signal skin_previewed(id: String)
 signal theme_selected(id: String)
 signal screen_changed(name: String)
@@ -68,6 +69,7 @@ func _ready() -> void:
 
 	main_menu.play_requested.connect(func() -> void: play_requested.emit())
 	main_menu.screen_requested.connect(func(n: String) -> void: push(_screen_by_name(n)))
+	main_menu.quit_requested.connect(func() -> void: quit_game_requested.emit())
 	pause_menu.resume_requested.connect(func() -> void: resume_requested.emit())
 	pause_menu.restart_requested.connect(func() -> void: restart_requested.emit())
 	pause_menu.settings_requested.connect(func() -> void: push(settings))

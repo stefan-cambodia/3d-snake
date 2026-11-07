@@ -6,20 +6,22 @@ _Last updated: 2026-11-07_
 
 The game is feature-complete for a 1.0 sideload release. The test suite passes, a signed release
 APK builds reproducibly, and the game has been played on a real phone (Samsung Galaxy A56) with the
-Vulkan renderer at a steady 60 fps. Testing on that phone found and fixed two display cut-out bugs.
-It has been tested on only one phone model so far.
+Vulkan renderer at a steady 60 fps. The UI is translated into 14 languages, including Khmer, with
+fonts, shaping and line breaking checked on that phone. It has been tested on only one phone model
+so far, and the translations other than English and French still need native speakers to review
+them (see Known issues).
 
 ## Build and test status
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **40 tests, 23,731 checks, 0 failures** (about 11 s) |
+| Headless test suite (`tools/run_tests.sh`) | **47 tests, 27,797 checks, 0 failures** (about 19 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
-| Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 30 MB, arm64-v8a**. Signature verified with apksigner (v2 + v3 schemes) |
+| Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
 | Manifest | `com.studio.snake3d`, version 1.0.0 (1), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
-| Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen |
+| Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live |
 
 ## Features
 
@@ -47,11 +49,16 @@ It has been tested on only one phone model so far.
 - Haptic feedback, a first-run tutorial, and AI attract mode behind the main menu.
 
 **Meta and UI**
-- Main menu, Skins & Sanctuaries (8 skins, 3 themes, unlocked through milestones), Records (top 10
+- Main menu with a **Quit** button (hidden on iOS and the web), Skins & Sanctuaries (8 skins, 3 themes, unlocked through milestones), Records (top 10
   plus lifetime stats), Settings, How to play / About, pause menu, and a game-over screen with
   new-best and unlock announcements.
 - 3 steering schemes (drag, tap sides, joystick), sensitivity, left-handed layout, camera distance
-  and smoothing, volumes, FPS counter, English/French. The language is auto-detected.
+  and smoothing, volumes, FPS counter.
+- **14 languages**: English, French, Khmer, Thai, Spanish, Portuguese (Brazil), German, Italian,
+  Turkish, Indonesian, Russian, Japanese, Korean, Simplified Chinese. All text lives in
+  `assets/i18n/strings.csv`; the phone's language is picked on first launch and can be changed live
+  in Settings. Non-Latin scripts use subsetted Noto fonts (`tools/build_fonts.py`), and Khmer and Thai
+  get dictionary-based line breaking from the exported ICU data.
 - The profile is saved with ConfigFile. A corrupt save is backed up and replaced with defaults.
 - The game pauses automatically when the app loses focus. Android *Back* moves back through menus.
 
@@ -80,7 +87,38 @@ It has been tested on only one phone model so far.
 - `export/android/shutdown_adb_on_exit` is now off (also in `tools/setup_godot.sh`). Before this,
   every headless export ran `adb kill-server`, which dropped wireless-debugging connections.
 
+## Changes: Quit button and languages (2026-11-07, later the same day)
+
+- **Quit button** at the bottom of the main menu: saves the profile and closes the app (the same as
+  Android *Back* on the main menu). Verified on the phone.
+- **Internationalisation:** the strings moved from code into `assets/i18n/strings.csv` (126 keys ×
+  14 locales), imported by Godot's CSV translation importer. `Localization` now only detects and
+  applies the language. The language picker is a grid showing each language in its own script.
+- **Fonts:** Godot sizes text lines by the tallest font in a fallback chain, and the Noto fonts for
+  Thai and CJK are 15–20 % taller than Outfit. So each language only gets the fallback for its own
+  script, and Latin languages keep exactly their old layout. A separate "picker" font holds every
+  script for the language grid.
+- **Main menu fits on any phone:** with the extra button, the column needed 757 px for 720. It now
+  scales down by up to 20 % when needed (about 5 % in Latin languages). An early version scaled a
+  container's child, which Godot silently resets; the new test caught this, and it was fixed and
+  checked on the phone.
+- **Scrolling from a button:** a swipe that started on a button (for example the language grid)
+  did not scroll the settings list, so on the phone half the languages were out of reach. Those
+  buttons now pass drags to the scroll container, and a press released at the end of a swipe is
+  ignored, so scrolling never picks a language by accident. Verified on the phone.
+- The language choice is saved immediately (other settings still save when Settings closes).
+- New `tests/test_localization.gd` (7 tests): CSV columns match the supported locales, every key is
+  translated with the same placeholders, Godot serves the CSV's text, every key used in the code
+  exists, device-language detection (`fr_BE`→fr, `km_KH`→km, `zh_TW`→zh_CN, legacy `in`→id…), the fonts
+  cover every character of every language, and every screen fits at 1280×720 in every language.
+
 ## Known issues and limitations
+
+- **The translations other than English and French were written by an AI** and have not been
+  reviewed by native speakers. Khmer (and Thai) matter most here: the Khmer text renders correctly,
+  but its wording should be checked by a Khmer speaker. Fixes only need edits to `strings.csv`.
+- Testing on the phone added a few short runs to the owner's profile (run count, records); one
+  of them took the run count to 10, which unlocked the "Coral Bands" skin.
 
 - **Vulkan shows a black screen on the Android emulator** (not on real phones). Godot logs
   `Couldn't present to Vulkan queue (VkResult error 5)` with both SwiftShader and host-GPU
@@ -103,12 +141,13 @@ It has been tested on only one phone model so far.
 
 ## Remaining work
 
-1. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
+1. **Have native speakers review the translations**, Khmer first.
+2. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
    Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
    runs the default (medium) at 60 fps, so it could probably default to high.
-2. Check audio and haptics on a phone, and time a cold first launch after a fresh install.
-3. For a Play Store release: switch to a Gradle build to produce an AAB, decide whether the Vulkan
+3. Check audio and haptics on a phone, and time a cold first launch after a fresh install.
+4. For a Play Store release: switch to a Gradle build to produce an AAB, decide whether the Vulkan
    features should be marked optional, add store assets and a privacy policy (the game collects no
    data), and use a long-lived upload key.
-4. Optional: more languages, more sanctuary themes and skins, and accessibility options
+5. Optional: more languages, more sanctuary themes and skins, and accessibility options
    (colour-blind-safe item colours, reduced camera motion).

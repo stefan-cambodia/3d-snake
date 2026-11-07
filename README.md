@@ -10,6 +10,8 @@ track is generated procedurally (see `tools/`). The only third-party assets are 
 - Package id: `com.studio.snake3d`, version 1.0.0 (code 1)
 - Android 7.0+ (API 24), arm64-v8a, landscape
 - Renderer: Godot *Mobile* (Vulkan); Godot falls back to OpenGL ES 3 when a device has no usable Vulkan driver at startup
+- 14 languages: English, Français, ខ្មែរ (Khmer), ไทย (Thai), Español, Português, Deutsch, Italiano, Türkçe,
+  Bahasa Indonesia, Русский, 日本語, 한국어, 简体中文. The phone's language is picked automatically on first launch
 
 ## Install the APK on a phone
 
@@ -41,7 +43,8 @@ different key. Uninstall it first (`adb uninstall com.studio.snake3d`); this era
 In **Settings** you can switch steering to *Tap sides* (hold the left/right half of the screen) or a
 floating *Joystick*, change steering sensitivity, mirror the layout for left-handed play, and adjust
 camera distance and smoothing, graphics quality, haptics, volumes, FPS counter and language
-(English / French).
+(any of the 14). The main menu's **Quit** button saves and closes the game (Android *Back* on the
+main menu does the same).
 
 **Scoring:** sunfruit 10 points, Surge crystal 25 (plus double points and extra speed for 5 s),
 violet relic 150. Pickups within 3.2 s of each other build a combo multiplier up to ×3. Grazing an
@@ -55,7 +58,8 @@ milestones unlock 7 more serpent skins and 2 more sanctuary themes.
 - **Godot 4.7.2** editor, plus the matching **Android export templates**
 - **Android SDK** with `platform-tools` and `build-tools` (Android Studio installs both)
 - **JDK 17 or newer** (tested with OpenJDK 27)
-- Python 3 for `tools/setup_godot.sh` (the optional asset generators also need numpy and Pillow)
+- Python 3 for `tools/setup_godot.sh` (the optional asset generators also need numpy and Pillow;
+  `tools/build_fonts.py` needs fontTools)
 
 ## Set up the toolchain
 
@@ -89,11 +93,12 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-40 tests cover snake movement and steering, the spine (body path) maths, collisions, scoring and
+47 tests cover snake movement and steering, the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
-autopilot run, and the real main scene's state machine, camera, and HUD/touch layout around display
-cut-outs.
+autopilot run, the real main scene's state machine, camera, and HUD/touch layout around display
+cut-outs, and the translations (every key in every language, matching `%d`/`%s` placeholders,
+fonts covering every character, and every screen fitting on a phone in every language).
 
 ## Build the Android APK
 
@@ -115,6 +120,27 @@ set `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `GODOT_ANDROID_KEYSTORE_RELEASE_USER`
 From the Godot editor you can instead use *Project → Export… → Android*, or *Remote Debug / One-click
 deploy* with a phone connected over USB.
 
+## Languages and translating
+
+All UI text lives in **`assets/i18n/strings.csv`**: one row per key, one column per language (the
+header row holds the locale codes). It opens in any spreadsheet program; keep it UTF-8 and comma
+separated. Godot imports it into `strings.<locale>.translation` files (generated, not in git).
+
+- **Fix or change a translation:** edit the cell and keep the same `%d` / `%s` / `%.1f` placeholders, in
+  the same order, as the English text.
+- **Add a language:** add a column (header = locale code, e.g. `vi`), then add the code to
+  `LOCALES` in `scripts/core/localization.gd` and to `internationalization/locale/translations` in
+  `project.godot`. If the language uses a new script, add a Noto font for it in `tools/build_fonts.py`
+  and in `UiTheme.FALLBACKS_BY_LANGUAGE`.
+- **After any change to the CSV, run `python3 tools/build_fonts.py`.** Cinzel and Outfit only cover
+  Latin, so Khmer, Thai, Cyrillic, Chinese, Japanese and Korean use Noto fonts. The script cuts them
+  down to the characters the translations use (about 0.7 MB in total instead of 50 MB) while keeping the
+  shaping rules Khmer and Thai need. Then run the tests: they fail if a key or a character is missing,
+  or if a translation is too long for its screen.
+
+Khmer and Thai do not put spaces between words, so line breaking uses the ICU data that the project
+exports (`internationalization/locale/include_text_server_data`, about 4.8 MB in the APK).
+
 ## Project layout
 
 ```
@@ -127,7 +153,7 @@ scripts/camera/           chase camera (intro, chase, death, menu and showcase m
 scripts/input/            touch, keyboard and gamepad steering
 scripts/ui/               HUD and menus (theme, screens, game over, settings, skins, records)
 scripts/save/             player profile: settings, stats, high scores, unlocks
-assets/                   generated audio, textures, icons; shaders; fonts
+assets/                   generated audio, textures, icons; shaders; fonts; i18n/strings.csv
 tests/                    headless test runner and suites
 tools/                    setup/build/test scripts and the asset generators
 ```
@@ -151,10 +177,12 @@ tools/                    setup/build/test scripts and the asset generators
   port on the main *Wireless debugging* screen. That port differs from the pairing port.
 - **`adb: more than one device/emulator`**: pick one with `adb -s <serial> install ...`
   (`adb devices` lists the serials).
+- **Squares or missing letters in some language**: run `python3 tools/build_fonts.py` (the
+  translations use a character the bundled fonts don't have yet), then rebuild.
 - **Profile looks wrong or a save got corrupted**: the game backs up an unreadable profile as
   `profile.cfg.bak` and starts fresh. *Settings → Reset progress* clears everything.
 
 ## Licence notes
 
-Godot Engine is MIT-licensed. The Cinzel and Outfit fonts are under the SIL Open Font License
-(`assets/fonts/*-OFL.txt`). All other assets were generated by the scripts in `tools/`.
+Godot Engine is MIT-licensed. The Cinzel, Outfit and Noto fonts are under the SIL Open Font
+License (`assets/fonts/*-OFL.txt`, `assets/fonts/fallback/Noto-OFL.txt`). All other assets were generated by the scripts in `tools/`.

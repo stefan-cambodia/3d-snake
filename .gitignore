@@ -5,6 +5,10 @@
 
 # Local toolchain (downloaded by tools/setup_godot.sh)
 /tools/godot/
+/tools/.font_cache/
+
+# Generated from assets/i18n/strings.csv on import
+/assets/i18n/*.translation
 
 # Build output
 /build/

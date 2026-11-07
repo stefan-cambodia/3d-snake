@@ -10,7 +10,7 @@ var _body: VBoxContainer
 func _ready() -> void:
 	add_backdrop(0.6)
 	var vb := make_panel("SET_TITLE", 900)
-	_body = MenuScreens.scroll_body(vb, 470)
+	_body = MenuScreens.scroll_body(vb, 450)
 	_build()
 	var back := make_button("COMMON_BACK", true, 300)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -34,7 +34,7 @@ func _build() -> void:
 		AudioManager.play("ui_click", -2.0))))
 
 	b.add_child(MenuScreens.section("SET_CONTROLS"))
-	b.add_child(MenuScreens.setting_row("SET_SCHEME", MenuScreens.segmented([tr("SCHEME_DRAG"), tr("SCHEME_HALVES"), tr("SCHEME_STICK")], int(Profile.get_setting("control_scheme")), func(i: int) -> void: Profile.set_setting("control_scheme", i))))
+	b.add_child(MenuScreens.setting_row("SET_SCHEME", MenuScreens.segmented(["SCHEME_DRAG", "SCHEME_HALVES", "SCHEME_STICK"], int(Profile.get_setting("control_scheme")), func(i: int) -> void: Profile.set_setting("control_scheme", i))))
 	var hint := UiTheme.label("SET_SCHEME_HINT", 18, "light", UiTheme.MUTED)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.add_child(hint)
@@ -46,24 +46,22 @@ func _build() -> void:
 			Input.vibrate_handheld(30))))
 
 	b.add_child(MenuScreens.section("SET_CAMERA"))
-	b.add_child(MenuScreens.setting_row("SET_CAM_DISTANCE", MenuScreens.segmented([tr("CAM_NEAR"), tr("CAM_NORMAL"), tr("CAM_FAR")], int(Profile.get_setting("camera_distance")), func(i: int) -> void: Profile.set_setting("camera_distance", i))))
+	b.add_child(MenuScreens.setting_row("SET_CAM_DISTANCE", MenuScreens.segmented(["CAM_NEAR", "CAM_NORMAL", "CAM_FAR"], int(Profile.get_setting("camera_distance")), func(i: int) -> void: Profile.set_setting("camera_distance", i))))
 	b.add_child(MenuScreens.setting_row("SET_CAM_SMOOTH", MenuScreens.slider(Profile.get_setting("camera_smoothing"), 0.5, 1.5, 0.05, func(v: float) -> void: Profile.set_setting("camera_smoothing", v))))
 
 	b.add_child(MenuScreens.section("SET_GRAPHICS"))
-	b.add_child(MenuScreens.setting_row("SET_QUALITY", MenuScreens.segmented([tr("Q_LOW"), tr("Q_MEDIUM"), tr("Q_HIGH")], int(Profile.get_setting("quality")), func(i: int) -> void: Profile.set_setting("quality", i))))
+	b.add_child(MenuScreens.setting_row("SET_QUALITY", MenuScreens.segmented(["Q_LOW", "Q_MEDIUM", "Q_HIGH"], int(Profile.get_setting("quality")), func(i: int) -> void: Profile.set_setting("quality", i))))
 	b.add_child(MenuScreens.setting_row("SET_FPS", MenuScreens.toggle(Profile.get_setting("show_fps"), func(v: bool) -> void: Profile.set_setting("show_fps", v))))
 
 	b.add_child(MenuScreens.section("SET_LANGUAGE"))
-	var langs := Localization.LANGUAGES
+	var codes := Localization.LOCALES
 	var names: Array = []
-	var current := 0
-	for i in langs.size():
-		names.append(langs[i][1])
-		if langs[i][0] == Localization.current():
-			current = i
-	b.add_child(MenuScreens.setting_row("SET_LANGUAGE_LABEL", MenuScreens.segmented(names, current, func(i: int) -> void:
-		Profile.set_setting("language", langs[i][0])
-		Localization.apply(langs[i][0]))))
+	for code in codes:
+		names.append(Localization.language_name(code))
+	b.add_child(MenuScreens.choice_grid(names, codes.find(Localization.current()), 4, func(i: int) -> void:
+		Profile.set_setting("language", codes[i])
+		Profile.save_profile() # keep the choice even if the app is killed in Settings
+		Localization.apply(codes[i])))
 
 	b.add_child(MenuScreens.section("SET_DATA"))
 	_confirm_reset = make_button("SET_RESET", false, 360)

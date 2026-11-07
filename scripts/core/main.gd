@@ -100,6 +100,7 @@ func _ready() -> void:
 	ui.resume_requested.connect(resume)
 	ui.restart_requested.connect(start_run)
 	ui.quit_to_menu_requested.connect(go_to_menu)
+	ui.quit_game_requested.connect(quit_game)
 	ui.skin_previewed.connect(func(id: String) -> void: snake_view.apply_skin(SkinCatalog.get_skin(id)))
 	ui.theme_selected.connect(func(id: String) -> void: world.apply_theme(WorldThemes.get_theme(id)))
 	ui.screen_changed.connect(_on_screen_changed)
@@ -231,6 +232,12 @@ func go_to_menu() -> void:
 		AudioManager.play_music("menu", 1.5))
 
 
+## Save and close the app (main menu "Quit" button, or Back on the main menu).
+func quit_game() -> void:
+	Profile.save_profile()
+	get_tree().quit()
+
+
 func pause_game() -> void:
 	if state != State.PLAYING and state != State.INTRO:
 		return
@@ -298,8 +305,7 @@ func _on_back() -> void:
 			if ui.top() != ui.main_menu:
 				ui.back()
 			else:
-				Profile.save_profile()
-				get_tree().quit()
+				quit_game()
 
 
 # --- Frame ------------------------------------------------------------------------

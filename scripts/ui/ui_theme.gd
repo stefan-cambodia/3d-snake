@@ -12,9 +12,54 @@ const DANGER := Color(1.0, 0.42, 0.32)
 
 const FONT_TITLE_PATH := "res://assets/fonts/Cinzel.ttf"
 const FONT_BODY_PATH := "res://assets/fonts/Outfit.ttf"
+## Fallbacks for scripts Cinzel/Outfit lack (built by tools/build_fonts.py).
+## Godot sizes every line by the tallest font in a fallback chain, and these
+## scripts need taller lines than Latin, so each language only gets the fallback
+## for its own script (Latin languages get none and keep their compact layout).
+const FALLBACK_DIR := "res://assets/fonts/fallback/"
+const FALLBACKS_BY_LANGUAGE := {
+	"ru": ["NotoSans-Subset.ttf"],
+	"km": ["NotoSansKhmer-Subset.ttf"],
+	"th": ["NotoSansThai-Subset.ttf"],
+	"ja": ["NotoSansJP-Subset.ttf"],
+	"ko": ["NotoSansKR-Subset.ttf"],
+	"zh": ["NotoSansSC-Subset.ttf"],
+}
+## Every script at once, for the language picker ("picker" font kind).
+const FALLBACKS_ALL := ["NotoSans-Subset.ttf", "NotoSansKhmer-Subset.ttf", "NotoSansThai-Subset.ttf",
+	"NotoSansSC-Subset.ttf", "NotoSansJP-Subset.ttf", "NotoSansKR-Subset.ttf"]
 
 static var _theme: Theme
 static var _fonts: Dictionary = {}
+static var _weights: Dictionary = {}
+static var _locale: String = "en"
+
+
+## Give every UI font the fallbacks the newly selected language needs.
+static func apply_locale(code: String) -> void:
+	_locale = code
+	for kind in _fonts:
+		if kind != "picker":
+			(_fonts[kind] as FontVariation).fallbacks = _fallbacks(_weights[kind], fallback_names(code))
+
+
+## Fallback font files used for a locale's text.
+static func fallback_names(code: String) -> Array:
+	return FALLBACKS_BY_LANGUAGE.get(code.get_slice("_", 0), [])
+
+
+static func _fallbacks(weight: int, names: Array) -> Array[Font]:
+	var out: Array[Font] = []
+	var ts := TextServerManager.get_primary_interface()
+	for n in names:
+		var f: FontFile = load(FALLBACK_DIR + n)
+		if f == null:
+			continue
+		var fv := FontVariation.new()
+		fv.base_font = f
+		fv.variation_opentype = {ts.name_to_tag("wght"): weight}
+		out.append(fv)
+	return out
 
 
 static func font(kind: String) -> Font:
@@ -35,9 +80,13 @@ static func font(kind: String) -> Font:
 			weight = 600
 		"light":
 			weight = 300
+		"picker":
+			weight = 600
 	var ts := TextServerManager.get_primary_interface()
 	fv.variation_opentype = {ts.name_to_tag("wght"): weight}
+	fv.fallbacks = _fallbacks(weight, FALLBACKS_ALL if kind == "picker" else fallback_names(_locale))
 	_fonts[kind] = fv
+	_weights[kind] = weight
 	return fv
 
 
