@@ -10,6 +10,7 @@
 /build/
 
 # Signing material - never commit
+/signing/
 *.keystore
 *.jks
 export_credentials.cfg
