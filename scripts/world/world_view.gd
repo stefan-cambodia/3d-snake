@@ -1,0 +1,912 @@
+class_name WorldView
+extends Node3D
+## Builds and animates the 3D sanctuary: environment, lighting, terrain, water,
+## landmarks, vegetation, arena boundary, obstacles and rising-obstacle effects.
+
+const TERRAIN_SHADER := preload("res://assets/shaders/terrain.gdshader")
+const WATER_SHADER := preload("res://assets/shaders/water.gdshader")
+const SKY_SHADER := preload("res://assets/shaders/sky.gdshader")
+const GRASS_SHADER := preload("res://assets/shaders/grass.gdshader")
+const FOLIAGE_SHADER := preload("res://assets/shaders/foliage.gdshader")
+const STONE_SHADER := preload("res://assets/shaders/stone.gdshader")
+const GLOW_SHADER := preload("res://assets/shaders/glow_billboard.gdshader")
+const RUNE_DISC_SHADER := preload("res://assets/shaders/rune_disc.gdshader")
+const BARRIER_SHADER := preload("res://assets/shaders/barrier.gdshader")
+
+const TEX_DETAIL := preload("res://assets/textures/ground_detail.png")
+const TEX_DETAIL_N := preload("res://assets/textures/ground_normal.png")
+const TEX_STONE := preload("res://assets/textures/stone_albedo.png")
+const TEX_STONE_N := preload("res://assets/textures/stone_normal.png")
+const TEX_WATER_N := preload("res://assets/textures/water_normal.png")
+const TEX_CLOUDS := preload("res://assets/textures/clouds.png")
+
+const INNER_EXTENT := 56.0
+const OUTER_EXTENT := 184.0
+const HEIGHTMAP_RES := 128
+const HEIGHTMAP_EXTENT := 256.0
+const GRASS_CHUNKS := 4
+
+var terrain: TerrainField
+var theme: Dictionary
+var quality: int = 2
+
+var environment: Environment
+var sun: DirectionalLight3D
+var fill_light: DirectionalLight3D
+
+var _sky_mat: ShaderMaterial
+var _terrain_mat: ShaderMaterial
+var _water_mat: ShaderMaterial
+var _stone_mat: ShaderMaterial
+var _grass_mat: ShaderMaterial
+var _foliage_mat: ShaderMaterial
+var _barrier_mat: ShaderMaterial
+var _glow_mat: ShaderMaterial
+var _lantern_glow: MultiMeshInstance3D
+var _night_lanterns: Node3D
+var _motes: GPUParticles3D
+var _grass_chunks: Array[MultiMeshInstance3D] = []
+var _grass_mesh: ArrayMesh
+var _soft_tex: GradientTexture2D
+
+var _obstacle_root: Node3D
+var _obstacle_nodes: Dictionary = {}
+var _rising: Dictionary = {}
+var _fires: Array[Node3D] = []
+var _mesh_cache: Dictionary = {}
+var _time: float = 0.0
+var _rng := RandomNumberGenerator.new()
+
+
+func build(p_terrain: TerrainField, p_theme: Dictionary, p_quality: int) -> void:
+	terrain = p_terrain
+	theme = p_theme
+	quality = p_quality
+	_rng.seed = terrain.seed_value * 31 + 5
+	_soft_tex = _make_soft_texture()
+	_make_materials()
+	_build_environment()
+	_build_terrain()
+	_build_water()
+	_build_backdrop()
+	_build_arena_ring()
+	_build_vegetation()
+	_build_landmarks()
+	_build_motes()
+	_obstacle_root = Node3D.new()
+	_obstacle_root.name = "Obstacles"
+	add_child(_obstacle_root)
+	_build_mesh_cache()
+	apply_theme(theme)
+	set_quality(quality)
+
+
+# --- Materials ------------------------------------------------------------------
+
+func _make_soft_texture() -> GradientTexture2D:
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 1))
+	g.set_color(1, Color(1, 1, 1, 0))
+	g.add_point(0.35, Color(1, 1, 1, 0.55))
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5)
+	t.fill_to = Vector2(1.0, 0.5)
+	t.width = 64
+	t.height = 64
+	return t
+
+
+func soft_texture() -> Texture2D:
+	return _soft_tex
+
+
+func _make_materials() -> void:
+	_terrain_mat = ShaderMaterial.new()
+	_terrain_mat.shader = TERRAIN_SHADER
+	_terrain_mat.set_shader_parameter("detail_tex", TEX_DETAIL)
+	_terrain_mat.set_shader_parameter("detail_normal", TEX_DETAIL_N)
+	_terrain_mat.set_shader_parameter("stone_tex", TEX_STONE)
+	_terrain_mat.set_shader_parameter("stone_normal", TEX_STONE_N)
+	_terrain_mat.set_shader_parameter("water_level", GameConfig.WATER_LEVEL)
+	_terrain_mat.set_shader_parameter("plaza_radius", TerrainField.PLAZA_RADIUS)
+
+	_water_mat = ShaderMaterial.new()
+	_water_mat.shader = WATER_SHADER
+	_water_mat.set_shader_parameter("normal_tex", TEX_WATER_N)
+	_water_mat.set_shader_parameter("water_level", GameConfig.WATER_LEVEL)
+	_water_mat.set_shader_parameter("map_extent", HEIGHTMAP_EXTENT)
+
+	_stone_mat = ShaderMaterial.new()
+	_stone_mat.shader = STONE_SHADER
+	_stone_mat.set_shader_parameter("albedo_tex", TEX_STONE)
+	_stone_mat.set_shader_parameter("normal_tex", TEX_STONE_N)
+	_stone_mat.set_shader_parameter("detail_tex", TEX_DETAIL)
+
+	_grass_mat = ShaderMaterial.new()
+	_grass_mat.shader = GRASS_SHADER
+
+	_foliage_mat = ShaderMaterial.new()
+	_foliage_mat.shader = FOLIAGE_SHADER
+
+	_barrier_mat = ShaderMaterial.new()
+	_barrier_mat.shader = BARRIER_SHADER
+
+	_glow_mat = ShaderMaterial.new()
+	_glow_mat.shader = GLOW_SHADER
+
+
+func stone_material() -> ShaderMaterial:
+	return _stone_mat
+
+
+func glow_material() -> ShaderMaterial:
+	return _glow_mat
+
+
+# --- Environment ------------------------------------------------------------------
+
+func _build_environment() -> void:
+	_sky_mat = ShaderMaterial.new()
+	_sky_mat.shader = SKY_SHADER
+	_sky_mat.set_shader_parameter("clouds", TEX_CLOUDS)
+	_sky_mat.set_shader_parameter("cloud_offset", Vector2(_rng.randf(), _rng.randf()))
+	var sky := Sky.new()
+	sky.sky_material = _sky_mat
+	sky.process_mode = Sky.PROCESS_MODE_QUALITY
+	sky.radiance_size = Sky.RADIANCE_SIZE_128
+	environment = Environment.new()
+	environment.background_mode = Environment.BG_SKY
+	environment.sky = sky
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	environment.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.tonemap_white = 6.0
+	environment.glow_enabled = true
+	environment.glow_intensity = 0.55
+	environment.glow_strength = 0.9
+	environment.glow_bloom = 0.04
+	environment.glow_hdr_threshold = 0.9
+	environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	environment.fog_enabled = true
+	environment.fog_sky_affect = 0.35
+	environment.fog_aerial_perspective = 0.25
+	environment.adjustment_enabled = true
+	environment.adjustment_saturation = 1.1
+	environment.adjustment_contrast = 1.05
+	var we := WorldEnvironment.new()
+	we.environment = environment
+	add_child(we)
+
+	sun = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.shadow_enabled = true
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	sun.directional_shadow_max_distance = 48.0
+	sun.directional_shadow_split_1 = 0.22
+	sun.shadow_bias = 0.04
+	sun.shadow_normal_bias = 1.2
+	sun.shadow_blur = 1.4
+	sun.light_angular_distance = 0.6
+	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_AND_SKY
+	add_child(sun)
+
+	fill_light = DirectionalLight3D.new()
+	fill_light.name = "Fill"
+	fill_light.shadow_enabled = false
+	fill_light.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
+	fill_light.light_specular = 0.2
+	add_child(fill_light)
+
+
+func apply_theme(p_theme: Dictionary) -> void:
+	theme = p_theme
+	var night: bool = theme["night"]
+	_sky_mat.set_shader_parameter("sky_top", theme["sky_top"])
+	_sky_mat.set_shader_parameter("sky_horizon", theme["sky_horizon"])
+	_sky_mat.set_shader_parameter("sky_ground", theme["sky_ground"])
+	_sky_mat.set_shader_parameter("cloud_tint", theme["cloud_tint"])
+	_sky_mat.set_shader_parameter("night", 1.0 if night else 0.0)
+	_sky_mat.set_shader_parameter("cloud_cover", 0.45 if night else (0.9 if theme["id"] == "mist" else 0.72))
+	_sky_mat.set_shader_parameter("sun_size", 0.9992 if night else 0.99955)
+	environment.ambient_light_energy = theme["ambient_energy"]
+	environment.fog_light_color = theme["fog_color"]
+	environment.fog_density = theme["fog_density"]
+	environment.tonemap_exposure = theme["exposure"]
+	environment.glow_intensity = 0.8 if night else 0.55
+	sun.light_color = theme["sun_color"]
+	sun.light_energy = theme["sun_energy"]
+	sun.rotation_degrees = Vector3(theme["sun_pitch"], theme["sun_yaw"], 0.0)
+	fill_light.light_color = (theme["sky_top"] as Color).lerp(Color.WHITE, 0.4)
+	fill_light.light_energy = 0.22 if not night else 0.18
+	fill_light.rotation_degrees = Vector3(-35.0, float(theme["sun_yaw"]) + 160.0, 0.0)
+	_water_mat.set_shader_parameter("deep_col", theme["water_deep"])
+	_water_mat.set_shader_parameter("shallow_col", theme["water_shallow"])
+	_terrain_mat.set_shader_parameter("grass_a", theme["grass_a"])
+	_terrain_mat.set_shader_parameter("grass_b", theme["grass_b"])
+	var boost: float = theme["emissive_boost"]
+	_terrain_mat.set_shader_parameter("rune_glow", 0.35 * boost)
+	_stone_mat.set_shader_parameter("rune_base", 0.25 * boost)
+	_stone_mat.set_shader_parameter("moss_col", (theme["grass_a"] as Color).darkened(0.25))
+	_grass_mat.set_shader_parameter("base_col", (theme["grass_a"] as Color).darkened(0.35))
+	_grass_mat.set_shader_parameter("tip_col", (theme["grass_b"] as Color).lightened(0.05))
+	_foliage_mat.set_shader_parameter("tint", Color(0.55, 0.65, 0.8) if night else Color.WHITE)
+	_barrier_mat.set_shader_parameter("base_alpha", 0.1 if night else 0.05)
+	if _lantern_glow:
+		_lantern_glow.set_instance_shader_parameter("fade", 1.0 if night else 0.35)
+	if _night_lanterns:
+		_night_lanterns.visible = night
+	if _motes:
+		var pm: ParticleProcessMaterial = _motes.process_material
+		pm.color = theme["motes"]
+		(_motes.draw_pass_1.surface_get_material(0) as StandardMaterial3D).emission_energy_multiplier = 3.0 if night else 1.2
+	for f in _fires:
+		f.visible = true
+
+
+func set_quality(q: int) -> void:
+	quality = q
+	sun.shadow_enabled = q > 0
+	RenderingServer.directional_shadow_atlas_set_size(2048 if q >= 2 else 1024, true)
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if q >= 2 else DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.directional_shadow_max_distance = 48.0 if q >= 2 else 32.0
+	environment.glow_enabled = q > 0
+	environment.fog_aerial_perspective = 0.25 if q > 0 else 0.0
+	environment.sky.radiance_size = Sky.RADIANCE_SIZE_256 if q >= 2 else Sky.RADIANCE_SIZE_64
+	if _motes:
+		_motes.amount = [30, 60, 110][q]
+	for f in _fires:
+		var l := f.get_node_or_null("Light") as OmniLight3D
+		if l:
+			l.visible = q >= 2
+	_update_grass_density()
+
+
+# --- Terrain & water ----------------------------------------------------------------
+
+func _build_terrain() -> void:
+	# Inner, detailed grid (1 m), outer coarse grid (4 m) skipping the inner square.
+	var inner := _terrain_grid(-INNER_EXTENT, INNER_EXTENT, 1.0, false)
+	var outer := _terrain_grid(-OUTER_EXTENT, OUTER_EXTENT, 4.0, true)
+	for m in [inner, outer]:
+		var mi := MeshInstance3D.new()
+		mi.mesh = m
+		mi.material_override = _terrain_mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.name = "Terrain"
+		add_child(mi)
+
+
+func _terrain_grid(from: float, to: float, step: float, skip_inner: bool) -> ArrayMesh:
+	var n := int(round((to - from) / step)) + 1
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var heights := PackedFloat32Array()
+	heights.resize(n * n)
+	for iz in n:
+		for ix in n:
+			var x := from + float(ix) * step
+			var z := from + float(iz) * step
+			heights[iz * n + ix] = terrain.height(x, z)
+	for iz in n:
+		for ix in n:
+			var x := from + float(ix) * step
+			var z := from + float(iz) * step
+			var h := heights[iz * n + ix]
+			var hl := heights[iz * n + maxi(ix - 1, 0)]
+			var hr := heights[iz * n + mini(ix + 1, n - 1)]
+			var hd := heights[maxi(iz - 1, 0) * n + ix]
+			var hu := heights[mini(iz + 1, n - 1) * n + ix]
+			var nrm := Vector3(hl - hr, 2.0 * step, hd - hu).normalized()
+			var r := sqrt(x * x + z * z)
+			var grass := 1.0 - MathUtil.smooth01(GameConfig.ARENA_RADIUS - 2.0, GameConfig.ARENA_RADIUS + 3.5, r)
+			if r > 50.0:
+				grass = MathUtil.smooth01(0.0, 0.5, h + 0.2)
+			grass *= 0.75 + 0.5 * terrain.variation(x, z)
+			grass *= MathUtil.smooth01(TerrainField.PLAZA_RADIUS + 0.2, TerrainField.PLAZA_RADIUS + 2.5, r)
+			var sand := MathUtil.smooth01(GameConfig.ARENA_RADIUS - 1.0, GameConfig.ARENA_RADIUS + 3.0, r) if r < 50.0 else MathUtil.smooth01(0.6, -0.2, h)
+			sand = maxf(sand, MathUtil.smooth01(-0.1, -0.6, h))
+			st.set_color(Color(grass, sand, 0.0, 1.0))
+			st.set_normal(nrm)
+			st.set_uv(Vector2(x, z) * 0.16)
+			st.add_vertex(Vector3(x, h, z))
+	var half := INNER_EXTENT - 0.01
+	for iz in n - 1:
+		for ix in n - 1:
+			if skip_inner:
+				var x0 := from + float(ix) * step
+				var z0 := from + float(iz) * step
+				if x0 >= -half and x0 + step <= half + 0.02 and z0 >= -half and z0 + step <= half + 0.02:
+					continue
+			var i00 := iz * n + ix
+			var i01 := i00 + 1
+			var i10 := i00 + n
+			var i11 := i10 + 1
+			st.add_index(i00)
+			st.add_index(i01)
+			st.add_index(i11)
+			st.add_index(i00)
+			st.add_index(i11)
+			st.add_index(i10)
+	st.generate_tangents()
+	return st.commit()
+
+
+func _build_water() -> void:
+	var img := Image.create(HEIGHTMAP_RES, HEIGHTMAP_RES, false, Image.FORMAT_RF)
+	for iz in HEIGHTMAP_RES:
+		for ix in HEIGHTMAP_RES:
+			var x := (float(ix) + 0.5) / HEIGHTMAP_RES * HEIGHTMAP_EXTENT - HEIGHTMAP_EXTENT * 0.5
+			var z := (float(iz) + 0.5) / HEIGHTMAP_RES * HEIGHTMAP_EXTENT - HEIGHTMAP_EXTENT * 0.5
+			img.set_pixel(ix, iz, Color(terrain.height(x, z), 0, 0))
+	_water_mat.set_shader_parameter("height_map", ImageTexture.create_from_image(img))
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(700, 700)
+	var water := MeshInstance3D.new()
+	water.name = "Water"
+	water.mesh = plane
+	water.position.y = GameConfig.WATER_LEVEL
+	water.material_override = _water_mat
+	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(water)
+
+
+func _build_backdrop() -> void:
+	var m := MeshInstance3D.new()
+	m.name = "Mountains"
+	m.mesh = WorldMeshes.mountains(terrain.seed_value + 9, 165.0, 330.0)
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 1.0
+	m.material_override = mat
+	m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(m)
+
+
+# --- Arena ring -----------------------------------------------------------------
+
+func _build_arena_ring() -> void:
+	var curtain := MeshKit.lathe(PackedVector2Array([Vector2(GameConfig.ARENA_RADIUS, -0.2), Vector2(GameConfig.ARENA_RADIUS, 2.6)]), 160, Callable(), Color.WHITE, Vector2(1.0, 1.0 / 2.8))
+	var b := MeshInstance3D.new()
+	b.name = "Barrier"
+	b.mesh = curtain
+	b.material_override = _barrier_mat
+	b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(b)
+	# Lantern posts.
+	var count := 30
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = WorldMeshes.lantern_post()
+	mm.instance_count = count
+	var glow := MultiMesh.new()
+	glow.transform_format = MultiMesh.TRANSFORM_3D
+	var q := QuadMesh.new()
+	q.size = Vector2(1, 1)
+	glow.mesh = q
+	glow.instance_count = count
+	var flame := MultiMesh.new()
+	flame.transform_format = MultiMesh.TRANSFORM_3D
+	var fm := SphereMesh.new()
+	fm.radius = 0.11
+	fm.height = 0.22
+	fm.radial_segments = 8
+	fm.rings = 4
+	flame.mesh = fm
+	flame.instance_count = count
+	for i in count:
+		var a := TAU * float(i) / float(count)
+		var p := Vector2(cos(a), sin(a)) * (GameConfig.ARENA_RADIUS + 0.9)
+		var y := terrain.height(p.x, p.y)
+		mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, -a), Vector3(p.x, y, p.y)))
+		glow.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ONE * 1.6), Vector3(p.x, y + 1.5, p.y)))
+		flame.set_instance_transform(i, Transform3D(Basis(), Vector3(p.x, y + 1.5, p.y)))
+	var posts := MultiMeshInstance3D.new()
+	posts.multimesh = mm
+	posts.material_override = _stone_mat
+	add_child(posts)
+	_lantern_glow = MultiMeshInstance3D.new()
+	_lantern_glow.multimesh = glow
+	var gm := _glow_mat.duplicate() as ShaderMaterial
+	gm.set_shader_parameter("color", Color(1.0, 0.7, 0.35))
+	gm.set_shader_parameter("intensity", 1.3)
+	_lantern_glow.material_override = gm
+	_lantern_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_lantern_glow)
+	var flames := MultiMeshInstance3D.new()
+	flames.multimesh = flame
+	var fmat := StandardMaterial3D.new()
+	fmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fmat.albedo_color = Color(1.0, 0.75, 0.4)
+	fmat.emission_enabled = true
+	fmat.emission = Color(1.0, 0.6, 0.25)
+	fmat.emission_energy_multiplier = 3.0
+	flames.material_override = fmat
+	flames.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(flames)
+
+
+# --- Vegetation -----------------------------------------------------------------
+
+func _build_vegetation() -> void:
+	var leaf_a := Color(0.24, 0.42, 0.16)
+	var leaf_b := Color(0.16, 0.32, 0.18)
+	var variants: Array[ArrayMesh] = [
+		WorldMeshes.broadleaf_tree(1, leaf_a),
+		WorldMeshes.broadleaf_tree(2, Color(0.36, 0.46, 0.14)),
+		WorldMeshes.cypress_tree(3, leaf_b),
+		WorldMeshes.bush(4, leaf_a),
+	]
+	var lists: Array = [[], [], [], []]
+	# Shore band just outside the arena ring, islets and the far shore.
+	for i in 900:
+		var a := _rng.randf() * TAU
+		var r := _rng.randf_range(GameConfig.ARENA_RADIUS + 2.6, 170.0)
+		if r > 62.0 and r < 128.0 and _rng.randf() < 0.55:
+			continue
+		var p := Vector2(cos(a), sin(a)) * r
+		var h := terrain.height(p.x, p.y)
+		if h < GameConfig.WATER_LEVEL + 0.25:
+			continue
+		# Keep landmark islets clear around their monument.
+		if p.distance_to(Vector2(0, -64)) < 9.0 or p.distance_to(Vector2(74, 10)) < 7.5:
+			continue
+		var kind := _rng.randi_range(0, 3)
+		if r < 52.0 and kind != 3 and _rng.randf() < 0.35:
+			kind = 3
+		var s := _rng.randf_range(0.8, 1.25) * (1.4 if r > 128.0 else 1.0)
+		var xf := Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * s), Vector3(p.x, h - 0.1, p.y))
+		lists[kind].append(xf)
+	for k in variants.size():
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = variants[k]
+		mm.instance_count = lists[k].size()
+		for i in lists[k].size():
+			mm.set_instance_transform(i, lists[k][i])
+		var mi := MultiMeshInstance3D.new()
+		mi.name = "Trees%d" % k
+		mi.multimesh = mm
+		mi.material_override = _foliage_mat
+		add_child(mi)
+
+	# Lily pads on shallow water.
+	var pads := MultiMesh.new()
+	pads.transform_format = MultiMesh.TRANSFORM_3D
+	pads.use_colors = true
+	pads.mesh = WorldMeshes.lily_pad()
+	var pad_xf: Array[Transform3D] = []
+	for i in 600:
+		if pad_xf.size() >= 90:
+			break
+		var a := _rng.randf() * TAU
+		var r := _rng.randf_range(47.0, 75.0)
+		var p := Vector2(cos(a), sin(a)) * r
+		var depth := GameConfig.WATER_LEVEL - terrain.height(p.x, p.y)
+		if depth < 0.25 or depth > 1.6:
+			continue
+		var cl := _rng.randi_range(1, 4)
+		for c in cl:
+			var o := p + Vector2(_rng.randf_range(-1.2, 1.2), _rng.randf_range(-1.2, 1.2))
+			pad_xf.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * _rng.randf_range(0.6, 1.3)), Vector3(o.x, GameConfig.WATER_LEVEL + 0.015, o.y)))
+	pads.instance_count = pad_xf.size()
+	for i in pad_xf.size():
+		pads.set_instance_transform(i, pad_xf[i])
+		pads.set_instance_color(i, Color(1, 1, 1) if _rng.randf() > 0.15 else Color(1.0, 0.75, 0.85))
+	var pad_mi := MultiMeshInstance3D.new()
+	pad_mi.multimesh = pads
+	var pm := StandardMaterial3D.new()
+	pm.vertex_color_use_as_albedo = true
+	pm.albedo_color = Color(0.85, 1.0, 0.8)
+	pm.roughness = 0.45
+	pad_mi.material_override = pm
+	pad_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(pad_mi)
+
+	# Grass clumps, chunked so the camera frustum culls most of them.
+	_grass_mesh = WorldMeshes.grass_clump(7, 3)
+	for i in GRASS_CHUNKS * GRASS_CHUNKS:
+		var mi := MultiMeshInstance3D.new()
+		mi.name = "Grass%d" % i
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _grass_mesh
+		mi.multimesh = mm
+		mi.material_override = _grass_mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visibility_range_end = 60.0
+		add_child(mi)
+		_grass_chunks.append(mi)
+
+
+var _grass_blockers: Array[Obstacle] = []
+
+
+func _update_grass_density() -> void:
+	if _grass_chunks.is_empty():
+		return
+	var target: int = [1100, 2600, 4600][quality]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = terrain.seed_value * 13 + 1
+	var per_chunk: Array = []
+	for i in _grass_chunks.size():
+		per_chunk.append([])
+	var size := (GameConfig.ARENA_RADIUS + 6.0) * 2.0 / float(GRASS_CHUNKS)
+	var tries := 0
+	var placed := 0
+	while placed < target and tries < target * 4:
+		tries += 1
+		var r := sqrt(rng.randf()) * (GameConfig.ARENA_RADIUS + 5.0)
+		var a := rng.randf() * TAU
+		var p := Vector2(cos(a), sin(a)) * r
+		if r < TerrainField.PLAZA_RADIUS + 0.8:
+			continue
+		var v := terrain.variation(p.x, p.y)
+		if rng.randf() > 0.25 + v * 0.9:
+			continue
+		var h := terrain.height(p.x, p.y)
+		if h < GameConfig.WATER_LEVEL + 0.25:
+			continue
+		var blocked := false
+		for ob in _grass_blockers:
+			if ob.edge_distance(p) < 0.15:
+				blocked = true
+				break
+		if blocked:
+			continue
+		var cx := clampi(int((p.x + GameConfig.ARENA_RADIUS + 6.0) / size), 0, GRASS_CHUNKS - 1)
+		var cz := clampi(int((p.y + GameConfig.ARENA_RADIUS + 6.0) / size), 0, GRASS_CHUNKS - 1)
+		var s := rng.randf_range(0.7, 1.35) * (0.7 if r > GameConfig.ARENA_RADIUS else 1.0)
+		per_chunk[cz * GRASS_CHUNKS + cx].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s, s * rng.randf_range(0.8, 1.3), s)), Vector3(p.x, h, p.y)))
+		placed += 1
+	for i in _grass_chunks.size():
+		var mm := _grass_chunks[i].multimesh
+		var list: Array = per_chunk[i]
+		mm.instance_count = list.size()
+		for k in list.size():
+			mm.set_instance_transform(k, list[k])
+
+
+# --- Landmarks -------------------------------------------------------------------
+
+func _build_landmarks() -> void:
+	var gate := MeshInstance3D.new()
+	gate.name = "TempleGate"
+	gate.mesh = WorldMeshes.temple_gate()
+	gate.material_override = _stone_mat
+	gate.position = Vector3(0, terrain.height(0, -64), -64)
+	gate.set_instance_shader_parameter("tint_var", 0.3)
+	add_child(gate)
+	var statue := MeshInstance3D.new()
+	statue.name = "SerpentStatue"
+	statue.mesh = WorldMeshes.serpent_statue()
+	statue.material_override = _stone_mat
+	statue.position = Vector3(74, terrain.height(74, 10) - 0.2, 10)
+	statue.rotation.y = 2.4
+	statue.set_instance_shader_parameter("tint_var", 0.8)
+	add_child(statue)
+	# Glowing eyes on the statue: a pair of halos high on the head.
+	var halo := QuadMesh.new()
+	var eyes := MeshInstance3D.new()
+	eyes.mesh = halo
+	var em := _glow_mat.duplicate() as ShaderMaterial
+	em.set_shader_parameter("color", Color(1.0, 0.75, 0.3))
+	em.set_shader_parameter("intensity", 1.6)
+	eyes.material_override = em
+	eyes.scale = Vector3.ONE * 2.2
+	statue.add_child(eyes)
+	eyes.position = Vector3(1.0, 10.6, 1.0)
+
+	# Scattered ruins on the beach outside the ring.
+	for i in 12:
+		var a := _rng.randf() * TAU
+		var r := _rng.randf_range(GameConfig.ARENA_RADIUS + 2.4, GameConfig.ARENA_RADIUS + 5.0)
+		var p := Vector2(cos(a), sin(a)) * r
+		var h := terrain.height(p.x, p.y)
+		if h < GameConfig.WATER_LEVEL + 0.15:
+			continue
+		var mi := MeshInstance3D.new()
+		mi.mesh = WorldMeshes.fallen_column(100 + i) if i % 2 == 0 else WorldMeshes.column(_rng.randf_range(1.0, 2.6), 0.6, true, 200 + i, 12)
+		mi.material_override = _stone_mat
+		mi.position = Vector3(p.x, h - 0.05, p.y)
+		mi.rotation.y = _rng.randf() * TAU
+		mi.set_instance_shader_parameter("tint_var", _rng.randf())
+		add_child(mi)
+
+	# Floating lanterns on the lake (night theme only).
+	_night_lanterns = Node3D.new()
+	_night_lanterns.name = "LakeLanterns"
+	add_child(_night_lanterns)
+	var lm := MultiMesh.new()
+	lm.transform_format = MultiMesh.TRANSFORM_3D
+	var box := BoxMesh.new()
+	box.size = Vector3(0.35, 0.4, 0.35)
+	lm.mesh = box
+	var gl := MultiMesh.new()
+	gl.transform_format = MultiMesh.TRANSFORM_3D
+	gl.mesh = QuadMesh.new()
+	var xs: Array[Transform3D] = []
+	for i in 400:
+		if xs.size() >= 40:
+			break
+		var a := _rng.randf() * TAU
+		var r := _rng.randf_range(54.0, 120.0)
+		var p := Vector2(cos(a), sin(a)) * r
+		if terrain.height(p.x, p.y) > GameConfig.WATER_LEVEL - 0.5:
+			continue
+		xs.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), Vector3(p.x, GameConfig.WATER_LEVEL + 0.2, p.y)))
+	lm.instance_count = xs.size()
+	gl.instance_count = xs.size()
+	for i in xs.size():
+		lm.set_instance_transform(i, xs[i])
+		gl.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ONE * 2.2), xs[i].origin + Vector3(0, 0.25, 0)))
+	var lmi := MultiMeshInstance3D.new()
+	lmi.multimesh = lm
+	var lmat := StandardMaterial3D.new()
+	lmat.albedo_color = Color(1.0, 0.6, 0.3)
+	lmat.emission_enabled = true
+	lmat.emission = Color(1.0, 0.55, 0.2)
+	lmat.emission_energy_multiplier = 2.5
+	lmi.material_override = lmat
+	_night_lanterns.add_child(lmi)
+	var gmi := MultiMeshInstance3D.new()
+	gmi.multimesh = gl
+	var gmat := _glow_mat.duplicate() as ShaderMaterial
+	gmat.set_shader_parameter("color", Color(1.0, 0.6, 0.25))
+	gmat.set_shader_parameter("intensity", 1.2)
+	gmi.material_override = gmat
+	_night_lanterns.add_child(gmi)
+
+
+func _build_motes() -> void:
+	_motes = GPUParticles3D.new()
+	_motes.name = "Motes"
+	_motes.amount = 90
+	_motes.lifetime = 7.0
+	_motes.preprocess = 7.0
+	_motes.visibility_aabb = AABB(Vector3(-25, -4, -25), Vector3(50, 12, 50))
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(22, 2.5, 22)
+	pm.gravity = Vector3(0, 0.05, 0)
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 180.0
+	pm.initial_velocity_min = 0.05
+	pm.initial_velocity_max = 0.35
+	pm.turbulence_enabled = false
+	pm.scale_min = 0.6
+	pm.scale_max = 1.4
+	var curve := Curve.new()
+	curve.add_point(Vector2(0, 0))
+	curve.add_point(Vector2(0.2, 1))
+	curve.add_point(Vector2(0.8, 1))
+	curve.add_point(Vector2(1, 0))
+	var ct := CurveTexture.new()
+	ct.curve = curve
+	pm.scale_curve = ct
+	_motes.process_material = pm
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.09, 0.09)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_texture = _soft_tex
+	mat.emission_enabled = true
+	mat.emission = Color(1, 1, 1)
+	mat.emission_energy_multiplier = 1.2
+	quad.material = mat
+	_motes.draw_pass_1 = quad
+	_motes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_motes)
+
+
+# --- Obstacles -------------------------------------------------------------------
+
+func _build_mesh_cache() -> void:
+	for v in 4:
+		_mesh_cache["%s:%d" % [Obstacle.KIND_PILLAR, v]] = WorldMeshes.column(5.5, 0.55, false, 10 + v, 16 if quality > 0 else 12)
+		_mesh_cache["%s:%d" % [Obstacle.KIND_BROKEN_PILLAR, v]] = WorldMeshes.column(2.5, 0.55, true, 20 + v, 16 if quality > 0 else 12)
+		_mesh_cache["%s:%d" % [Obstacle.KIND_ROCKS, v]] = WorldMeshes.rocks(1.25, 1.5, 30 + v)
+		_mesh_cache["%s:%d" % [Obstacle.KIND_MONOLITH, v]] = WorldMeshes.monolith(3.2, 40 + v)
+		_mesh_cache["%s:%d" % [Obstacle.KIND_WALL, v]] = WorldMeshes.wall(1.8, 50 + v)
+	_mesh_cache["%s:0" % Obstacle.KIND_BRAZIER] = WorldMeshes.brazier()
+	_mesh_cache["%s:0" % Obstacle.KIND_FALLEN_COLUMN] = WorldMeshes.fallen_column(60)
+	_mesh_cache["%s:1" % Obstacle.KIND_FALLEN_COLUMN] = WorldMeshes.fallen_column(61)
+
+
+func _mesh_for(ob: Obstacle) -> ArrayMesh:
+	var kind := ob.kind
+	if kind == Obstacle.KIND_RISING:
+		kind = Obstacle.KIND_MONOLITH
+	var key := "%s:%d" % [kind, ob.variant]
+	if not _mesh_cache.has(key):
+		key = "%s:0" % kind
+	return _mesh_cache[key]
+
+
+func _obstacle_scale(ob: Obstacle) -> Vector3:
+	match ob.kind:
+		Obstacle.KIND_PILLAR:
+			return Vector3(1, ob.height / 5.5, 1)
+		Obstacle.KIND_BROKEN_PILLAR:
+			return Vector3(1, ob.height / 2.5, 1)
+		Obstacle.KIND_ROCKS:
+			var k := ob.circles[0].z / 1.25
+			return Vector3(k, ob.height / 1.5, k)
+		Obstacle.KIND_MONOLITH, Obstacle.KIND_RISING:
+			return Vector3(1, ob.height / 3.2, 1)
+		Obstacle.KIND_WALL:
+			return Vector3(1, ob.height / 1.8, 1)
+	return Vector3.ONE
+
+
+func _make_obstacle_node(ob: Obstacle) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Ob%d" % ob.id
+	var ground := INF
+	for c in ob.circles:
+		ground = minf(ground, terrain.height(c.x, c.y))
+	root.position = Vector3(ob.position.x, ground - 0.05, ob.position.y)
+	root.rotation.y = -ob.rotation
+	var mi := MeshInstance3D.new()
+	mi.name = "Mesh"
+	mi.mesh = _mesh_for(ob)
+	mi.material_override = _stone_mat
+	mi.scale = _obstacle_scale(ob)
+	mi.set_instance_shader_parameter("tint_var", MathUtil.hash01(ob.id * 7 + 3))
+	root.add_child(mi)
+	if ob.kind == Obstacle.KIND_BRAZIER:
+		var fire := _make_fire()
+		fire.position = Vector3(0, 1.45, 0)
+		root.add_child(fire)
+	return root
+
+
+func _make_fire() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Fire"
+	var p := GPUParticles3D.new()
+	p.amount = 22
+	p.lifetime = 0.8
+	p.local_coords = false
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	pm.emission_sphere_radius = 0.28
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 12.0
+	pm.initial_velocity_min = 0.6
+	pm.initial_velocity_max = 1.4
+	pm.gravity = Vector3(0, 1.6, 0)
+	pm.scale_min = 0.7
+	pm.scale_max = 1.3
+	var curve := Curve.new()
+	curve.add_point(Vector2(0, 0.6))
+	curve.add_point(Vector2(0.3, 1.0))
+	curve.add_point(Vector2(1, 0.0))
+	var ct := CurveTexture.new()
+	ct.curve = curve
+	pm.scale_curve = ct
+	var g := Gradient.new()
+	g.set_color(0, Color(1.0, 0.85, 0.45, 1.0))
+	g.set_color(1, Color(0.8, 0.12, 0.02, 0.0))
+	g.add_point(0.4, Color(1.0, 0.45, 0.1, 0.9))
+	var gt := GradientTexture1D.new()
+	gt.gradient = g
+	pm.color_ramp = gt
+	p.process_material = pm
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.55, 0.55)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_texture = _soft_tex
+	quad.material = mat
+	p.draw_pass_1 = quad
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(p)
+	var halo := MeshInstance3D.new()
+	halo.mesh = QuadMesh.new()
+	var hm := _glow_mat.duplicate() as ShaderMaterial
+	hm.set_shader_parameter("color", Color(1.0, 0.55, 0.2))
+	hm.set_shader_parameter("intensity", 1.1)
+	halo.material_override = hm
+	halo.scale = Vector3.ONE * 3.2
+	halo.position = Vector3(0, 0.35, 0)
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(halo)
+	var light := OmniLight3D.new()
+	light.name = "Light"
+	light.light_color = Color(1.0, 0.6, 0.3)
+	light.light_energy = 1.6
+	light.omni_range = 6.0
+	light.shadow_enabled = false
+	light.position = Vector3(0, 0.6, 0)
+	light.visible = quality >= 2
+	root.add_child(light)
+	_fires.append(root)
+	return root
+
+
+## Replace the static obstacle instances for a new layout.
+func set_obstacles(list: Array[Obstacle]) -> void:
+	for n in _obstacle_root.get_children():
+		n.queue_free()
+	_obstacle_nodes.clear()
+	_fires.clear()
+	for id in _rising:
+		var e: Dictionary = _rising[id]
+		if is_instance_valid(e["disc"]):
+			e["disc"].queue_free()
+	_rising.clear()
+	for ob in list:
+		var node := _make_obstacle_node(ob)
+		_obstacle_root.add_child(node)
+		_obstacle_nodes[ob.id] = node
+
+
+func on_rise_warning(ob: Obstacle) -> void:
+	var disc := MeshInstance3D.new()
+	disc.name = "RiseWarn%d" % ob.id
+	disc.mesh = MeshKit.draped_disc(terrain, ob.position, ob.bounding_radius() + 1.0, 10, 0.06)
+	disc.position = Vector3(ob.position.x, 0, ob.position.y)
+	var mat := ShaderMaterial.new()
+	mat.shader = RUNE_DISC_SHADER
+	disc.material_override = mat
+	disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_obstacle_root.add_child(disc)
+	_rising[ob.id] = {"ob": ob, "disc": disc, "mat": mat, "node": null, "fade": 1.0}
+
+
+func on_rise_start(ob: Obstacle) -> void:
+	if not _rising.has(ob.id):
+		on_rise_warning(ob)
+	var e: Dictionary = _rising[ob.id]
+	var node := _make_obstacle_node(ob)
+	_obstacle_root.add_child(node)
+	_obstacle_nodes[ob.id] = node
+	e["node"] = node
+
+
+func obstacle_node(id: int) -> Node3D:
+	return _obstacle_nodes.get(id)
+
+
+func update_view(delta: float, head_pos: Vector3, camera_pos: Vector3) -> void:
+	_time += delta
+	_barrier_mat.set_shader_parameter("head_pos", head_pos)
+	_grass_mat.set_shader_parameter("player_pos", head_pos)
+	if _motes:
+		_motes.global_position = Vector3(camera_pos.x, 0.5, camera_pos.z).lerp(Vector3(head_pos.x, 0.5, head_pos.z), 0.6)
+	var done: Array = []
+	for id in _rising:
+		var e: Dictionary = _rising[id]
+		var ob: Obstacle = e["ob"]
+		var mat: ShaderMaterial = e["mat"]
+		if ob.state == Obstacle.State.WARNING:
+			mat.set_shader_parameter("progress", 1.0 - ob.timer / GameConfig.RISE_WARNING_TIME)
+			mat.set_shader_parameter("intensity", 1.6)
+		else:
+			var node: Node3D = e["node"]
+			if node:
+				var mi := node.get_node("Mesh") as MeshInstance3D
+				var sink := (1.0 - ease(ob.rise, 0.4)) * (ob.height + 0.7)
+				var shake := 0.04 * (1.0 - ob.rise) * sin(_time * 70.0)
+				mi.position = Vector3(shake, -sink, shake * 0.6)
+				mi.set_instance_shader_parameter("rune_glow", 0.4 + 2.2 * (1.0 - ob.rise))
+			if ob.state == Obstacle.State.ACTIVE:
+				e["fade"] = float(e["fade"]) - delta * 1.2
+			mat.set_shader_parameter("progress", 1.0)
+			mat.set_shader_parameter("intensity", maxf(float(e["fade"]), 0.0) * 1.6)
+			if float(e["fade"]) <= 0.0:
+				done.append(id)
+	for id in done:
+		var e: Dictionary = _rising[id]
+		(e["disc"] as Node).queue_free()
+		_rising.erase(id)

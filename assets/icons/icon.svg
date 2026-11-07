@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#1f5a46"/>
+      <stop offset="0.55" stop-color="#0d2a22"/>
+      <stop offset="1" stop-color="#06120f"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6fd18c"/>
+      <stop offset="0.5" stop-color="#2f8f58"/>
+      <stop offset="1" stop-color="#14502f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe7a3"/>
+      <stop offset="1" stop-color="#d79a35"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="45%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#ffe680"/>
+      <stop offset="1" stop-color="#e08a10"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="196" fill="none" stroke="url(#gold)" stroke-width="10" opacity="0.85"/>
+  <circle cx="256" cy="256" r="176" fill="none" stroke="#d9a548" stroke-width="2" opacity="0.5"/>
+  <path d="M150 360 C 95 300, 120 205, 205 190 C 285 176, 330 235, 300 285 C 278 322, 222 318, 214 284 C 207 256, 236 240, 256 252"
+        fill="none" stroke="#0a2018" stroke-width="58" stroke-linecap="round" opacity="0.55"/>
+  <path d="M150 360 C 95 300, 120 205, 205 190 C 285 176, 330 235, 300 285 C 278 322, 222 318, 214 284 C 207 256, 236 240, 256 252"
+        fill="none" stroke="url(#body)" stroke-width="46" stroke-linecap="round"/>
+  <path d="M150 360 C 95 300, 120 205, 205 190 C 285 176, 330 235, 300 285"
+        fill="none" stroke="#bff2c8" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 22" opacity="0.7"/>
+  <path d="M150 360 C 170 395, 230 410, 285 400 L 395 352 C 420 340, 418 312, 392 306 L 290 300 C 240 300, 200 320, 180 340 Z"
+        fill="url(#body)" stroke="#0a2018" stroke-width="6"/>
+  <ellipse cx="350" cy="322" rx="17" ry="13" fill="url(#eye)" stroke="#0a2018" stroke-width="4"/>
+  <ellipse cx="351" cy="322" rx="3.5" ry="11" fill="#120a04"/>
+  <path d="M398 336 l 34 10 m -34 -10 l 30 22" stroke="#e2425a" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="300" cy="140" r="16" fill="url(#gold)"/>
+  <circle cx="300" cy="140" r="30" fill="#ffd27a" opacity="0.18"/>
+</svg>

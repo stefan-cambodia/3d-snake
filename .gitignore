@@ -1,0 +1,20 @@
+# Godot
+.godot/
+*.import.tmp
+/android/build/
+
+# Local toolchain (downloaded by tools/setup_godot.sh)
+/tools/godot/
+
+# Build output
+/build/
+
+# Signing material - never commit
+*.keystore
+*.jks
+export_credentials.cfg
+
+# OS / editor
+.DS_Store
+*.swp
+__pycache__/
