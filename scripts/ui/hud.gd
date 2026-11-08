@@ -179,6 +179,34 @@ func pause_center() -> Vector2:
 	return Vector2(r.end.x - 66.0, r.position.y + 62.0)
 
 
+## Clearance from a button's centre that keeps a whole marker (disc 22 px)
+## off the button and its rings (stamina, Surge).
+const MARKER_BOOST_CLEARANCE := BOOST_RADIUS + 23.0 + 24.0
+const MARKER_PAUSE_CLEARANCE := PAUSE_RADIUS + 26.0
+
+
+## Slide an off-screen marker sitting on `area`'s border along that border until
+## it no longer covers the boost or pause button.
+func avoid_buttons(p: Vector2, area: Rect2) -> Vector2:
+	for b in [[boost_center(), MARKER_BOOST_CLEARANCE], [pause_center(), MARKER_PAUSE_CLEARANCE]]:
+		var c: Vector2 = b[0]
+		var r: float = b[1]
+		if p.distance_to(c) >= r:
+			continue
+		var on_side := absf(p.x - area.position.x) < 1.0 or absf(p.x - area.end.x) < 1.0
+		if on_side:
+			var dy := sqrt(maxf(r * r - (p.x - c.x) * (p.x - c.x), 0.0))
+			var up := c.y - dy - 1.0
+			var down := c.y + dy + 1.0
+			p.y = up if up >= area.position.y and (p.y <= c.y or down > area.end.y) else down
+		else:
+			var dx := sqrt(maxf(r * r - (p.y - c.y) * (p.y - c.y), 0.0))
+			var left := c.x - dx - 1.0
+			var right := c.x + dx + 1.0
+			p.x = left if left >= area.position.x and (p.x <= c.x or right > area.end.x) else right
+	return p
+
+
 func configure(p_left_handed: bool, p_scheme: int) -> void:
 	left_handed = p_left_handed
 	scheme = p_scheme
@@ -264,7 +292,8 @@ func update_hud(delta: float, session: GameSession) -> void:
 			if dir.length() < 1.0:
 				dir = Vector2(0, 1)
 			var scale_k := minf(area.size.x * 0.5 / maxf(absf(dir.x), 0.001), area.size.y * 0.5 / maxf(absf(dir.y), 0.001))
-			_markers.append({"pos": c + dir * scale_k, "kind": it.kind, "color": col, "angle": dir.angle(), "life": it.time_left()})
+			var mp := avoid_buttons(c + dir * scale_k, area)
+			_markers.append({"pos": mp, "kind": it.kind, "color": col, "angle": dir.angle(), "life": it.time_left()})
 
 	if _tutorial_t > 0.0:
 		_tutorial_t -= delta

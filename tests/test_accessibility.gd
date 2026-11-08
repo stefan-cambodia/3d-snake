@@ -108,3 +108,31 @@ func test_markers_carry_the_item_kind() -> void:
 	check(seen.has(Collectible.Kind.ENERGY), "crystal behind the camera gets a marker")
 	check(seen.has(Collectible.Kind.RARE), "relic behind the camera gets a marker")
 	dispose_main(main)
+
+
+## Markers never sit on the boost or pause button: one that would is slid along
+## the screen edge, right- or left-handed.
+func test_markers_keep_clear_of_hud_buttons() -> void:
+	var main := make_main()
+	var hud: Hud = main.ui.hud
+	for left_handed in [false, true]:
+		hud.configure(left_handed, 0)
+		var area := hud.safe_rect().grow(-56.0)
+		var y := area.position.y
+		while y <= area.end.y:
+			for x in [area.position.x, area.end.x]:
+				var p := hud.avoid_buttons(Vector2(x, y), area)
+				check(p.distance_to(hud.boost_center()) >= Hud.MARKER_BOOST_CLEARANCE - 0.01, "side marker clear of boost (%s, y=%.0f)" % [left_handed, y])
+				check(p.distance_to(hud.pause_center()) >= Hud.MARKER_PAUSE_CLEARANCE - 0.01, "side marker clear of pause (y=%.0f)" % y)
+				check(area.grow(0.5).has_point(p), "side marker stays on the edge (y=%.0f)" % y)
+			y += 7.0
+		var x2 := area.position.x
+		while x2 <= area.end.x:
+			for yy in [area.position.y, area.end.y]:
+				var q := hud.avoid_buttons(Vector2(x2, yy), area)
+				check(q.distance_to(hud.boost_center()) >= Hud.MARKER_BOOST_CLEARANCE - 0.01, "edge marker clear of boost (x=%.0f)" % x2)
+				check(q.distance_to(hud.pause_center()) >= Hud.MARKER_PAUSE_CLEARANCE - 0.01, "edge marker clear of pause (x=%.0f)" % x2)
+				check(area.grow(0.5).has_point(q), "edge marker stays on the edge (x=%.0f)" % x2)
+			x2 += 9.0
+	hud.configure(false, 0)
+	dispose_main(main)

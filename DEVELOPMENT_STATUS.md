@@ -15,7 +15,7 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **63 tests, 36,015 checks, 0 failures** (about 36 s) |
+| Headless test suite (`tools/run_tests.sh`) | **64 tests, 39,579 checks, 0 failures** (about 36 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
@@ -262,6 +262,9 @@ them (see Known issues).
 - Tests: every sanctuary's island is valid (terraces with two ramps, all reachable over several
   layouts), `regenerate()` equals a new terrain, and switching in the real main scene rebuilds the
   island and the run's walls.
+- **Fixed: off-screen item markers could cover the boost or pause button.** A marker that would is
+  slid along the screen edge around the button (`Hud.avoid_buttons()`), for both handednesses;
+  `test_markers_keep_clear_of_hud_buttons` checks every edge position.
 
 ## Known issues and limitations
 
@@ -290,8 +293,6 @@ them (see Known issues).
 - Audio and haptics were checked through Android's own reports (audio stream started and unmuted,
   vibrations logged as played), not by ear or by hand. Whether the mix sounds right still needs a
   person to listen.
-- An off-screen item marker can be drawn over the boost or pause button when the item is in that
-  direction (seen on the emulator). Both stay readable and the button still works.
 - Launch options such as `--autoplay` cannot be passed to the Android build with
   `adb shell am start --esa command_line_params`: Godot's launcher activity ignores them. Put them in
   the export preset's `command_line/extra_args` instead (as the Showcase preset does).
@@ -312,5 +313,4 @@ them (see Known issues).
 5. Release 1.2.0 (per-sanctuary islands): bump the version, take a `docs/screenshots/v1.2/` series,
    tag it, and install it on the phone.
 6. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
-   HUD text, an option for the danger vignette's colour), and keeping item markers clear of the HUD
-   buttons.
+   HUD text, an option for the danger vignette's colour).

@@ -13,6 +13,10 @@ What changed in each version of the game. Version numbers are the Android app's 
 - Google Play preparation: an App Bundle build (`tools/build_android.sh --aab`), the store listing
   and graphics in `store/`, and a privacy policy (`PRIVACY.md`).
 
+### Fixed
+- Off-screen arrows pointing at a crystal or relic could cover the boost or pause button; they now
+  slide along the screen edge around them.
+
 ## 1.1.0 (2) — 2026-11-08
 
 Screenshots: [docs/screenshots/v1.1](docs/screenshots/v1.1/README.md)
