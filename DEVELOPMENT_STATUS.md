@@ -21,7 +21,8 @@ them (see Known issues).
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
 | Manifest | `com.studio.snake3d`, version 1.0.0 (1), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
-| Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live |
+| Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
+| Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
 
 ## Features
 
@@ -139,7 +140,9 @@ them (see Known issues).
   still sets the value. Toggles now also let a swipe scroll the list and ignore the release at the
   end of a swipe, as the language buttons already did. Lists also wait for 10 px of finger
   movement before scrolling (it was 0), so a slightly shaky tap is still a tap. Checked on the
-  emulator with `adb input`; not yet on the phone.
+  emulator and then on the Galaxy A56: a swipe that starts on the steering-sensitivity slider (set
+  to maximum) scrolls the list and the slider stays at maximum.
+- Checked on the phone: audio output, haptics, and the cold first-launch time (see the table).
 - New tests: `tests/test_accessibility.gd` (4) and `tests/test_ui_touch.gd` (3). The touch tests
   push real input events through the main scene's viewport, and fail on the previous code.
 
@@ -167,8 +170,9 @@ them (see Known issues).
   Vulkan.
 - With no steering, the snake reaches the barrier about 6 s after "GO!". This is intended: the
   first-run tutorial shows how to steer.
-- Audio output and haptics on the phone were not checked in this session: the tests here can't
-  hear sound or feel vibration.
+- Audio and haptics were checked through Android's own reports (audio stream started and unmuted,
+  vibrations logged as played), not by ear or by hand. Whether the mix sounds right still needs a
+  person to listen.
 - An off-screen item marker can be drawn over the boost or pause button when the item is in that
   direction (seen on the emulator). Both stay readable and the button still works.
 - Launch options such as `--autoplay` cannot be passed to the Android build with
@@ -182,8 +186,8 @@ them (see Known issues).
 2. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
    Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
    runs the default (medium) at 60 fps, so it could probably default to high.
-3. Check audio and haptics on a phone, time a cold first launch after a fresh install, and check
-   the new settings gestures (swiping from sliders and toggles) and *Reduced motion* on the phone.
+3. Listen to the audio mix and feel the haptics on a phone (Android reports both working), and try
+   *Reduced motion* during a real run on the phone (only the automated tests cover it in play).
 4. For a Play Store release: switch to a Gradle build to produce an AAB, decide whether the Vulkan
    features should be marked optional, add store assets and a privacy policy (the game collects no
    data), and use a long-lived upload key.
