@@ -15,7 +15,6 @@ extends Node
 
 enum State { MENU, INTRO, PLAYING, PAUSED, DYING, GAME_OVER }
 
-const WORLD_SEED := 20241107
 
 var state: int = State.MENU
 var terrain: TerrainField
@@ -61,7 +60,8 @@ func _ready() -> void:
 	if _args.has("quality"):
 		_quality = clampi(int(_args["quality"]), 0, 2)
 
-	terrain = TerrainField.new(WORLD_SEED)
+	# Each sanctuary has its own island.
+	terrain = TerrainField.new(WorldThemes.terrain_seed(Profile.selected_theme))
 	session = GameSession.new(terrain)
 
 	world = WorldView.new()
@@ -111,7 +111,7 @@ func _ready() -> void:
 	ui.quit_to_menu_requested.connect(go_to_menu)
 	ui.quit_game_requested.connect(quit_game)
 	ui.skin_previewed.connect(func(id: String) -> void: snake_view.apply_skin(SkinCatalog.get_skin(id)))
-	ui.theme_selected.connect(func(id: String) -> void: world.apply_theme(WorldThemes.get_theme(id)))
+	ui.theme_selected.connect(_on_theme_selected)
 	ui.screen_changed.connect(_on_screen_changed)
 
 	Profile.setting_changed.connect(_on_setting_changed)
@@ -277,6 +277,30 @@ func _on_pause_requested() -> void:
 	if state == State.PLAYING or state == State.INTRO:
 		AudioManager.ui_click()
 		pause_game()
+
+
+## Another sanctuary: its own light, and its own island. The island is rebuilt
+## behind a short fade (about a second on a phone), and the menu's background
+## run restarts on it.
+func _on_theme_selected(id: String) -> void:
+	var th := WorldThemes.get_theme(id)
+	var island := int(th["terrain_seed"])
+	if island == terrain.seed_value or state != State.MENU:
+		world.apply_theme(th)
+		return
+	ui.fade_through(func() -> void: _switch_island(island, th))
+
+
+func _switch_island(island: int, th: Dictionary) -> void:
+	var t0 := Time.get_ticks_msec()
+	terrain.regenerate(island)
+	world.apply_theme(th)
+	world.rebuild_island()
+	_start_attract()
+	print("[world] island %d (%s) ready in %d ms" % [island, th["id"], Time.get_ticks_msec() - t0])
+	# _start_attract() puts the camera in the menu orbit; keep the skins close-up.
+	if ui.top() == ui.skins:
+		camera.set_mode(ChaseCamera.Mode.SHOWCASE)
 
 
 func _on_screen_changed(screen: String) -> void:

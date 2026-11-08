@@ -50,6 +50,9 @@ var _grass_chunks: Array[MultiMeshInstance3D] = []
 var _grass_mesh: ArrayMesh
 var _soft_tex: GradientTexture2D
 
+## Everything built from the terrain (ground, water, shore, vegetation, ring,
+## landmarks): rebuilt as a whole when the sanctuary, and so the island, changes.
+var _terrain_root: Node3D
 var _obstacle_root: Node3D
 var _obstacle_nodes: Dictionary = {}
 var _rising: Dictionary = {}
@@ -73,17 +76,42 @@ func build(p_terrain: TerrainField, p_theme: Dictionary, p_quality: int) -> void
 	_soft_tex = _make_soft_texture()
 	_make_materials()
 	_build_environment()
+	_build_island()
+	_build_motes()
+	_obstacle_root = Node3D.new()
+	_obstacle_root.name = "Obstacles"
+	add_child(_obstacle_root)
+	_build_mesh_cache()
+	apply_theme(theme)
+	set_quality(quality)
+
+
+## The island's ground, water, shore, vegetation, ring and landmarks, under one
+## node. Seeded from the terrain only, so an island looks the same whether the
+## game starts on it or switches to it.
+func _build_island() -> void:
+	_rng.seed = terrain.seed_value * 31 + 5
+	_terrain_root = Node3D.new()
+	_terrain_root.name = "Island"
+	add_child(_terrain_root)
 	_build_terrain()
 	_build_water()
 	_build_backdrop()
 	_build_arena_ring()
 	_build_vegetation()
 	_build_landmarks()
-	_build_motes()
-	_obstacle_root = Node3D.new()
-	_obstacle_root.name = "Obstacles"
-	add_child(_obstacle_root)
-	_build_mesh_cache()
+
+
+## Rebuild the island after the terrain was regenerated (another sanctuary).
+## Lights, sky and materials stay; obstacles are replaced by the next layout.
+func rebuild_island() -> void:
+	if _terrain_root:
+		remove_child(_terrain_root)
+		_terrain_root.free()
+	_grass_chunks.clear()
+	_lantern_glow = null
+	_night_lanterns = null
+	_build_island()
 	apply_theme(theme)
 	set_quality(quality)
 
@@ -287,7 +315,7 @@ func _build_terrain() -> void:
 		mi.material_override = _terrain_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.name = "Terrain"
-		add_child(mi)
+		_terrain_root.add_child(mi)
 	_build_wall_shadows()
 
 
@@ -517,7 +545,7 @@ func _build_wall_shadows() -> void:
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mi.material_override = mat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-	add_child(mi)
+	_terrain_root.add_child(mi)
 
 
 func _build_water() -> void:
@@ -536,7 +564,7 @@ func _build_water() -> void:
 	water.position.y = GameConfig.WATER_LEVEL
 	water.material_override = _water_mat
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(water)
+	_terrain_root.add_child(water)
 
 
 func _build_backdrop() -> void:
@@ -548,7 +576,7 @@ func _build_backdrop() -> void:
 	mat.roughness = 1.0
 	m.material_override = mat
 	m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(m)
+	_terrain_root.add_child(m)
 
 
 # --- Arena ring -----------------------------------------------------------------
@@ -560,7 +588,7 @@ func _build_arena_ring() -> void:
 	b.mesh = curtain
 	b.material_override = _barrier_mat
 	b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(b)
+	_terrain_root.add_child(b)
 	# Lantern posts.
 	var count := 30
 	var mm := MultiMesh.new()
@@ -592,7 +620,7 @@ func _build_arena_ring() -> void:
 	var posts := MultiMeshInstance3D.new()
 	posts.multimesh = mm
 	posts.material_override = _stone_mat
-	add_child(posts)
+	_terrain_root.add_child(posts)
 	_lantern_glow = MultiMeshInstance3D.new()
 	_lantern_glow.multimesh = glow
 	var gm := _glow_mat.duplicate() as ShaderMaterial
@@ -600,7 +628,7 @@ func _build_arena_ring() -> void:
 	gm.set_shader_parameter("intensity", 1.3)
 	_lantern_glow.material_override = gm
 	_lantern_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_lantern_glow)
+	_terrain_root.add_child(_lantern_glow)
 	var flames := MultiMeshInstance3D.new()
 	flames.multimesh = flame
 	var fmat := StandardMaterial3D.new()
@@ -611,7 +639,7 @@ func _build_arena_ring() -> void:
 	fmat.emission_energy_multiplier = 3.0
 	flames.material_override = fmat
 	flames.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(flames)
+	_terrain_root.add_child(flames)
 
 
 # --- Vegetation -----------------------------------------------------------------
@@ -656,7 +684,7 @@ func _build_vegetation() -> void:
 		mi.name = "Trees%d" % k
 		mi.multimesh = mm
 		mi.material_override = _foliage_mat
-		add_child(mi)
+		_terrain_root.add_child(mi)
 
 	# Lily pads on shallow water.
 	var pads := MultiMesh.new()
@@ -689,7 +717,7 @@ func _build_vegetation() -> void:
 	pm.roughness = 0.45
 	pad_mi.material_override = pm
 	pad_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(pad_mi)
+	_terrain_root.add_child(pad_mi)
 
 	# Grass clumps, chunked so the camera frustum culls most of them.
 	_grass_mesh = WorldMeshes.grass_clump(7, 3)
@@ -703,7 +731,7 @@ func _build_vegetation() -> void:
 		mi.material_override = _grass_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.visibility_range_end = 60.0
-		add_child(mi)
+		_terrain_root.add_child(mi)
 		_grass_chunks.append(mi)
 
 
@@ -767,14 +795,14 @@ func _build_landmarks() -> void:
 	gate.mesh = WorldMeshes.temple_gate()
 	gate.material_override = _stone_mat
 	gate.position = Vector3(0, terrain.height(0, -64), -64)
-	add_child(gate)
+	_terrain_root.add_child(gate)
 	var statue := MeshInstance3D.new()
 	statue.name = "SerpentStatue"
 	statue.mesh = WorldMeshes.serpent_statue()
 	statue.material_override = _stone_mat
 	statue.position = Vector3(74, terrain.height(74, 10) - 0.2, 10)
 	statue.rotation.y = 2.4
-	add_child(statue)
+	_terrain_root.add_child(statue)
 	# Glowing eyes on the statue: a pair of halos high on the head.
 	var halo := QuadMesh.new()
 	var eyes := MeshInstance3D.new()
@@ -801,12 +829,12 @@ func _build_landmarks() -> void:
 		mi.position = Vector3(p.x, h - 0.05, p.y)
 		mi.rotation.y = _rng.randf() * TAU
 		_rng.randf() # keeps the placement sequence of later decorations unchanged
-		add_child(mi)
+		_terrain_root.add_child(mi)
 
 	# Floating lanterns on the lake (night theme only).
 	_night_lanterns = Node3D.new()
 	_night_lanterns.name = "LakeLanterns"
-	add_child(_night_lanterns)
+	_terrain_root.add_child(_night_lanterns)
 	var lm := MultiMesh.new()
 	lm.transform_format = MultiMesh.TRANSFORM_3D
 	var box := BoxMesh.new()

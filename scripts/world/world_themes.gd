@@ -1,12 +1,12 @@
 class_name WorldThemes
 extends RefCounted
-## Lighting / atmosphere presets for the sanctuary island. A theme only changes
-## parameters, so new themes (or new biomes built on the same generator) can be
-## added without touching gameplay code.
+## The three sanctuaries: each has its own island (`terrain_seed`: a different
+## relief, terraces and shore) and its own light and atmosphere. A theme is only
+## parameters, so new ones can be added without touching gameplay code.
 
 const THEMES: Array[Dictionary] = [
 	{
-		"id": "dawn", "name": "THEME_DAWN", "unlock": {},
+		"id": "dawn", "name": "THEME_DAWN", "unlock": {}, "terrain_seed": 20241107,
 		"sky_top": Color(0.20, 0.42, 0.72), "sky_horizon": Color(0.98, 0.72, 0.48), "sky_ground": Color(0.18, 0.2, 0.22),
 		"sun_color": Color(1.0, 0.82, 0.6), "sun_energy": 1.55, "sun_pitch": -24.0, "sun_yaw": 205.0,
 		"ambient_energy": 0.55, "fog_color": Color(0.84, 0.70, 0.58), "fog_density": 0.0045,
@@ -16,7 +16,7 @@ const THEMES: Array[Dictionary] = [
 		"exposure": 1.0,
 	},
 	{
-		"id": "moon", "name": "THEME_MOON", "unlock": {"stat": "best_score", "value": 600},
+		"id": "moon", "name": "THEME_MOON", "unlock": {"stat": "best_score", "value": 600}, "terrain_seed": 20241110,
 		"sky_top": Color(0.015, 0.03, 0.08), "sky_horizon": Color(0.10, 0.17, 0.30), "sky_ground": Color(0.02, 0.03, 0.05),
 		"sun_color": Color(0.62, 0.74, 1.0), "sun_energy": 0.55, "sun_pitch": -38.0, "sun_yaw": 140.0,
 		"ambient_energy": 0.42, "fog_color": Color(0.06, 0.10, 0.18), "fog_density": 0.0065,
@@ -26,7 +26,7 @@ const THEMES: Array[Dictionary] = [
 		"exposure": 1.15,
 	},
 	{
-		"id": "mist", "name": "THEME_MIST", "unlock": {"stat": "best_stage", "value": 6},
+		"id": "mist", "name": "THEME_MIST", "unlock": {"stat": "best_stage", "value": 6}, "terrain_seed": 20241112,
 		"sky_top": Color(0.48, 0.60, 0.66), "sky_horizon": Color(0.82, 0.86, 0.84), "sky_ground": Color(0.3, 0.33, 0.33),
 		"sun_color": Color(0.95, 0.96, 0.9), "sun_energy": 1.1, "sun_pitch": -50.0, "sun_yaw": 160.0,
 		"ambient_energy": 0.75, "fog_color": Color(0.76, 0.82, 0.80), "fog_density": 0.012,
@@ -36,6 +36,11 @@ const THEMES: Array[Dictionary] = [
 		"exposure": 0.95,
 	},
 ]
+
+
+## Seed of the island a sanctuary stands on.
+static func terrain_seed(id: String) -> int:
+	return int(get_theme(id)["terrain_seed"])
 
 
 static func get_theme(id: String) -> Dictionary:

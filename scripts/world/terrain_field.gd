@@ -86,7 +86,16 @@ var _cliffs: Array[Obstacle] = []
 
 
 func _init(p_seed: int = 1) -> void:
+	regenerate(p_seed)
+
+
+## Rebuild everything from another seed, in place (objects holding this terrain
+## keep a valid reference). Same result as TerrainField.new(p_seed).
+func regenerate(p_seed: int) -> void:
 	seed_value = p_seed
+	terraces.clear()
+	hills.clear()
+	_cliffs = []
 	_noise.seed = p_seed
 	_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	_noise.frequency = 0.045

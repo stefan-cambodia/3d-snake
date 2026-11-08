@@ -93,3 +93,27 @@ func test_safe_area_insets_keep_hud_and_touch_aligned() -> void:
 	main.resume()
 	ui.set_safe_insets(Vector4.ZERO)
 	dispose_main(main)
+
+
+## Choosing another sanctuary moves the game to that sanctuary's island: the
+## terrain, the 3D island and the menu's background run all change together.
+func test_switching_sanctuary_rebuilds_the_island() -> void:
+	var main := make_main()
+	var dawn := WorldThemes.terrain_seed("dawn")
+	check_eq(main.terrain.seed_value, dawn, "starts on the Golden Dawn island")
+	var old_island: Node = main.world._terrain_root
+	main.ui.push(main.ui.skins)
+	main._switch_island(WorldThemes.terrain_seed("moon"), WorldThemes.get_theme("moon"))
+	check_eq(main.terrain.seed_value, WorldThemes.terrain_seed("moon"), "terrain regenerated in place")
+	check(main.session.terrain == main.terrain and main.camera.terrain == main.terrain, "everyone still shares the one terrain")
+	check(not is_instance_valid(old_island), "the old island's nodes are gone")
+	check(main.world._terrain_root != null and main.world._terrain_root.get_child_count() > 5, "a new island was built")
+	var walls := 0
+	for ob in main.session.obstacles:
+		if ob.kind == Obstacle.KIND_CLIFF:
+			walls += 1
+			check(main.terrain.cliff_obstacles().has(ob), "the run's walls are the new island's walls")
+	check_eq(walls, main.terrain.terraces.size(), "one wall per terrace of the new island")
+	check_eq(main.state, main.State.MENU, "still in the menu")
+	check_eq(main.camera.mode, ChaseCamera.Mode.SHOWCASE, "the skins close-up is kept")
+	dispose_main(main)

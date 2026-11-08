@@ -4,6 +4,15 @@ What changed in each version of the game. Version numbers are the Android app's 
 (the `versionCode` is in brackets). Screenshots of every version are kept in
 [docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`).
 
+## Unreleased (next: 1.2.0)
+
+### Added
+- **Each sanctuary has its own island**: Golden Dawn keeps the 1.1.0 island, Moonlit Shrine and
+  Misty Morning get islands of their own (other terraces, hills and shore). Choosing a sanctuary
+  rebuilds the island behind a short fade (0.43 s on a Galaxy A56).
+- Google Play preparation: an App Bundle build (`tools/build_android.sh --aab`), the store listing
+  and graphics in `store/`, and a privacy policy (`PRIVACY.md`).
+
 ## 1.1.0 (2) — 2026-11-08
 
 Screenshots: [docs/screenshots/v1.1](docs/screenshots/v1.1/README.md)

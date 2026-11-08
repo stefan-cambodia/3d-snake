@@ -179,3 +179,36 @@ func test_items_reach_terrace_tops() -> void:
 			on_top += 1
 		check(s.terrain.slope(p.x, p.y) < TerrainField.CLIMB_LIMIT, "item not on a wall")
 	check(on_top > 4, "some food appears on terrace tops (%d of 400)" % on_top)
+
+
+## Each sanctuary stands on its own island, and every one of them is playable.
+func test_each_sanctuary_has_its_own_valid_island() -> void:
+	var seeds := []
+	for th in WorldThemes.THEMES:
+		var sd := WorldThemes.terrain_seed(th["id"])
+		check(not seeds.has(sd), "%s has its own island" % th["id"])
+		seeds.append(sd)
+		var t := TerrainField.new(sd)
+		check(t.terraces.size() >= 2, "%s: terraces (%d)" % [th["id"], t.terraces.size()])
+		for ter in t.terraces:
+			check_eq(ter.ramps.size(), 2, "%s: two ramps per terrace" % th["id"])
+		for layout in [1, 2, 3]:
+			var obs := WorldGenerator.generate(layout, t)
+			check_near(WorldGenerator.reachable_fraction(obs, 0.6), 1.0, 0.0001, "%s layout %d: whole island reachable" % [th["id"], layout])
+
+
+## Regenerating a terrain in place gives exactly the island a new one would.
+func test_regenerate_matches_a_new_terrain() -> void:
+	var a := TerrainField.new(20241107)
+	a.regenerate(20241112)
+	var b := TerrainField.new(20241112)
+	check_eq(a.seed_value, 20241112, "seed updated")
+	check_eq(a.terraces.size(), b.terraces.size(), "same terraces")
+	check_eq(a.hills.size(), b.hills.size(), "same hills")
+	check_eq(a.cliff_obstacles().size(), b.cliff_obstacles().size(), "same walls")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	for i in 200:
+		var x := rng.randf_range(-60, 60)
+		var z := rng.randf_range(-60, 60)
+		check_eq(a.height(x, z), b.height(x, z), "same height at (%.1f, %.1f)" % [x, z])

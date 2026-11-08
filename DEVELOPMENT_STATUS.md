@@ -15,7 +15,7 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **60 tests, 35,649 checks, 0 failures** (about 30 s) |
+| Headless test suite (`tools/run_tests.sh`) | **63 tests, 36,015 checks, 0 failures** (about 36 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
@@ -248,6 +248,21 @@ them (see Known issues).
 - **Privacy policy** in `PRIVACY.md` (English and French), public on GitHub: no data collected, no
   Internet access, saves stay on the device.
 
+## Changes: an island per sanctuary (2026-11-08, unreleased)
+
+- Each theme in `WorldThemes` has a `terrain_seed`: Golden Dawn 20241107 (the 1.1.0 island),
+  Moonlit Shrine 20241110, Misty Morning 20241112 (chosen for three terraces each and different
+  layouts; all checked by the tests).
+- `TerrainField.regenerate(seed)` rebuilds a terrain in place, so the session, snake, camera and
+  views keep their reference. `WorldView` keeps everything built from the terrain under one
+  `Island` node and `rebuild_island()` replaces just that (sky, lights, materials stay).
+- Choosing a sanctuary in *Skins & Sanctuaries* fades out, regenerates the terrain, rebuilds the
+  island, restarts the menu's background run on it and fades back, keeping the skins close-up.
+  Measured on the Galaxy A56 (Showcase build): 425–431 ms; on the PC about 0.5 s.
+- Tests: every sanctuary's island is valid (terraces with two ramps, all reachable over several
+  layouts), `regenerate()` equals a new terrain, and switching in the real main scene rebuilds the
+  island and the run's walls.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -294,9 +309,8 @@ them (see Known issues).
 4. For a Play Store release (prepared, see [store/README.md](store/README.md)): create the Play
    Console app, fill in the listing, upload `build/android/snake3d.aab` to internal testing and test
    it on a phone, back up `signing/`, and have a native speaker check the Khmer listing text.
-5. Give each sanctuary (theme) its own relief layout. Today the three sanctuaries share one island
-   (seed 20241107) and only change light, sky and colours. Switching would rebuild the terrain
-   mesh (about 0.3 s on the PC).
+5. Release 1.2.0 (per-sanctuary islands): bump the version, take a `docs/screenshots/v1.2/` series,
+   tag it, and install it on the phone.
 6. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
    HUD text, an option for the danger vignette's colour), and keeping item markers clear of the HUD
    buttons.

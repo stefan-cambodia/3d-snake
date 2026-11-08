@@ -69,7 +69,8 @@ obstacle without touching it gives a *Close Call* bonus. Every 6 fruits moves yo
 (14 in total): the snake gets faster and more monoliths rise. Score, length and stage
 milestones unlock 7 more serpent skins and 2 more sanctuary themes.
 
-**Relief:** the snake follows the ground over hills and up ramps. Any ground steeper than about 39°
+**Relief:** each sanctuary is an island of its own (Golden Dawn, Moonlit Shrine and Misty Morning
+have different terraces, hills and shores). The snake follows the ground over hills and up ramps. Any ground steeper than about 39°
 (the stone walls of the terraces) is a wall and ends the run like a pillar does. Each terrace has
 one or two ramps, and food and relics also appear on the terrace tops.
 
@@ -118,7 +119,7 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-60 tests cover snake movement and steering, the relief (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
+63 tests cover snake movement and steering, the relief and each sanctuary's island (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
 autopilot run, the real main scene's state machine, camera, and HUD/touch layout around display
