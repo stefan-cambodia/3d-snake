@@ -1,6 +1,6 @@
 # Development status
 
-_Last updated: 2026-11-07_
+_Last updated: 2026-11-08_
 
 ## Summary
 
@@ -15,7 +15,7 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **47 tests, 27,797 checks, 0 failures** (about 19 s) |
+| Headless test suite (`tools/run_tests.sh`) | **54 tests, 27,948 checks, 0 failures** (about 18 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
@@ -54,6 +54,8 @@ them (see Known issues).
   new-best and unlock announcements.
 - 3 steering schemes (drag, tap sides, joystick), sensitivity, left-handed layout, camera distance
   and smoothing, volumes, FPS counter.
+- Accessibility: a *Reduced motion* option (no camera shake, banking, FOV zoom or speed lines), and
+  off-screen item arrows that differ in shape as well as colour.
 - **14 languages**: English, French, Khmer, Thai, Spanish, Portuguese (Brazil), German, Italian,
   Turkish, Indonesian, Russian, Japanese, Korean, Simplified Chinese. All text lives in
   `assets/i18n/strings.csv`; the phone's language is picked on first launch and can be changed live
@@ -121,6 +123,26 @@ them (see Known issues).
   (`tools/build_android.sh --showcase`): a separate package with a demo profile and autopilot-driven
   runs, for future screenshot or demo sessions.
 
+## Changes: accessibility and settings touch fixes (2026-11-08)
+
+- **Reduced motion** (*Settings → Accessibility*, off by default, saved in the profile): the chase
+  camera ignores shake, stays level in turns and keeps a fixed field of view on boost and Surge, and
+  the HUD draws no speed lines. Translated into all 14 languages; the Khmer row was checked on the
+  emulator (subscript consonants render correctly).
+- **Off-screen markers do not rely on colour alone:** the Surge crystal marker is a diamond and the
+  relic marker a ring, matching the 3D items. Cyan and violet are hard to tell apart with some kinds
+  of colour blindness. Checked on the emulator during an autopilot run.
+- **Fixed: swiping the Settings list from a slider changed the slider.** Godot's slider jumps to
+  wherever a finger lands, so a vertical swipe starting on, say, *Steering sensitivity* set it to a
+  new value (1.0 became 1.8 in the test) and the list did not scroll. `ScrollSafeSlider` reads the
+  gesture first: a horizontal drag moves the slider, a vertical one scrolls the list, and a tap
+  still sets the value. Toggles now also let a swipe scroll the list and ignore the release at the
+  end of a swipe, as the language buttons already did. Lists also wait for 10 px of finger
+  movement before scrolling (it was 0), so a slightly shaky tap is still a tap. Checked on the
+  emulator with `adb input`; not yet on the phone.
+- New tests: `tests/test_accessibility.gd` (4) and `tests/test_ui_touch.gd` (3). The touch tests
+  push real input events through the main scene's viewport, and fail on the previous code.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -147,16 +169,24 @@ them (see Known issues).
   first-run tutorial shows how to steer.
 - Audio output and haptics on the phone were not checked in this session: the tests here can't
   hear sound or feel vibration.
+- An off-screen item marker can be drawn over the boost or pause button when the item is in that
+  direction (seen on the emulator). Both stay readable and the button still works.
+- Launch options such as `--autoplay` cannot be passed to the Android build with
+  `adb shell am start --esa command_line_params`: Godot's launcher activity ignores them. Put them in
+  the export preset's `command_line/extra_args` instead (as the Showcase preset does).
 
 ## Remaining work
 
-1. **Have native speakers review the translations**, Khmer first.
+1. **Have native speakers review the translations**, Khmer first (including the new accessibility
+   strings).
 2. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
    Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
    runs the default (medium) at 60 fps, so it could probably default to high.
-3. Check audio and haptics on a phone, and time a cold first launch after a fresh install.
+3. Check audio and haptics on a phone, time a cold first launch after a fresh install, and check
+   the new settings gestures (swiping from sliders and toggles) and *Reduced motion* on the phone.
 4. For a Play Store release: switch to a Gradle build to produce an AAB, decide whether the Vulkan
    features should be marked optional, add store assets and a privacy policy (the game collects no
    data), and use a long-lived upload key.
-5. Optional: more languages, more sanctuary themes and skins, and accessibility options
-   (colour-blind-safe item colours, reduced camera motion).
+5. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
+   HUD text, an option for the danger vignette's colour), and keeping item markers clear of the HUD
+   buttons.

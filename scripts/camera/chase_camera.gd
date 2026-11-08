@@ -16,6 +16,9 @@ var terrain: TerrainField
 ## Player settings.
 var smoothing: float = 1.0 # 0.5 (snappy) .. 1.5 (smooth)
 var distance_pref: int = 1
+## Accessibility: no shake, no banking and a fixed field of view (no zoom kicks
+## on boost or Surge), for players prone to motion sickness.
+var reduced_motion: bool = false
 
 var _yaw: float = 0.0
 var _pos: Vector3 = Vector3(0, 10, -20)
@@ -67,6 +70,8 @@ func snap_to_chase() -> void:
 
 
 func add_trauma(amount: float) -> void:
+	if reduced_motion:
+		return
 	_trauma = clampf(_trauma + amount, 0.0, 1.0)
 
 
@@ -148,8 +153,9 @@ func _process(delta: float) -> void:
 			pos_tau = 0.045 * smoothing
 			look_tau = 0.035 * smoothing
 			var speed_k := clampf((sim.speed - sim.cruise_speed) / 6.0, 0.0, 1.0)
-			target_fov = BASE_FOV + speed_k * 9.0 + (4.0 if sim.is_surging() else 0.0)
-			roll_target = clampf(sim.yaw_rate * 0.025, -0.06, 0.06)
+			if not reduced_motion:
+				target_fov = BASE_FOV + speed_k * 9.0 + (4.0 if sim.is_surging() else 0.0)
+				roll_target = clampf(sim.yaw_rate * 0.025, -0.06, 0.06)
 			if mode == Mode.INTRO:
 				var k := MathUtil.smooth01(0.0, GameConfig.INTRO_DURATION, _mode_time)
 				target_pos = _from_pos.lerp(target_pos, k)
@@ -200,7 +206,7 @@ func _process(delta: float) -> void:
 	# Trauma-based shake (squared for a nice falloff).
 	_trauma = maxf(_trauma - delta * 1.4, 0.0)
 	_shake_t += delta
-	var sh := _trauma * _trauma
+	var sh := 0.0 if reduced_motion else _trauma * _trauma
 	var shake := Vector3(_noise.get_noise_2d(_shake_t * 60.0, 0.0), _noise.get_noise_2d(0.0, _shake_t * 60.0), 0.0) * sh * 0.35
 
 	global_position = _pos + shake

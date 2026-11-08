@@ -56,6 +56,11 @@ camera distance and smoothing, graphics quality, haptics, volumes, FPS counter a
 (any of the 14). The main menu's **Quit** button saves and closes the game (Android *Back* on the
 main menu does the same).
 
+**Accessibility:** *Settings → Accessibility → Reduced motion* turns off camera shake, banking in
+turns, the field-of-view zoom on boost and Surge, and the speed lines, for players prone to motion
+sickness. The arrows at the screen edge that point to off-screen items also differ in shape (a
+diamond for a Surge crystal, a ring for a relic), so they don't rely on telling cyan from violet.
+
 **Scoring:** sunfruit 10 points, Surge crystal 25 (plus double points and extra speed for 5 s),
 violet relic 150. Pickups within 3.2 s of each other build a combo multiplier up to ×3. Grazing an
 obstacle without touching it gives a *Close Call* bonus. Every 6 fruits moves you up a stage
@@ -103,12 +108,14 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-47 tests cover snake movement and steering, the spine (body path) maths, collisions, scoring and
+54 tests cover snake movement and steering, the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
 autopilot run, the real main scene's state machine, camera, and HUD/touch layout around display
-cut-outs, and the translations (every key in every language, matching `%d`/`%s` placeholders,
-fonts covering every character, and every screen fitting on a phone in every language).
+cut-outs, the translations (every key in every language, matching `%d`/`%s` placeholders,
+fonts covering every character, and every screen fitting on a phone in every language), the
+*Reduced motion* option, and touch gestures in the settings list (swiping from a slider or a toggle
+scrolls the list without changing it).
 
 ## Build the Android APK
 

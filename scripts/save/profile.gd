@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS := {
 	"haptics": true,
 	"language": "",
 	"show_fps": false,
+	"reduced_motion": false,
 }
 
 const DEFAULT_STATS := {

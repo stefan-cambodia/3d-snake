@@ -146,6 +146,9 @@ func _on_setting_changed(key: String, value: Variant) -> void:
 			camera.distance_pref = int(value)
 		"camera_smoothing":
 			camera.smoothing = float(value)
+		"reduced_motion":
+			camera.reduced_motion = bool(value)
+			ui.hud.reduced_motion = bool(value)
 		"show_fps":
 			ui.set_fps_visible(bool(value))
 

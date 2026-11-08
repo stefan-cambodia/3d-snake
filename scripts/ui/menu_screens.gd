@@ -2,6 +2,9 @@ class_name MenuScreens
 extends RefCounted
 ## Factory for the menu screens (keeps each screen compact and consistent).
 
+## Finger travel (UI px) before a touch drag scrolls a list.
+const SCROLL_DEADZONE := 10
+
 
 ## Options are translation keys (re-translated automatically on language change).
 static func segmented(options: Array, selected: int, on_select: Callable) -> HBoxContainer:
@@ -74,7 +77,7 @@ static func setting_row(label_key: String, control: Control) -> HBoxContainer:
 
 
 static func slider(value: float, min_v: float, max_v: float, step: float, on_change: Callable) -> HSlider:
-	var s := HSlider.new()
+	var s := ScrollSafeSlider.new()
 	s.min_value = min_v
 	s.max_value = max_v
 	s.step = step
@@ -90,7 +93,11 @@ static func toggle(on: bool, on_change: Callable) -> CheckButton:
 	c.button_pressed = on
 	c.focus_mode = Control.FOCUS_NONE
 	c.custom_minimum_size = Vector2(0, 52)
+	scroll_friendly(c)
 	c.toggled.connect(func(v: bool) -> void:
+		if is_scrolling(c):
+			c.set_pressed_no_signal(not v) # the end of a swipe, not a tap
+			return
 		AudioManager.play("ui_toggle", -6.0)
 		on_change.call(v))
 	return c
@@ -124,6 +131,9 @@ static func is_scrolling(c: Control) -> bool:
 static func scroll_body(vb: VBoxContainer, max_height: float) -> VBoxContainer:
 	var sc := ScrollContainer.new()
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# Without a dead zone the list starts scrolling on the first pixel of finger
+	# movement, which then cancels taps and blocks horizontal slider drags.
+	sc.scroll_deadzone = SCROLL_DEADZONE
 	sc.scroll_started.connect(func() -> void: sc.set_meta("dragging", true))
 	sc.scroll_ended.connect(func() -> void: sc.set_meta("dragging", false))
 	sc.custom_minimum_size = Vector2(0, max_height)

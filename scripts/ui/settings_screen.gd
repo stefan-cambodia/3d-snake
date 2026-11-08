@@ -49,6 +49,12 @@ func _build() -> void:
 	b.add_child(MenuScreens.setting_row("SET_CAM_DISTANCE", MenuScreens.segmented(["CAM_NEAR", "CAM_NORMAL", "CAM_FAR"], int(Profile.get_setting("camera_distance")), func(i: int) -> void: Profile.set_setting("camera_distance", i))))
 	b.add_child(MenuScreens.setting_row("SET_CAM_SMOOTH", MenuScreens.slider(Profile.get_setting("camera_smoothing"), 0.5, 1.5, 0.05, func(v: float) -> void: Profile.set_setting("camera_smoothing", v))))
 
+	b.add_child(MenuScreens.section("SET_ACCESS"))
+	b.add_child(MenuScreens.setting_row("SET_REDUCED_MOTION", MenuScreens.toggle(Profile.get_setting("reduced_motion"), func(v: bool) -> void: Profile.set_setting("reduced_motion", v))))
+	var motion_hint := UiTheme.label("SET_REDUCED_MOTION_HINT", 18, "light", UiTheme.MUTED)
+	motion_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b.add_child(motion_hint)
+
 	b.add_child(MenuScreens.section("SET_GRAPHICS"))
 	b.add_child(MenuScreens.setting_row("SET_QUALITY", MenuScreens.segmented(["Q_LOW", "Q_MEDIUM", "Q_HIGH"], int(Profile.get_setting("quality")), func(i: int) -> void: Profile.set_setting("quality", i))))
 	b.add_child(MenuScreens.setting_row("SET_FPS", MenuScreens.toggle(Profile.get_setting("show_fps"), func(v: bool) -> void: Profile.set_setting("show_fps", v))))
@@ -66,6 +72,7 @@ func _build() -> void:
 	b.add_child(MenuScreens.section("SET_DATA"))
 	_confirm_reset = make_button("SET_RESET", false, 360)
 	_confirm_reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	MenuScreens.scroll_friendly(_confirm_reset)
 	_confirm_reset.pressed.connect(_on_reset)
 	b.add_child(_confirm_reset)
 
@@ -74,6 +81,8 @@ var _reset_armed := false
 
 
 func _on_reset() -> void:
+	if MenuScreens.is_scrolling(_confirm_reset):
+		return
 	if not _reset_armed:
 		_reset_armed = true
 		_confirm_reset.text = "SET_RESET_CONFIRM"

@@ -15,6 +15,8 @@ var touch: TouchController
 var camera: Camera3D
 var left_handed: bool = false
 var scheme: int = 0
+## Accessibility: no speed lines (the camera handles the rest of reduced motion).
+var reduced_motion: bool = false
 
 var _score_label: Label
 var _best_label: Label
@@ -39,7 +41,7 @@ var _boosting: bool = false
 var _stage_progress: float = 0.0
 var _combo_t: float = 0.0
 var _combo_mult: float = 1.0
-var _markers: Array = [] # [{pos: Vector2, color: Color, angle: float, edge: bool}]
+var _markers: Array = [] # [{pos: Vector2, kind: Collectible.Kind, color: Color, angle: float, life: float}]
 var _speed_lines: float = 0.0
 var _insets := Vector4.ZERO # left, top, right, bottom
 var _danger: float = 0.0
@@ -234,7 +236,8 @@ func update_hud(delta: float, session: GameSession) -> void:
 	_stamina = sim.stamina
 	_surge = sim.surge_time / GameConfig.SURGE_DURATION
 	_boosting = sim.boosting
-	_speed_lines = MathUtil.damp(_speed_lines, 1.0 if (sim.boosting or sim.is_surging()) else 0.0, 0.15, delta)
+	var fast := (sim.boosting or sim.is_surging()) and not reduced_motion
+	_speed_lines = MathUtil.damp(_speed_lines, 1.0 if fast else 0.0, 0.15, delta)
 	# Danger vignette: proximity to wall, obstacles or own body.
 	var clear := minf(session.head_clearance(), GameConfig.ARENA_RADIUS - sim.head_tip().length() - GameConfig.HEAD_COLLISION_RADIUS)
 	_danger = MathUtil.damp(_danger, clampf(1.0 - clear / 2.2, 0.0, 1.0), 0.1, delta)
@@ -261,7 +264,7 @@ func update_hud(delta: float, session: GameSession) -> void:
 			if dir.length() < 1.0:
 				dir = Vector2(0, 1)
 			var scale_k := minf(area.size.x * 0.5 / maxf(absf(dir.x), 0.001), area.size.y * 0.5 / maxf(absf(dir.y), 0.001))
-			_markers.append({"pos": c + dir * scale_k, "color": col, "angle": dir.angle(), "life": it.time_left()})
+			_markers.append({"pos": c + dir * scale_k, "kind": it.kind, "color": col, "angle": dir.angle(), "life": it.time_left()})
 
 	if _tutorial_t > 0.0:
 		_tutorial_t -= delta
@@ -304,6 +307,19 @@ func banner(text: String, sub: String, color: Color = UiTheme.GOLD) -> void:
 	tw.tween_property(_banner_box, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.chain().tween_interval(1.3)
 	tw.chain().tween_property(_banner_box, "modulate:a", 0.0, 0.4)
+
+
+## Outline of the off-screen marker symbol centred on p: a diamond for Surge
+## crystals (filled), a closed ring for relics (stroked).
+static func marker_symbol(kind: int, p: Vector2) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	if kind == Collectible.Kind.RARE:
+		for i in 25:
+			var a := TAU * float(i) / 24.0
+			pts.append(p + Vector2(cos(a), sin(a)) * 9.5)
+	else:
+		pts = PackedVector2Array([p + Vector2(0, -15), p + Vector2(10, 0), p + Vector2(0, 15), p + Vector2(-10, 0)])
+	return pts
 
 
 func _draw_canvas() -> void:
@@ -377,14 +393,19 @@ func _draw_canvas() -> void:
 			var x := 0.0 if s < 0.0 else vs.x - 14.0
 			c.draw_rect(Rect2(x, vs.y * 0.25, 14, vs.y * 0.5), Color(UiTheme.GOLD, 0.35))
 
-	# Off-screen markers.
+	# Off-screen markers. The symbol repeats the item's 3D shape (crystal = diamond,
+	# relic = ring), so they can be told apart without relying on colour.
 	for m in _markers:
 		var p: Vector2 = m["pos"]
 		var col: Color = m["color"]
 		var ang: float = m["angle"]
 		var blink: float = 1.0 if float(m["life"]) > 3.0 else (0.4 + 0.6 * absf(sin(_time * 8.0)))
 		c.draw_circle(p, 22, Color(0, 0, 0, 0.45 * blink))
-		c.draw_circle(p, 12, Color(col, 0.95 * blink))
+		var sym := marker_symbol(int(m["kind"]), p)
+		if int(m["kind"]) == Collectible.Kind.RARE:
+			c.draw_polyline(sym, Color(col, 0.95 * blink), 5.0, true)
+		else:
+			c.draw_colored_polygon(sym, Color(col, 0.95 * blink))
 		var tip := p + Vector2(cos(ang), sin(ang)) * 34.0
 		var side := Vector2(-sin(ang), cos(ang)) * 10.0
 		c.draw_colored_polygon(PackedVector2Array([tip, p + Vector2(cos(ang), sin(ang)) * 22.0 + side, p + Vector2(cos(ang), sin(ang)) * 22.0 - side]), Color(col, blink))
