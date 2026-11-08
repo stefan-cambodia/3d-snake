@@ -3,7 +3,8 @@ extends RefCounted
 ## Simple look-ahead driver: used for the attract-mode snake on the main menu
 ## and for automated soak tests. Samples a few steering arcs, rejects the ones
 ## that collide within the horizon and picks the one ending nearest its target.
-## Food on (or off) a terrace is reached through a ramp: foot, then top.
+## Food on (or off) a terrace is reached through a ramp, lined up with its axis:
+## a point just beyond the foot, then the top (and the reverse on the way down).
 ## Cost is kept low (runs on phones while the menu is shown): obstacles are
 ## pre-filtered to the horizon radius once per decision.
 
@@ -64,7 +65,6 @@ static func route(terrain: TerrainField, from: Vector2, goal: Vector2) -> Vector
 	var there := terrain.terrace_at(goal)
 	if here == there:
 		return goal
-	var on_ramp := terrain.ramp_distance(from) <= 0.0
 	if here >= 0:
 		# Leave this terrace by the ramp that suits the goal best.
 		var t: TerrainField.Terrace = terrain.terraces[here]
@@ -75,8 +75,8 @@ static func route(terrain: TerrainField, from: Vector2, goal: Vector2) -> Vector
 			if cost < best_cost:
 				best_cost = cost
 				best = i
-		if on_ramp or from.distance_to(t.ramp_top(best)) < 2.5:
-			return t.ramp_foot(best)
+		if _on_axis(t, best, from) or from.distance_to(t.ramp_top(best)) < 2.5:
+			return _beyond_foot(t, best)
 		return t.ramp_top(best)
 	# Climb the goal's terrace.
 	var g: TerrainField.Terrace = terrain.terraces[there]
@@ -87,9 +87,28 @@ static func route(terrain: TerrainField, from: Vector2, goal: Vector2) -> Vector
 		if cost < pick_cost:
 			pick_cost = cost
 			pick = i
-	if on_ramp or from.distance_to(g.ramp_foot(pick)) < 3.0:
+	var approach := _beyond_foot(g, pick)
+	if _on_axis(g, pick, from) or from.distance_to(approach) < 3.0:
 		return g.ramp_top(pick)
-	return g.ramp_foot(pick)
+	return approach
+
+
+## True near the middle line of ramp i, between its approach point and its top
+## (not merely somewhere on its width: cutting across from an edge runs into
+## the steep sides near the top).
+static func _on_axis(t: TerrainField.Terrace, i: int, p: Vector2) -> bool:
+	var a := t.ramp_top(i)
+	var b := _beyond_foot(t, i)
+	var ab := b - a
+	var k := (p - a).dot(ab) / ab.length_squared()
+	return k >= 0.0 and k <= 1.0 and p.distance_to(a + ab * k) < 1.2
+
+
+## A point 3 m out from a ramp's foot along its axis: heading for it, then for
+## the top, lines the snake up with the ramp instead of cutting across its sides.
+static func _beyond_foot(t: TerrainField.Terrace, i: int) -> Vector2:
+	var foot := t.ramp_foot(i)
+	return foot + (foot - t.ramp_top(i)).normalized() * 3.0
 
 
 func _pick_target(session: GameSession) -> Vector2:

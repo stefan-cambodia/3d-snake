@@ -1,32 +1,29 @@
-# Serpent Sanctum — screenshots
+# Screenshot history
 
-Captured on 2026-11-07 from the game running on Android (1920×1080, high quality setting), with the
-autopilot playing the runs. Free to use for documentation, store pages and presentations.
-`overview.jpg` is a contact sheet of all of them.
+One folder per released version. A new version gets a new folder; older folders are never
+overwritten, so this directory shows how the game looked at each release.
 
-| | |
-|---|---|
-| ![](01-main-menu.jpg) **01** Main menu (Golden Dawn) | ![](02-gameplay-surge.jpg) **02** Surge crystal: speed and double points |
-| ![](03-gameplay-stage-up.jpg) **03** Stage 6: faster, and monoliths rise | ![](04-gameplay-long-serpent.jpg) **04** A 44 m serpent winding through the ruins |
-| ![](05-gameplay-relic-beam.jpg) **05** A rare relic, marked by a beam of light | ![](06-night-crystal.jpg) **06** Moonlit Shrine: Surge crystal pickup |
-| ![](07-night-relic.jpg) **07** Moonlit Shrine: relic collected (+450) | ![](08-night-surge.jpg) **08** Moonlit Shrine: Surge and combo |
-| ![](09-night-barrier.jpg) **09** Stage 5 beside the glowing sanctuary barrier | ![](10-mist-stage-up.jpg) **10** Misty Morning with the Ember Python skin |
-| ![](11-main-menu-night.jpg) **11** Main menu (Moonlit Shrine, Azure Naga) | ![](12-main-menu-mist.jpg) **12** Main menu (Misty Morning, Ember Python) |
-| ![](13-skins-sanctuaries.jpg) **13** Skins & Sanctuaries: 8 serpents, 3 sanctuaries | ![](14-game-over-new-best.jpg) **14** Game over with a new best score |
-| ![](15-records.jpg) **15** Records: hall of fame | ![](16-how-to-play.jpg) **16** How to play |
-| ![](17-settings-languages.jpg) **17** Settings: 14 languages | ![](18-khmer-main-menu.jpg) **18** Khmer: main menu |
-| ![](19-khmer-how-to-play.jpg) **19** Khmer: How to play (word-boundary line breaks) | ![](20-khmer-gameplay.jpg) **20** Khmer: Surge during a run |
+| Version | Date | Folder | What it shows |
+|---|---|---|---|
+| **1.1.0** (current) | 2026-11-08 | [v1.1](v1.1/README.md) · [contact sheet](v1.1/overview.jpg) | 24 images: the relief (hills, walled terraces, paved ramps), the new name *3D Snake*, the Reduced motion setting, all three sanctuaries, menus, Khmer |
+| 1.0.0 | 2026-11-07 | [v1.0](v1.0/README.md) · [contact sheet](v1.0/overview.jpg) | 20 images of the first release, then called *Serpent Sanctum*: a flat island |
+
+What changed between versions is listed in [CHANGELOG.md](../../CHANGELOG.md).
 
 ## How to take new ones
 
 1. Build the showcase variant: `tools/build_android.sh --showcase`
-   (`build/android/snake3d-showcase.apk`). It installs as a separate app, *Serpent Sanctum
-   Showcase* (`com.studio.snake3d.showcase`), so the real game and its scores are untouched.
+   (`build/android/snake3d-showcase.apk`). It installs as a separate app, *3D Snake Showcase*
+   (`com.studio.snake3d.showcase`), so the real game and its scores are untouched.
+   For the Android emulator, which cannot show Godot's Vulkan output, build the emulator preset
+   instead with `-- --showcase` added to its `command_line/extra_args` (and the OpenGL renderer it
+   already uses), then put the preset back.
 2. Its first launch fills an empty profile with a demo history (a records table, every skin and
    sanctuary unlocked) and sets graphics quality to high. Every run started with **Play** is played
    by the autopilot, so the snake grows long and reaches later stages without anyone touching it.
    Change skin, sanctuary and language from the menus as usual.
-3. Capture with `adb exec-out screencap -p > shot.png` (on a phone or an emulator).
-
-These images came from the Android emulator, which uses the OpenGL renderer; phones use Vulkan,
-which looks nearly identical.
+3. Capture with `adb exec-out screencap -p > shot.png` (on a phone or an emulator), every second or
+   so during a run, and keep the best frames.
+4. Save them as 1920×1080 JPEGs in a new `vX.Y/` folder with its own `README.md` and
+   `overview.jpg`, add a row to the table above, and point the gallery in the main README at the
+   new folder.

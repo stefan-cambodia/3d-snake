@@ -72,7 +72,7 @@ else
 			echo "== Creating local release keystore $KS"
 			"$KEYTOOL" -genkeypair -v -keystore "$KS" -alias snake3d -keyalg RSA -keysize 2048 \
 				-validity 10000 -storepass "$PASS" -keypass "$PASS" \
-				-dname "CN=Serpent Sanctum, O=Studio, C=US" >/dev/null 2>&1
+				-dname "CN=3D Snake, O=Studio, C=US" >/dev/null 2>&1
 			printf 'alias=snake3d\npassword=%s\n' "$PASS" > "$PROPS"
 			chmod 600 "$KS" "$PROPS"
 		fi

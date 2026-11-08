@@ -8,7 +8,7 @@ extends RefCounted
 ##
 ## Relief inside the arena:
 ## - gentle hills, climbable from any direction;
-## - raised terraces with near-vertical stone walls and one or two paved ramps.
+## - raised terraces with near-vertical stone walls and two paved ramps.
 ##   Ground steeper than CLIMB_LIMIT is a wall: cliff_obstacles() turns it into
 ##   ordinary collision circles, so collisions, spawning rules, the autopilot
 ##   and the connectivity guarantee all treat terrace walls like any obstacle.
@@ -193,18 +193,19 @@ func _try_terrace(rng: RandomNumberGenerator) -> Terrace:
 	for o in terraces:
 		if t.center.distance_to(o.center) < outer + o.radius * 1.15 + 11.0:
 			return null
-	# First ramp faces the middle of the island; a second one is optional.
+	# Two ramps: the first faces the middle of the island, the second leads off
+	# another side, so a terrace is never a dead end (a long snake could not
+	# turn round on top while its own body blocks the only way down).
 	var to_mid := (-t.center).normalized().rotated(rng.randf_range(-0.6, 0.6))
 	if not _ramp_fits(t, to_mid):
 		return null
 	t.ramps.append(to_mid)
-	if rng.randf() < 0.65:
-		for k in 6:
-			var d := to_mid.rotated((1.0 if rng.randf() < 0.5 else -1.0) * rng.randf_range(1.6, 2.6))
-			if _ramp_fits(t, d):
-				t.ramps.append(d)
-				break
-	return t
+	for k in 10:
+		var d := to_mid.rotated((1.0 if rng.randf() < 0.5 else -1.0) * rng.randf_range(1.5, 3.0))
+		if _ramp_fits(t, d):
+			t.ramps.append(d)
+			return t
+	return null
 
 
 ## A terrace's walls must leave the spawn area, the spawn corridor and the

@@ -51,13 +51,13 @@ func _ready() -> void:
 	margin.add_child(col)
 	_col = col
 
-	var t1 := UiTheme.label("SERPENT", 66, "title", UiTheme.GOLD)
-	var t2 := UiTheme.label("SANCTUM", 66, "title", UiTheme.GOLD)
-	for t in [t1, t2]:
-		t.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.0, 0.7))
-		t.add_theme_constant_override("outline_size", 10)
-		t.custom_minimum_size = Vector2(0, 62)
-		col.add_child(t)
+	# The game's name, the same in every language.
+	var title := UiTheme.label("3D SNAKE", 74, "title", UiTheme.GOLD)
+	title.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	title.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.0, 0.7))
+	title.add_theme_constant_override("outline_size", 10)
+	title.custom_minimum_size = Vector2(0, 70)
+	col.add_child(title)
 	var tag := UiTheme.label("MENU_TAGLINE", 22, "light", UiTheme.MUTED)
 	col.add_child(tag)
 	var spacer := Control.new()

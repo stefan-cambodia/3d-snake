@@ -7,7 +7,7 @@ func _ready() -> void:
 	var vb := make_panel("ABOUT_TITLE", 900)
 	var body := MenuScreens.scroll_body(vb, 440)
 	body.add_child(MenuScreens.section("ABOUT_HOW"))
-	for key in ["HOW_1", "HOW_2", "HOW_3", "HOW_4", "HOW_5", "HOW_6"]:
+	for key in ["HOW_1", "HOW_2", "HOW_3", "HOW_4", "HOW_5", "HOW_6", "HOW_7"]:
 		var l := UiTheme.label(key, 21, "body", UiTheme.CREAM)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		body.add_child(l)

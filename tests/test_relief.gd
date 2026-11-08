@@ -49,7 +49,7 @@ func test_terraces_and_hills_are_climbable_where_open() -> void:
 			var top := t.height(ter.center.x, ter.center.y)
 			var foot := ter.ramp_foot(0)
 			check(top - t.height(foot.x, foot.y) > 1.4, "seed %d: terrace stands above its ramp foot" % seed_value)
-			check(ter.ramps.size() >= 1, "seed %d: terrace has a ramp" % seed_value)
+			check_eq(ter.ramps.size(), 2, "seed %d: terrace has two ramps (never a dead end)" % seed_value)
 			for i in ter.ramps.size():
 				# Walk up the ramp: never steeper than a ramp should be.
 				var a := ter.ramp_foot(i)
@@ -155,8 +155,13 @@ func test_route_uses_ramps() -> void:
 	var feet := []
 	for i in ter.ramps.size():
 		feet.append(ter.ramp_foot(i))
-	check(feet.has(wp), "from the plaza, head for a ramp foot")
-	var i0: int = feet.find(wp)
+	var i0 := 0
+	for i in feet.size():
+		if (feet[i] as Vector2).distance_to(wp) < (feet[i0] as Vector2).distance_to(wp):
+			i0 = i
+	check((feet[i0] as Vector2).distance_to(wp) < 3.5, "from the plaza, head for (just beyond) a ramp foot")
+	var axis: Vector2 = (ter.ramp_foot(i0) - ter.ramp_top(i0)).normalized()
+	check((wp - ter.ramp_foot(i0)).normalized().dot(axis) > 0.99, "the approach point lines up with the ramp")
 	check(Autopilot.route(tf, ter.ramp_foot(i0) + (ter.ramp_top(i0) - ter.ramp_foot(i0)) * 0.4, goal) == ter.ramp_top(i0), "on the ramp, head for the top")
 	check(Autopilot.route(tf, ter.center + Vector2(0.5, 0.5), goal) == goal, "on the terrace, head for the food")
 	check(Autopilot.route(tf, goal, Vector2.ZERO) in [ter.ramp_top(0), ter.ramp_top(ter.ramps.size() - 1)], "leaving: head for a ramp top")

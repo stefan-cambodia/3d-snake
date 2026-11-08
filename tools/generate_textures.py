@@ -199,7 +199,7 @@ def splash():
     except Exception:
         title = ImageFont.load_default()
         sub = ImageFont.load_default()
-    for text, font, y, col in (("SERPENT", title, 120, (246, 222, 160, 255)), ("SANCTUM", title, 215, (246, 222, 160, 255))):
+    for text, font, y, col in (("3D SNAKE", title, 165, (246, 222, 160, 255)),):
         tw = d.textlength(text, font=font)
         d.text(((w - tw) / 2 + 3, y + 4), text, font=font, fill=(0, 0, 0, 160))
         d.text(((w - tw) / 2, y), text, font=font, fill=col)

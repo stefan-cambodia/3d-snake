@@ -1,10 +1,10 @@
-# Development status
+# Development status — 3D Snake
 
-_Last updated: 2026-11-08_
+_Last updated: 2026-11-08 · version 1.1.0 (code 2) · history in [CHANGELOG.md](CHANGELOG.md)_
 
 ## Summary
 
-The game is feature-complete for a 1.0 sideload release. The test suite passes, a signed release
+The game (renamed from *Serpent Sanctum* in 1.1.0) is feature-complete for a sideload release. The test suite passes, a signed release
 APK builds reproducibly, and the game has been played on a real phone (Samsung Galaxy A56) with the
 Vulkan renderer at a steady 60 fps. The UI is translated into 14 languages, including Khmer, with
 fonts, shaping and line breaking checked on that phone. It has been tested on only one phone model
@@ -19,7 +19,7 @@ them (see Known issues).
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
-| Manifest | `com.studio.snake3d`, version 1.0.0 (1), minSdk 24, targetSdk 36, only the VIBRATE permission |
+| Manifest | `com.studio.snake3d`, version 1.1.0 (2), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
@@ -124,7 +124,7 @@ them (see Known issues).
 
 ## Changes: screenshots (2026-11-07)
 
-- `docs/screenshots/`: 20 screenshots (1920×1080 JPEG) covering the three sanctuaries, several
+- `docs/screenshots/` (now `docs/screenshots/v1.0/`): 20 screenshots (1920×1080 JPEG) covering the three sanctuaries, several
   skins, Surge, relics, stage-ups, the barrier, every menu screen, and Khmer; plus `overview.jpg`
   (contact sheet). Captured on the Android emulator with the autopilot playing.
 - `--showcase` mode in `main.gd` and the `Android Showcase` export preset
@@ -202,6 +202,24 @@ them (see Known issues).
   checks walls instead of "every slope is gentle". `tools/terrain_map.gd` draws a top-down map of
   the relief, walls and ruins for a seed.
 
+## Changes: version 1.1.0 — name, ramps, screenshots history (2026-11-08)
+
+- **Renamed 3D Snake** (app name, main menu title on one line, startup image, credits in all 14
+  languages, Showcase app name). The package id is unchanged, so the update keeps players' progress.
+- **Version 1.1.0 (code 2)**, with a [CHANGELOG.md](CHANGELOG.md). Git tags `v1.0.0` (the commit the
+  1.0 screenshots were taken from) and `v1.1.0`.
+- **Every terrace now has two ramps.** With one ramp, a terrace was a dead end: a long snake could not
+  turn round on top while its own body filled the only way down. Headless autopilot runs on the
+  game's island showed the deaths clustering there.
+- **Autopilot** lines up with a ramp's axis (a point 3 m beyond its foot, then the top) instead of
+  cutting across from the ramp's edge into its steep upper sides. Over 40 layouts of the game's
+  island (90 s cap): average survival 78.1 s → 84.8 s, no deaths in the first 15 s (one before).
+- *How to play* has a 7th line about terraces and ramps (14 languages; fonts rebuilt).
+- **Screenshot history**: the 1.0 screenshots moved to `docs/screenshots/v1.0/` (unchanged, with git
+  history); 24 new ones of 1.1.0 in `docs/screenshots/v1.1/` with a captioned contact sheet;
+  `docs/screenshots/README.md` lists the versions and how to add the next one. The README gallery
+  shows 1.1.0.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -229,8 +247,6 @@ them (see Known issues).
 - Audio and haptics were checked through Android's own reports (audio stream started and unmuted,
   vibrations logged as played), not by ear or by hand. Whether the mix sounds right still needs a
   person to listen.
-- The screenshots in `docs/screenshots` and the README gallery were taken before the relief existed;
-  the island now has terraces and hills.
 - An off-screen item marker can be drawn over the boost or pause button when the item is in that
   direction (seen on the emulator). Both stay readable and the button still works.
 - Launch options such as `--autoplay` cannot be passed to the Android build with
@@ -253,7 +269,6 @@ them (see Known issues).
 5. Give each sanctuary (theme) its own relief layout. Today the three sanctuaries share one island
    (seed 20241107) and only change light, sky and colours. Switching would rebuild the terrain
    mesh (about 0.3 s on the PC).
-6. Retake the screenshots with the relief.
-7. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
+6. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
    HUD text, an option for the danger vignette's colour), and keeping item markers clear of the HUD
    buttons.
