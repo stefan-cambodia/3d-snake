@@ -115,8 +115,11 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
    `signing/release.keystore` with Google's PEPK tool; then the APK and the Play version match.
 4. Fill in the store listing and app content above.
 5. *Testing → Internal testing* → create a release, upload `build/android/snake3d.aab`, add testers,
-   then promote to closed/open testing and production. New personal developer accounts must run a
-   closed test with testers for 14 days before production.
+   then promote to closed testing and production. **Personal developer accounts created after
+   13 November 2023 must run a closed test with at least 12 testers opted in for 14 days in a row**
+   (per app) before they can apply for production access; internal testing does not count, and
+   organization accounts are exempt (rule as of 2026: check the Play Console help, Google changes
+   it from time to time).
 6. For each update: raise `version/code` (and `version/name`) in `export_presets.cfg` for all
    presets and `config/version` in `project.godot`, add a `CHANGELOG.md` entry, rebuild with
    `tools/build_android.sh --aab`.
