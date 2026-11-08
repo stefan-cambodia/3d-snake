@@ -215,6 +215,8 @@ them (see Known issues).
   cutting across from the ramp's edge into its steep upper sides. Over 40 layouts of the game's
   island (90 s cap): average survival 78.1 s → 84.8 s, no deaths in the first 15 s (one before).
 - *How to play* has a 7th line about terraces and ramps (14 languages; fonts rebuilt).
+- Installed on the Galaxy A56 over 1.0.0: the launcher shows *3D Snake*, the menu title reads
+  3D SNAKE, the owner's profile (Thai, best score 871) is kept, launch to main loop 2.9 s.
 - **Screenshot history**: the 1.0 screenshots moved to `docs/screenshots/v1.0/` (unchanged, with git
   history); 24 new ones of 1.1.0 in `docs/screenshots/v1.1/` with a captioned contact sheet;
   `docs/screenshots/README.md` lists the versions and how to add the next one. The README gallery
