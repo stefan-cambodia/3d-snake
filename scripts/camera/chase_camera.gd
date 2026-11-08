@@ -119,6 +119,9 @@ func _obstruction(head: Vector3, cam: Vector3) -> float:
 	for ob in obstacles:
 		if not ob.is_solid() or ob.height < 1.6:
 			continue
+		# A terrace wall only blocks the view from below its top.
+		if cam.y > ob.top_y and head.y > ob.top_y - 0.6:
+			continue
 		for c in ob.circles:
 			var center := Vector2(c.x, c.y)
 			var t := clampf((center - a).dot(ab) / len2, 0.0, 1.0)

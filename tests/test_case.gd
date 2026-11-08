@@ -52,5 +52,5 @@ func dispose_main(main: Node) -> void:
 func make_session(seed_value: int = 1234) -> GameSession:
 	var terrain := TerrainField.new(seed_value)
 	var s := GameSession.new(terrain)
-	s.start(seed_value, WorldGenerator.generate(seed_value))
+	s.start(seed_value, WorldGenerator.generate(seed_value, terrain))
 	return s

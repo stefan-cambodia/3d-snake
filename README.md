@@ -4,7 +4,9 @@ A third-person 3D snake game for Android, built with **Godot 4.7** and GDScript.
 
 You guide a living serpent across a lakeside island sanctuary: eat sunfruit to grow, chain pickups
 for combos, grab Surge crystals and rare relics, and dodge pillars, the barrier, your own body and
-monoliths that rise out of the ground as the stages climb. Every model, texture, sound and music
+monoliths that rise out of the ground as the stages climb. The island has relief: rolling hills,
+and raised stone terraces whose walls block the way but whose paved ramps let the serpent climb up
+and back down. Every model, texture, sound and music
 track is generated procedurally (see `tools/`). The only third-party assets are the fonts (Cinzel, Outfit and Noto, all under the SIL OFL).
 
 ![Serpent Sanctum main menu](docs/screenshots/01-main-menu.jpg)
@@ -67,6 +69,10 @@ obstacle without touching it gives a *Close Call* bonus. Every 6 fruits moves yo
 (14 in total): the snake gets faster and more monoliths rise. Score, length and stage
 milestones unlock 7 more serpent skins and 2 more sanctuary themes.
 
+**Relief:** the snake follows the ground over hills and up ramps. Any ground steeper than about 39°
+(the stone walls of the terraces) is a wall and ends the run like a pillar does. Each terrace has
+one or two ramps, and food and relics also appear on the terrace tops.
+
 ## Requirements (to build from source)
 
 - Linux x86_64 (the scripts use bash; the Godot steps work the same on other OSes)
@@ -101,6 +107,10 @@ The game also accepts automation flags after `--`, for example
 `tools/godot/godot --path . -- --autoplay --quit-after=30` (the AI plays; see the top of
 `scripts/core/main.gd` for the full list).
 
+To see an island's relief from above (height, walls in red and their collision circles, ramps in
+blue, ruins), run `tools/godot/godot --headless --path . -s tools/terrain_map.gd -- --seed=20241107
+--px=8 --out=map.png`. 20241107 is the seed of the island in the game.
+
 ## Run the tests
 
 ```sh
@@ -108,7 +118,7 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-54 tests cover snake movement and steering, the spine (body path) maths, collisions, scoring and
+60 tests cover snake movement and steering, the relief (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
 autopilot run, the real main scene's state machine, camera, and HUD/touch layout around display
@@ -169,7 +179,7 @@ scenes/main/main.tscn     entry scene (everything else is built in code)
 scripts/core/             game flow state machine (main.gd), tuning constants, localisation, helpers
 scripts/snake/            simulation (snake_sim, spine path buffer) and the GPU-skinned body view
 scripts/gameplay/         session rules, scoring, collectibles, effects, autopilot
-scripts/world/            seeded island generator, terrain, obstacles, meshes and themes
+scripts/world/            seeded island generator, terrain and relief, obstacles, meshes and themes
 scripts/camera/           chase camera (intro, chase, death, menu and showcase modes)
 scripts/input/            touch, keyboard and gamepad steering
 scripts/ui/               HUD and menus (theme, screens, game over, settings, skins, records)

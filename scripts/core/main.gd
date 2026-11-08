@@ -46,6 +46,10 @@ var _elapsed_real: float = 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Phones with 120 Hz screens otherwise alternate 120 and 60 fps frames
+	# (uneven pacing reads as stutter); a steady 60 is smoother and cooler.
+	if OS.has_feature("mobile"):
+		Engine.max_fps = 60
 	_rng.randomize()
 	_parse_args()
 	if _args.has("showcase"):
@@ -175,7 +179,7 @@ func _set_state(s: int) -> void:
 
 func _start_attract() -> void:
 	var seed_value := _rng.randi()
-	var layout := WorldGenerator.generate(seed_value)
+	var layout := WorldGenerator.generate(seed_value, terrain)
 	world.set_obstacles(layout)
 	session.start(seed_value, layout)
 	camera.obstacles = session.obstacles
@@ -200,7 +204,7 @@ func _begin_run() -> void:
 	get_tree().paused = false
 	AudioManager.set_muffled(false)
 	var seed_value := _rng.randi()
-	var layout := WorldGenerator.generate(seed_value)
+	var layout := WorldGenerator.generate(seed_value, terrain)
 	world.set_obstacles(layout)
 	session.start(seed_value, layout)
 	camera.obstacles = session.obstacles

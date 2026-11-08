@@ -10,15 +10,19 @@ uniform vec3 rune_col : source_color = vec3(1.0, 0.62, 0.25);
 uniform float uv_scale = 0.5;
 uniform float moss_amount = 1.0;
 uniform float rune_base = 0.35;
-instance uniform float rune_glow = 0.0;
-instance uniform float tint_var = 0.5;
+// Extra rune light while a monolith rises (set on that monolith's own copy of
+// the material). Deliberately not an instance uniform: under OpenGL, Godot
+// caps objects using instance uniforms at 256 in total.
+uniform float rune_glow = 0.0;
 
 varying vec3 v_wnormal;
 varying vec3 v_world;
+varying vec2 v_origin;
 
 void vertex() {
 	v_wnormal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	v_origin = MODEL_MATRIX[3].xz;
 }
 
 float hash12(vec2 p) {
@@ -30,7 +34,8 @@ float hash12(vec2 p) {
 void fragment() {
 	vec2 uv = UV * uv_scale;
 	vec3 col = texture(albedo_tex, uv).rgb * COLOR.rgb;
-	col *= 0.9 + 0.2 * tint_var;
+	// Each stone gets its own tint, from where it stands.
+	col *= 0.9 + 0.2 * hash12(floor(v_origin * 2.3) + 0.5);
 	float d = texture(detail_tex, v_world.xz * 0.21 + v_world.y * 0.13).g;
 	float up = smoothstep(0.35, 0.85, v_wnormal.y);
 	float low = smoothstep(0.9, 0.0, v_world.y + 0.3);

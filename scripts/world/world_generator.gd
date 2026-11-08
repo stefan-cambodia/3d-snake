@@ -7,6 +7,9 @@ extends RefCounted
 ## obstacles inside a disc leave the free space connected, so every collectible
 ## spawn point is reachable and no pocket can trap the snake. The spawn area and
 ## a corridor ahead of the spawn heading are always kept clear.
+##
+## Terrace walls (TerrainField.cliff_obstacles) are obstacles too, open where a
+## ramp leads up, so the same rule keeps every terrace top reachable.
 
 const SPAWN_POS := Vector2.ZERO
 const SPAWN_HEADING := 0.0 # facing +Z
@@ -23,11 +26,18 @@ const KIND_TABLE: Array = [
 ]
 
 
-static func generate(seed_value: int) -> Array[Obstacle]:
+## Layout for one run: the terrain's terrace walls, then ruins placed around
+## them. Without a terrain, the one built from the same seed is used.
+static func generate(seed_value: int, terrain: TerrainField = null) -> Array[Obstacle]:
+	if terrain == null:
+		terrain = TerrainField.new(seed_value)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var target := rng.randi_range(22, 30)
 	var result: Array[Obstacle] = []
+	for wall in terrain.cliff_obstacles():
+		wall.id = result.size()
+		result.append(wall)
+	var target := result.size() + rng.randi_range(22, 30)
 	var attempts := 0
 	while result.size() < target and attempts < 4000:
 		attempts += 1
@@ -36,10 +46,18 @@ static func generate(seed_value: int) -> Array[Obstacle]:
 		var a := rng.randf() * TAU
 		var pos := Vector2(cos(a), sin(a)) * r
 		var ob := Obstacle.create(kind, pos, rng.randf() * TAU, rng)
-		if is_valid_static_placement(ob, result):
+		if is_valid_static_placement(ob, result) and clear_of_ramps(ob, terrain):
 			ob.id = result.size()
 			result.append(ob)
 	return result
+
+
+## Keeps ruins and rising monoliths off the ramps and their landings.
+static func clear_of_ramps(ob: Obstacle, terrain: TerrainField) -> bool:
+	for c in ob.circles:
+		if terrain.ramp_distance(Vector2(c.x, c.y)) < c.z + 1.8:
+			return false
+	return true
 
 
 static func _pick_kind(rng: RandomNumberGenerator) -> StringName:
@@ -59,7 +77,7 @@ static func respects_gaps(ob: Obstacle, existing: Array[Obstacle]) -> bool:
 	if ob.max_radius_from_origin() > GameConfig.ARENA_RADIUS - GameConfig.OBSTACLE_MIN_GAP:
 		return false
 	for other in existing:
-		if ob.edge_distance_to(other) < GameConfig.OBSTACLE_MIN_GAP:
+		if ob.edge_distance_to(other, GameConfig.OBSTACLE_MIN_GAP) < GameConfig.OBSTACLE_MIN_GAP:
 			return false
 	return true
 
@@ -90,7 +108,7 @@ static func reachable_fraction(obstacles: Array[Obstacle], cell: float = 0.5) ->
 			var ok := p.length() < r - clearance
 			if ok:
 				for o in obstacles:
-					if o.is_solid() and o.edge_distance(p) < clearance:
+					if o.is_solid() and o.edge_distance_within(p, clearance) < clearance:
 						ok = false
 						break
 			free[iz * n + ix] = 1 if ok else 0

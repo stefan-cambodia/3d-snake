@@ -15,7 +15,7 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **54 tests, 27,948 checks, 0 failures** (about 18 s) |
+| Headless test suite (`tools/run_tests.sh`) | **60 tests, 35,649 checks, 0 failures** (about 30 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
@@ -23,6 +23,8 @@ them (see Known issues).
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
+| Relief build on the phone (2026-11-08) | Installed over the previous version, profile kept. **Medium quality (the phone default): steady 60 fps** with the new 60 fps cap (98% of frames at 16 ms over 85 s of autopilot play, 0 dropped). Without the cap the 120 Hz screen got an uneven mix of 8 ms and 16 ms frames (84 fps average). High quality: 54.5 fps (13% of frames at 33 ms). Launch to main loop: 2.8 s (3.6 s on the first launch after the update, which recompiles the changed shaders). Terraces, walls, ramps and the snake climbing a ramp checked on screen |
+| Emulator soak (2026-11-08) | 7 minutes of autopilot runs: no errors (the pre-fix build hit the shader instance limit after 1.5–4 minutes) |
 
 ## Features
 
@@ -38,6 +40,11 @@ them (see Known issues).
 - 14 stages: speed increases, and monoliths rise from the ground after a glowing warning circle.
   A monolith waits for the snake to move off its spot, and the free area always stays connected.
 - Seeded island layout with a guaranteed clear spawn corridor, checked across many seeds by the tests.
+- Relief: gentle hills, and 2 or 3 raised terraces with stone walls and 1 or 2 paved ramps each. The
+  snake climbs ramps and hills; ground steeper than `TerrainField.CLIMB_LIMIT` (0.8, about 39°) is a
+  wall. Walls are ordinary obstacles built from the terrain's own slope, so collisions, spawn rules,
+  the autopilot and the connectivity guarantee cover them; the autopilot reaches terrace tops by
+  their ramps.
 
 **Presentation**
 - Third-person chase camera: predictive yaw, speed-based distance and FOV, banking, shake, pulling
@@ -146,6 +153,55 @@ them (see Known issues).
 - New tests: `tests/test_accessibility.gd` (4) and `tests/test_ui_touch.gd` (3). The touch tests
   push real input events through the main scene's viewport, and fail on the previous code.
 
+## Changes: relief and graphics (2026-11-08)
+
+- **Relief** (`scripts/world/terrain_field.gd`): 4–6 gentle hills (up to 2 m) and 2–3 raised
+  terraces (1.7–2.5 m) with stone walls and 1–2 paved ramps each. The first ramp faces the middle of
+  the island; the spawn area, the spawn corridor and the barrier gap stay clear (checked against the
+  actual walls when a terrace is placed). Hills fade out well before any terrace, so they never
+  steepen a wall or a ramp.
+- **Walls are obstacles made from the terrain's own slope**: ground steeper than `CLIMB_LIMIT` (0.8)
+  is sampled every 0.5 m and covered by collision circles (about 85 per terrace, built once, about
+  80 ms). Collision, spawn rules, the obstacle-gap rule and the connectivity guarantee therefore
+  cover walls with no special cases. Ruins and rising monoliths keep off the ramps.
+  `Obstacle.edge_distance_within()` skips far obstacles cheaply, so the many wall circles do not
+  slow collision checks.
+- The ramp's sides are as tall as the ramp is high: steep near the top (part of the wall), gentle
+  further down, so the snake can join a ramp from the side near its foot.
+- **Autopilot** (menu background, Showcase, tests): goes for food on a terrace through the best
+  ramp (foot, then top) and leaves the same way.
+- **Camera**: a wall no longer pulls the camera in when the camera is above the terrace.
+- **Rendering**:
+  - The terrain mesh uses a 0.5 m grid over the arena (±38 m), 1 m around it and 4 m beyond, with
+    borders bent onto the coarser grid so the grids meet without cracks. It is built from packed
+    arrays instead of SurfaceTool.
+  - Fixed: neighbouring terrain grids overlapped by one row of cells (the hole test missed the
+    first row), so a strip of ground was drawn twice.
+  - Terrace walls are drawn as weathered sandstone courses on a laterite footing, with moss in the
+    joints and run-off streaks. Ramps and the wall tops are paved.
+  - Vertex ambient occlusion darkens the foot of walls and hollows. Invisible strips along the walls
+    cast their shadows (the terrain itself casts none).
+  - The grass has broad lush and sun-dried patches, hill slopes wear through to bare earth, and
+    there are no grass clumps on walls or paving.
+- **Fixed: "Too many instances using shader instance variables"** after a few minutes of autoplay
+  in the emulator. Under OpenGL, Godot reserves 16 slots per object that uses `instance uniform`s,
+  out of 4096, so at most 256 such objects can exist at once (Vulkan allows 16 times more). The
+  stone and glow shaders used them for small things (a per-stone tint, the lantern fade, the
+  rising monolith glow). They now use a tint derived from the object's position and ordinary
+  material parameters, so the limit can no longer be reached.
+- Cost: the world takes about 175 ms longer to build on the development PC (about 0.5 s instead of
+  0.39 s). On the phone, launch to main loop is 2.8 s (3.0 s was measured before, on the Showcase
+  build).
+- **Frame rate capped at 60 on phones** (`Engine.max_fps`). The Galaxy A56's screen runs at 120 Hz,
+  and the game alternated 8 ms and 16 ms frames, which looks less smooth than a steady 60 and costs
+  battery and heat. Measured on the phone before and after (see the table).
+- New tests: `tests/test_relief.gd` (6): every steep spot is out of the head's reach and every wall
+  circle sits on a slope; ramps and open ground are climbable and the open ground has real relief;
+  the snake climbs a ramp with its body trailing behind; a wall stops it; the autopilot's route
+  uses ramps; food appears on terrace tops. The terrain test in `test_world_generation.gd` now
+  checks walls instead of "every slope is gentle". `tools/terrain_map.gd` draws a top-down map of
+  the relief, walls and ruins for a seed.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -173,6 +229,8 @@ them (see Known issues).
 - Audio and haptics were checked through Android's own reports (audio stream started and unmuted,
   vibrations logged as played), not by ear or by hand. Whether the mix sounds right still needs a
   person to listen.
+- The screenshots in `docs/screenshots` and the README gallery were taken before the relief existed;
+  the island now has terraces and hills.
 - An off-screen item marker can be drawn over the boost or pause button when the item is in that
   direction (seen on the emulator). Both stay readable and the button still works.
 - Launch options such as `--autoplay` cannot be passed to the Android build with
@@ -185,12 +243,17 @@ them (see Known issues).
    strings).
 2. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
    Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
-   runs the default (medium) at 60 fps, so it could probably default to high.
+   runs the default (medium) at a steady 60 fps with the relief; high drops about one frame in
+   eight there, so medium stays the default.
 3. Listen to the audio mix and feel the haptics on a phone (Android reports both working), and try
    *Reduced motion* during a real run on the phone (only the automated tests cover it in play).
 4. For a Play Store release: switch to a Gradle build to produce an AAB, decide whether the Vulkan
    features should be marked optional, add store assets and a privacy policy (the game collects no
    data), and use a long-lived upload key.
-5. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
+5. Give each sanctuary (theme) its own relief layout. Today the three sanctuaries share one island
+   (seed 20241107) and only change light, sky and colours. Switching would rebuild the terrain
+   mesh (about 0.3 s on the PC).
+6. Retake the screenshots with the relief.
+7. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
    HUD text, an option for the danger vignette's colour), and keeping item markers clear of the HUD
    buttons.

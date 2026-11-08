@@ -20,6 +20,7 @@ const TEX_STONE_N := preload("res://assets/textures/stone_normal.png")
 const TEX_WATER_N := preload("res://assets/textures/water_normal.png")
 const TEX_CLOUDS := preload("res://assets/textures/clouds.png")
 
+const CORE_EXTENT := 38.0 ## Fine grid: covers every terrace wall (TerrainField.TERRACE_MAX_EXTENT + wall).
 const INNER_EXTENT := 56.0
 const OUTER_EXTENT := 184.0
 const HEIGHTMAP_RES := 128
@@ -56,6 +57,12 @@ var _fires: Array[Node3D] = []
 var _mesh_cache: Dictionary = {}
 var _time: float = 0.0
 var _rng := RandomNumberGenerator.new()
+## Fine terrain grid kept after building the mesh (grass placement reads it).
+var _core_heights := PackedFloat32Array()
+var _core_paved := PackedFloat32Array()
+var _core_from := 0.0
+var _core_step := 1.0
+var _core_n := 0
 
 
 func build(p_terrain: TerrainField, p_theme: Dictionary, p_quality: int) -> void:
@@ -225,6 +232,7 @@ func apply_theme(p_theme: Dictionary) -> void:
 	_water_mat.set_shader_parameter("shallow_col", theme["water_shallow"])
 	_terrain_mat.set_shader_parameter("grass_a", theme["grass_a"])
 	_terrain_mat.set_shader_parameter("grass_b", theme["grass_b"])
+	_terrain_mat.set_shader_parameter("moss_col", (theme["grass_a"] as Color).darkened(0.3))
 	var boost: float = theme["emissive_boost"]
 	_terrain_mat.set_shader_parameter("rune_glow", 0.35 * boost)
 	_stone_mat.set_shader_parameter("rune_base", 0.25 * boost)
@@ -234,7 +242,7 @@ func apply_theme(p_theme: Dictionary) -> void:
 	_foliage_mat.set_shader_parameter("tint", Color(0.55, 0.65, 0.8) if night else Color.WHITE)
 	_barrier_mat.set_shader_parameter("base_alpha", 0.1 if night else 0.05)
 	if _lantern_glow:
-		_lantern_glow.set_instance_shader_parameter("fade", 1.0 if night else 0.35)
+		(_lantern_glow.material_override as ShaderMaterial).set_shader_parameter("fade", 1.0 if night else 0.35)
 	if _night_lanterns:
 		_night_lanterns.visible = night
 	if _motes:
@@ -266,71 +274,250 @@ func set_quality(q: int) -> void:
 # --- Terrain & water ----------------------------------------------------------------
 
 func _build_terrain() -> void:
-	# Inner, detailed grid (1 m), outer coarse grid (4 m) skipping the inner square.
-	var inner := _terrain_grid(-INNER_EXTENT, INNER_EXTENT, 1.0, false)
-	var outer := _terrain_grid(-OUTER_EXTENT, OUTER_EXTENT, 4.0, true)
-	for m in [inner, outer]:
+	# Fine 0.5 m grid over the arena (crisp terrace walls), 1 m around the shore,
+	# 4 m out to the far shore. Each grid skips the square the finer one covers
+	# and its border is bent onto the coarser grid's edges, so they join without
+	# cracks.
+	var core := _terrain_grid(-CORE_EXTENT, CORE_EXTENT, 0.5, 0.0, 2, true)
+	var inner := _terrain_grid(-INNER_EXTENT, INNER_EXTENT, 1.0, CORE_EXTENT, 4, true)
+	var outer := _terrain_grid(-OUTER_EXTENT, OUTER_EXTENT, 4.0, INNER_EXTENT, 1, false)
+	for m in [core, inner, outer]:
 		var mi := MeshInstance3D.new()
 		mi.mesh = m
 		mi.material_override = _terrain_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.name = "Terrain"
 		add_child(mi)
+	_build_wall_shadows()
 
 
-func _terrain_grid(from: float, to: float, step: float, skip_inner: bool) -> ArrayMesh:
+## Grid of terrain from `from` to `to`. `hole` > 0 leaves out the centre square
+## [-hole, hole] (drawn by a finer grid); border vertices are snapped onto a
+## grid `stitch` times coarser. Vertex colour: r = grass, g = sand, b = paved
+## stone, a = ambient occlusion. Built from packed arrays (SurfaceTool is several
+## times slower for grids this size).
+func _terrain_grid(from: float, to: float, step: float, hole: float, stitch: int, detailed: bool) -> ArrayMesh:
 	var n := int(round((to - from) / step)) + 1
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var count := n * n
 	var heights := PackedFloat32Array()
-	heights.resize(n * n)
+	heights.resize(count)
+	var paved := PackedFloat32Array()
+	paved.resize(count)
+	var pave_r2 := pow(TerrainField.TERRACE_MAX_EXTENT + 10.0, 2.0)
+	# Vertices well inside the hole are never drawn (only the hole's border and
+	# its neighbours feed normals and shading), so skip their heights.
+	var skip := hole - step * 4.0
 	for iz in n:
+		var z := from + float(iz) * step
 		for ix in n:
 			var x := from + float(ix) * step
-			var z := from + float(iz) * step
-			heights[iz * n + ix] = terrain.height(x, z)
+			var i := iz * n + ix
+			if hole > 0.0 and absf(x) < skip and absf(z) < skip:
+				continue
+			if detailed and x * x + z * z < pave_r2:
+				var hp := terrain.sample(x, z)
+				heights[i] = hp.x
+				paved[i] = hp.y
+			else:
+				heights[i] = terrain.height(x, z)
+	if stitch > 1:
+		_stitch_border(heights, n, stitch)
+	if hole <= 0.0:
+		_core_heights = heights
+		_core_paved = paved
+		_core_from = from
+		_core_step = step
+		_core_n = n
+	var verts := PackedVector3Array()
+	verts.resize(count)
+	var norms := PackedVector3Array()
+	norms.resize(count)
+	var tans := PackedFloat32Array()
+	tans.resize(count * 4)
+	var cols := PackedColorArray()
+	cols.resize(count)
+	var uvs := PackedVector2Array()
+	uvs.resize(count)
+	var near := maxi(int(round(1.0 / step)), 1)
+	var far := maxi(int(round(2.5 / step)), 2)
+	var ao_r2 := pow(GameConfig.ARENA_RADIUS + 4.0, 2.0)
 	for iz in n:
+		var z := from + float(iz) * step
 		for ix in n:
 			var x := from + float(ix) * step
-			var z := from + float(iz) * step
-			var h := heights[iz * n + ix]
+			var i := iz * n + ix
+			var h := heights[i]
 			var hl := heights[iz * n + maxi(ix - 1, 0)]
 			var hr := heights[iz * n + mini(ix + 1, n - 1)]
 			var hd := heights[maxi(iz - 1, 0) * n + ix]
 			var hu := heights[mini(iz + 1, n - 1) * n + ix]
+			if hole > 0.0 and absf(x) < skip and absf(z) < skip:
+				continue
 			var nrm := Vector3(hl - hr, 2.0 * step, hd - hu).normalized()
 			var r := sqrt(x * x + z * z)
-			var grass := 1.0 - MathUtil.smooth01(GameConfig.ARENA_RADIUS - 2.0, GameConfig.ARENA_RADIUS + 3.5, r)
+			var grass := 1.0
+			var sand := 0.0
 			if r > 50.0:
-				grass = MathUtil.smooth01(0.0, 0.5, h + 0.2)
+				grass = TerrainField._ss(0.0, 0.5, h + 0.2)
+				sand = TerrainField._ss(0.6, -0.2, h)
+			elif r > GameConfig.ARENA_RADIUS - 2.0:
+				grass = 1.0 - TerrainField._ss(GameConfig.ARENA_RADIUS - 2.0, GameConfig.ARENA_RADIUS + 3.5, r)
+				sand = TerrainField._ss(GameConfig.ARENA_RADIUS - 1.0, GameConfig.ARENA_RADIUS + 3.0, r)
 			grass *= 0.75 + 0.5 * terrain.variation(x, z)
-			grass *= MathUtil.smooth01(TerrainField.PLAZA_RADIUS + 0.2, TerrainField.PLAZA_RADIUS + 2.5, r)
-			var sand := MathUtil.smooth01(GameConfig.ARENA_RADIUS - 1.0, GameConfig.ARENA_RADIUS + 3.0, r) if r < 50.0 else MathUtil.smooth01(0.6, -0.2, h)
-			sand = maxf(sand, MathUtil.smooth01(-0.1, -0.6, h))
-			st.set_color(Color(grass, sand, 0.0, 1.0))
-			st.set_normal(nrm)
-			st.set_uv(Vector2(x, z) * 0.16)
-			st.add_vertex(Vector3(x, h, z))
-	var half := INNER_EXTENT - 0.01
+			if r < TerrainField.PLAZA_RADIUS + 2.5:
+				grass *= TerrainField._ss(TerrainField.PLAZA_RADIUS + 0.2, TerrainField.PLAZA_RADIUS + 2.5, r)
+			if h < -0.1:
+				sand = maxf(sand, TerrainField._ss(-0.1, -0.6, h))
+			var ao := 1.0
+			if detailed and x * x + z * z < ao_r2:
+				ao = _vertex_ao(heights, n, ix, iz, step, near, far)
+			verts[i] = Vector3(x, h, z)
+			norms[i] = nrm
+			var tan := (Vector3.RIGHT - nrm * nrm.x).normalized()
+			tans[i * 4] = tan.x
+			tans[i * 4 + 1] = tan.y
+			tans[i * 4 + 2] = tan.z
+			tans[i * 4 + 3] = 1.0
+			cols[i] = Color(grass, sand, paved[i], ao)
+			uvs[i] = Vector2(x, z) * 0.16
+	var idx := PackedInt32Array()
+	idx.resize((n - 1) * (n - 1) * 6)
+	var k := 0
+	var eps := step * 0.01
 	for iz in n - 1:
 		for ix in n - 1:
-			if skip_inner:
+			if hole > 0.0:
 				var x0 := from + float(ix) * step
 				var z0 := from + float(iz) * step
-				if x0 >= -half and x0 + step <= half + 0.02 and z0 >= -half and z0 + step <= half + 0.02:
+				if x0 >= -hole - eps and x0 + step <= hole + eps and z0 >= -hole - eps and z0 + step <= hole + eps:
 					continue
 			var i00 := iz * n + ix
-			var i01 := i00 + 1
-			var i10 := i00 + n
-			var i11 := i10 + 1
-			st.add_index(i00)
-			st.add_index(i01)
-			st.add_index(i11)
-			st.add_index(i00)
-			st.add_index(i11)
-			st.add_index(i10)
-	st.generate_tangents()
-	return st.commit()
+			idx[k] = i00
+			idx[k + 1] = i00 + 1
+			idx[k + 2] = i00 + n + 1
+			idx[k + 3] = i00
+			idx[k + 4] = i00 + n + 1
+			idx[k + 5] = i00 + n
+			k += 6
+	idx.resize(k)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = norms
+	arrays[Mesh.ARRAY_TANGENT] = tans
+	arrays[Mesh.ARRAY_COLOR] = cols
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## Ground under (x, z) from the fine terrain grid: x = height (bilinear),
+## y = slope, z = paved. Falls back to the terrain function outside the grid.
+func ground_info(x: float, z: float) -> Vector3:
+	var fx := (x - _core_from) / _core_step
+	var fz := (z - _core_from) / _core_step
+	var ix := int(floor(fx))
+	var iz := int(floor(fz))
+	if _core_n == 0 or ix < 1 or iz < 1 or ix >= _core_n - 2 or iz >= _core_n - 2:
+		return Vector3(terrain.height(x, z), terrain.slope(x, z), terrain.paved(x, z))
+	var n := _core_n
+	var tx := fx - float(ix)
+	var tz := fz - float(iz)
+	var i := iz * n + ix
+	var h := lerpf(lerpf(_core_heights[i], _core_heights[i + 1], tx), lerpf(_core_heights[i + n], _core_heights[i + n + 1], tx), tz)
+	var gx := (_core_heights[i + 1] - _core_heights[i - 1]) / (2.0 * _core_step)
+	var gz := (_core_heights[i + n] - _core_heights[i - n]) / (2.0 * _core_step)
+	return Vector3(h, sqrt(gx * gx + gz * gz), _core_paved[i])
+
+
+## Make the outer border follow straight lines between every `m`-th vertex, as
+## the next coarser grid draws it.
+func _stitch_border(h: PackedFloat32Array, n: int, m: int) -> void:
+	for i in n:
+		if i % m == 0:
+			continue
+		var i0 := (i / m) * m
+		var i1 := mini(i0 + m, n - 1)
+		var k := float(i - i0) / float(maxi(i1 - i0, 1))
+		for e in 4:
+			var a: int
+			var b: int
+			var c: int
+			match e:
+				0:
+					a = i0; b = i1; c = i # bottom row
+				1:
+					a = (n - 1) * n + i0; b = (n - 1) * n + i1; c = (n - 1) * n + i
+				2:
+					a = i0 * n; b = i1 * n; c = i * n # left column
+				_:
+					a = i0 * n + n - 1; b = i1 * n + n - 1; c = i * n + n - 1
+			h[c] = lerpf(h[a], h[b], k)
+
+
+## Darkening where the ground is hemmed in by higher ground (foot of walls and
+## slopes), from the height grid: 8 directions at two distances.
+const _AO_DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 1), Vector2i(-1, 1), Vector2i(-1, 0), Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1)]
+
+
+func _vertex_ao(h: PackedFloat32Array, n: int, ix: int, iz: int, step: float, near: int, far: int) -> float:
+	var h0 := h[iz * n + ix]
+	# Quick out: nothing noticeably higher a few metres away along the axes.
+	var lim := h0 + 0.3
+	if h[iz * n + mini(ix + far, n - 1)] < lim and h[iz * n + maxi(ix - far, 0)] < lim \
+			and h[mini(iz + far, n - 1) * n + ix] < lim and h[maxi(iz - far, 0) * n + ix] < lim:
+		return 1.0
+	var occ := 0.0
+	var inv_near := 1.0 / (float(near) * step)
+	var inv_far := 1.0 / (float(far) * step)
+	for d in _AO_DIRS:
+		var inv_diag := 0.7071 if d.x != 0 and d.y != 0 else 1.0
+		var jx := clampi(ix + d.x * near, 0, n - 1)
+		var jz := clampi(iz + d.y * near, 0, n - 1)
+		occ += maxf((h[jz * n + jx] - h0) * inv_near * inv_diag - 0.12, 0.0)
+		jx = clampi(ix + d.x * far, 0, n - 1)
+		jz = clampi(iz + d.y * far, 0, n - 1)
+		occ += maxf((h[jz * n + jx] - h0) * inv_far * inv_diag - 0.12, 0.0)
+	return 1.0 - clampf(occ * 0.09, 0.0, 0.55)
+
+
+## Terrace walls are drawn by the terrain mesh, which casts no shadow (it would
+## shadow itself everywhere). These invisible strips along each wall cast the
+## walls' shadows on the ground below.
+func _build_wall_shadows() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var any := false
+	for t in terrain.terraces:
+		var segs := 96
+		var prev_top := Vector3.ZERO
+		var prev_bot := Vector3.ZERO
+		for i in segs + 1:
+			var a := TAU * float(i) / float(segs)
+			var d := Vector2(cos(a), sin(a))
+			var rim := t.rim(a)
+			var pt := t.center + d * (rim - TerrainField.CLIFF_IN - 0.15)
+			var pb := t.center + d * (rim + TerrainField.CLIFF_OUT + 0.1)
+			var top := Vector3(pt.x, terrain.height(pt.x, pt.y) - 0.08, pt.y)
+			var bot := Vector3(pb.x, terrain.height(pb.x, pb.y) - 0.3, pb.y)
+			if i > 0 and top.y - bot.y > 0.6 and prev_top.y - prev_bot.y > 0.6:
+				any = true
+				for v in [prev_top, prev_bot, bot, prev_top, bot, top]:
+					st.add_vertex(v)
+			prev_top = top
+			prev_bot = bot
+	if not any:
+		return
+	var mi := MeshInstance3D.new()
+	mi.name = "WallShadows"
+	mi.mesh = st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	add_child(mi)
 
 
 func _build_water() -> void:
@@ -545,12 +732,16 @@ func _update_grass_density() -> void:
 		var v := terrain.variation(p.x, p.y)
 		if rng.randf() > 0.25 + v * 0.9:
 			continue
-		var h := terrain.height(p.x, p.y)
+		var g := ground_info(p.x, p.y)
+		var h := g.x
 		if h < GameConfig.WATER_LEVEL + 0.25:
+			continue
+		# No grass on terrace walls or paving.
+		if g.y > 0.55 or g.z > 0.2:
 			continue
 		var blocked := false
 		for ob in _grass_blockers:
-			if ob.edge_distance(p) < 0.15:
+			if ob.edge_distance_within(p, 0.15) < 0.15:
 				blocked = true
 				break
 		if blocked:
@@ -576,7 +767,6 @@ func _build_landmarks() -> void:
 	gate.mesh = WorldMeshes.temple_gate()
 	gate.material_override = _stone_mat
 	gate.position = Vector3(0, terrain.height(0, -64), -64)
-	gate.set_instance_shader_parameter("tint_var", 0.3)
 	add_child(gate)
 	var statue := MeshInstance3D.new()
 	statue.name = "SerpentStatue"
@@ -584,7 +774,6 @@ func _build_landmarks() -> void:
 	statue.material_override = _stone_mat
 	statue.position = Vector3(74, terrain.height(74, 10) - 0.2, 10)
 	statue.rotation.y = 2.4
-	statue.set_instance_shader_parameter("tint_var", 0.8)
 	add_child(statue)
 	# Glowing eyes on the statue: a pair of halos high on the head.
 	var halo := QuadMesh.new()
@@ -611,7 +800,7 @@ func _build_landmarks() -> void:
 		mi.material_override = _stone_mat
 		mi.position = Vector3(p.x, h - 0.05, p.y)
 		mi.rotation.y = _rng.randf() * TAU
-		mi.set_instance_shader_parameter("tint_var", _rng.randf())
+		_rng.randf() # keeps the placement sequence of later decorations unchanged
 		add_child(mi)
 
 	# Floating lanterns on the lake (night theme only).
@@ -757,7 +946,6 @@ func _make_obstacle_node(ob: Obstacle) -> Node3D:
 	mi.mesh = _mesh_for(ob)
 	mi.material_override = _stone_mat
 	mi.scale = _obstacle_scale(ob)
-	mi.set_instance_shader_parameter("tint_var", MathUtil.hash01(ob.id * 7 + 3))
 	root.add_child(mi)
 	if ob.kind == Obstacle.KIND_BRAZIER:
 		var fire := _make_fire()
@@ -846,6 +1034,8 @@ func set_obstacles(list: Array[Obstacle]) -> void:
 			e["disc"].queue_free()
 	_rising.clear()
 	for ob in list:
+		if ob.kind == Obstacle.KIND_CLIFF:
+			continue # terrace walls are part of the terrain mesh
 		var node := _make_obstacle_node(ob)
 		_obstacle_root.add_child(node)
 		_obstacle_nodes[ob.id] = node
@@ -872,6 +1062,9 @@ func on_rise_start(ob: Obstacle) -> void:
 	_obstacle_root.add_child(node)
 	_obstacle_nodes[ob.id] = node
 	e["node"] = node
+	# Its own material while it rises (glowing runes), the shared one afterwards.
+	var mi := node.get_node("Mesh") as MeshInstance3D
+	mi.material_override = _stone_mat.duplicate()
 
 
 func obstacle_node(id: int) -> Node3D:
@@ -899,7 +1092,10 @@ func update_view(delta: float, head_pos: Vector3, camera_pos: Vector3) -> void:
 				var sink := (1.0 - ease(ob.rise, 0.4)) * (ob.height + 0.7)
 				var shake := 0.04 * (1.0 - ob.rise) * sin(_time * 70.0)
 				mi.position = Vector3(shake, -sink, shake * 0.6)
-				mi.set_instance_shader_parameter("rune_glow", 0.4 + 2.2 * (1.0 - ob.rise))
+				if ob.state == Obstacle.State.RISING:
+					(mi.material_override as ShaderMaterial).set_shader_parameter("rune_glow", 0.4 + 2.2 * (1.0 - ob.rise))
+				elif mi.material_override != _stone_mat:
+					mi.material_override = _stone_mat
 			if ob.state == Obstacle.State.ACTIVE:
 				e["fade"] = float(e["fade"]) - delta * 1.2
 			mat.set_shader_parameter("progress", 1.0)

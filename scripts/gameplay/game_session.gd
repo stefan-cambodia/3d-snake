@@ -255,7 +255,7 @@ func is_valid_item_point(p: Vector2, min_head: float, max_head: float = INF, rel
 	if hd < min_head or hd > max_head:
 		return false
 	for o in obstacles:
-		if o.edge_distance(p) < GameConfig.FOOD_MIN_DIST_FROM_OBSTACLE:
+		if o.edge_distance_within(p, GameConfig.FOOD_MIN_DIST_FROM_OBSTACLE) < GameConfig.FOOD_MIN_DIST_FROM_OBSTACLE:
 			return false
 	for it in items:
 		if it.pos2().distance_to(p) < (2.0 if relaxed else 3.5):
@@ -325,7 +325,7 @@ func _pick_rise_site() -> Obstacle:
 		if d < 24.0 and fwd.dot(to / d) > cos(deg_to_rad(42.0)):
 			continue
 		var ob := Obstacle.create(Obstacle.KIND_RISING, p, rng.randf() * TAU, rng)
-		if not WorldGenerator.respects_gaps(ob, obstacles):
+		if not WorldGenerator.respects_gaps(ob, obstacles) or not WorldGenerator.clear_of_ramps(ob, terrain):
 			continue
 		var blocked := false
 		for c in ob.circles:
@@ -377,7 +377,7 @@ func _check_collisions() -> void:
 		_die(CAUSE_WALL)
 		return
 	for ob in obstacles:
-		if ob.is_solid() and ob.edge_distance(tip) < hr:
+		if ob.is_solid() and ob.edge_distance_within(tip, hr) < hr:
 			_die(CAUSE_OBSTACLE)
 			return
 	var body := snake.spine.clearance_xz(Vector3(tip.x, 0.0, tip.y), GameConfig.NECK_SKIP, snake.length, hr + GameConfig.BODY_COLLISION_RADIUS + 0.01)
@@ -398,7 +398,7 @@ func head_clearance() -> float:
 	var best := cap
 	for ob in obstacles:
 		if ob.is_solid():
-			best = minf(best, ob.edge_distance(tip) - GameConfig.HEAD_COLLISION_RADIUS)
+			best = minf(best, ob.edge_distance_within(tip, cap + GameConfig.HEAD_COLLISION_RADIUS) - GameConfig.HEAD_COLLISION_RADIUS)
 	var body := snake.spine.clearance_xz(Vector3(tip.x, 0.0, tip.y), GameConfig.NECK_SKIP + 0.6, snake.length, cap + 1.0)
 	best = minf(best, body - GameConfig.HEAD_COLLISION_RADIUS - GameConfig.BODY_COLLISION_RADIUS)
 	return best

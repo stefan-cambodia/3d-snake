@@ -15,6 +15,9 @@ const KIND_BRAZIER := &"brazier"
 const KIND_WALL := &"wall"
 const KIND_FALLEN_COLUMN := &"fallen_column"
 const KIND_RISING := &"rising_monolith"
+## Terrace wall: steep terrain covered by many small circles. Drawn by the
+## terrain itself, so it has no model of its own.
+const KIND_CLIFF := &"cliff"
 
 var id: int = -1
 var kind: StringName = KIND_PILLAR
@@ -28,17 +31,34 @@ var state: int = State.ACTIVE
 var timer: float = 0.0
 ## Visual rise progress 0..1 (static obstacles are always 1).
 var rise: float = 1.0
+## Highest point (world y) of a terrace wall: the camera above it is not blocked.
+var top_y: float = INF
+
+var _bound: float = -1.0
 
 
 func is_solid() -> bool:
 	return state != State.WARNING
 
 
+## Radius around `position` that contains every circle (cached: circles never
+## change after creation).
 func bounding_radius() -> float:
-	var r := 0.0
-	for c in circles:
-		r = maxf(r, Vector2(c.x - position.x, c.y - position.y).length() + c.z)
-	return r
+	if _bound < 0.0:
+		var r := 0.0
+		for c in circles:
+			r = maxf(r, Vector2(c.x - position.x, c.y - position.y).length() + c.z)
+		_bound = r
+	return _bound
+
+
+## Like edge_distance(), but cheap for far points: when p is clearly further
+## than `cap` from the obstacle, returns a lower bound (>= cap) instead.
+func edge_distance_within(p: Vector2, cap: float) -> float:
+	var lower := p.distance_to(position) - bounding_radius()
+	if lower > cap:
+		return lower
+	return edge_distance(p)
 
 
 ## Signed distance from point to the nearest circle edge (negative = inside).
@@ -51,7 +71,10 @@ func edge_distance(p: Vector2) -> float:
 	return best
 
 
-func edge_distance_to(other: Obstacle) -> float:
+func edge_distance_to(other: Obstacle, cap: float = INF) -> float:
+	var lower := position.distance_to(other.position) - bounding_radius() - other.bounding_radius()
+	if lower > cap:
+		return lower
 	var best := INF
 	for a in circles:
 		for b in other.circles:

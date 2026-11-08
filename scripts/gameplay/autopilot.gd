@@ -3,6 +3,7 @@ extends RefCounted
 ## Simple look-ahead driver: used for the attract-mode snake on the main menu
 ## and for automated soak tests. Samples a few steering arcs, rejects the ones
 ## that collide within the horizon and picks the one ending nearest its target.
+## Food on (or off) a terrace is reached through a ramp: foot, then top.
 ## Cost is kept low (runs on phones while the menu is shown): obstacles are
 ## pre-filtered to the horizon radius once per decision.
 
@@ -39,7 +40,7 @@ func update(session: GameSession, dt: float) -> void:
 			continue
 		if ob.position.distance_to(tip) < reach + ob.bounding_radius():
 			_near.append(ob)
-	var target := _pick_target(session)
+	var target := route(session.terrain, tip, _pick_target(session))
 	var best_score := -INF
 	var best_steer := 0.0
 	for c in CANDIDATES:
@@ -54,6 +55,41 @@ func update(session: GameSession, dt: float) -> void:
 	var to := target - tip
 	var ahead := MathUtil.heading_dir2(sim.heading).dot(to.normalized()) > 0.9
 	boost = ahead and to.length() > 14.0 and sim.stamina > 0.45 and best_score > -50.0
+
+
+## Next point to head for on the way from `from` to `goal`: the goal itself, or
+## a ramp's foot or top when one of them is on a terrace the other is not.
+static func route(terrain: TerrainField, from: Vector2, goal: Vector2) -> Vector2:
+	var here := terrain.terrace_at(from)
+	var there := terrain.terrace_at(goal)
+	if here == there:
+		return goal
+	var on_ramp := terrain.ramp_distance(from) <= 0.0
+	if here >= 0:
+		# Leave this terrace by the ramp that suits the goal best.
+		var t: TerrainField.Terrace = terrain.terraces[here]
+		var best := 0
+		var best_cost := INF
+		for i in t.ramps.size():
+			var cost := from.distance_to(t.ramp_top(i)) + t.ramp_foot(i).distance_to(goal)
+			if cost < best_cost:
+				best_cost = cost
+				best = i
+		if on_ramp or from.distance_to(t.ramp_top(best)) < 2.5:
+			return t.ramp_foot(best)
+		return t.ramp_top(best)
+	# Climb the goal's terrace.
+	var g: TerrainField.Terrace = terrain.terraces[there]
+	var pick := 0
+	var pick_cost := INF
+	for i in g.ramps.size():
+		var cost := from.distance_to(g.ramp_foot(i)) + g.ramp_top(i).distance_to(goal)
+		if cost < pick_cost:
+			pick_cost = cost
+			pick = i
+	if on_ramp or from.distance_to(g.ramp_foot(pick)) < 3.0:
+		return g.ramp_top(pick)
+	return g.ramp_foot(pick)
 
 
 func _pick_target(session: GameSession) -> Vector2:
@@ -86,7 +122,7 @@ func _evaluate(session: GameSession, steer_value: float, target: Vector2) -> flo
 		p += MathUtil.heading_dir2(h) * spd * HORIZON_DT
 		var clear := GameConfig.ARENA_RADIUS - p.length() - hr
 		for ob in _near:
-			clear = minf(clear, ob.edge_distance(p) - hr)
+			clear = minf(clear, ob.edge_distance_within(p, 3.0) - hr)
 		if k % 2 == 1 or clear < 2.0:
 			var body := sim.spine.clearance_xz(Vector3(p.x, 0.0, p.y), GameConfig.NECK_SKIP + 0.5, sim.length, 2.5)
 			clear = minf(clear, body - body_r)

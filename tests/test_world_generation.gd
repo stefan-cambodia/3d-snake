@@ -42,15 +42,20 @@ func test_free_space_fully_connected() -> void:
 func test_terrain_is_deterministic_and_playable() -> void:
 	var a := TerrainField.new(9)
 	var b := TerrainField.new(9)
+	var walls := a.cliff_obstacles()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
-	for i in 200:
+	for i in 400:
 		var x := rng.randf_range(-60, 60)
 		var z := rng.randf_range(-60, 60)
 		check_eq(a.height(x, z), b.height(x, z), "same height")
 		if Vector2(x, z).length() < GameConfig.ARENA_RADIUS:
 			check(a.height(x, z) > GameConfig.WATER_LEVEL + 0.1, "arena above water at (%.1f, %.1f)" % [x, z])
-			check(a.normal(x, z).y > 0.93, "arena slopes gentle")
+			if a.slope(x, z) > TerrainField.CLIMB_LIMIT:
+				var inside := false
+				for w in walls:
+					inside = inside or w.edge_distance(Vector2(x, z)) < GameConfig.HEAD_COLLISION_RADIUS
+				check(inside, "ground too steep to climb at (%.1f, %.1f) is a wall" % [x, z])
 	check_near(a.height(0, 0), a.height(3, 4), 0.06, "plaza is flat")
 	check(a.height(0, 90) < GameConfig.WATER_LEVEL, "lake is under water")
 
