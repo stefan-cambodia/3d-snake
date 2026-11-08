@@ -8,6 +8,8 @@
 #   tools/build_android.sh --showcase # demo build for screenshots (build/android/snake3d-showcase.apk):
 #                                     # package com.studio.snake3d.showcase installs next to the game,
 #                                     # with a demo profile and the autopilot playing (main.gd --showcase)
+#   tools/build_android.sh --aab      # Android App Bundle for Google Play (build/android/snake3d.aab),
+#                                     # built with Gradle; run "tools/setup_godot.sh --gradle" once first
 #
 # Environment overrides:
 #   GODOT                                   path to a Godot 4.7.x editor binary (default tools/godot/godot)
@@ -28,7 +30,8 @@ for arg in "$@"; do
 		debug|release) MODE="$arg" ;;
 		--emulator) PRESET="Android Emulator x86_64"; OUT="build/android/snake3d-x86_64.apk" ;;
 		--showcase) PRESET="Android Showcase"; OUT="build/android/snake3d-showcase.apk" ;;
-		*) echo "usage: $0 [release|debug] [--emulator|--showcase]" >&2; exit 2 ;;
+		--aab) PRESET="Android Play"; OUT="build/android/snake3d.aab" ;;
+		*) echo "usage: $0 [release|debug] [--emulator|--showcase|--aab]" >&2; exit 2 ;;
 	esac
 done
 GODOT="${GODOT:-tools/godot/godot}"
@@ -57,9 +60,19 @@ rm -f "$OUT" "$OUT.idsig"
 echo "== Importing project resources"
 "$GODOT" --headless --path . --import >/dev/null 2>&1 || true
 
+EXTRA=()
+if [[ "$OUT" == *.aab ]]; then
+	if [[ ! -f "$(dirname "$GODOT")/editor_data/export_templates/4.7.2.stable/android_source.zip" ]]; then
+		echo "The Gradle build needs the Android source template: run tools/setup_godot.sh --gradle" >&2
+		exit 1
+	fi
+	# First Gradle export: let Godot unpack its Android project into android/build.
+	[[ -f android/build/build.gradle ]] || EXTRA+=(--install-android-build-template)
+fi
+
 if [[ "$MODE" == "debug" ]]; then
-	echo "== Exporting DEBUG APK"
-	"$GODOT" --headless --path . --export-debug "$PRESET" "$OUT"
+	echo "== Exporting DEBUG build"
+	"$GODOT" --headless --path . "${EXTRA[@]}" --export-debug "$PRESET" "$OUT"
 else
 	if [[ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_PATH:-}" ]]; then
 		mkdir -p signing
@@ -80,8 +93,8 @@ else
 		export GODOT_ANDROID_KEYSTORE_RELEASE_USER="$(sed -n 's/^alias=//p' "$PROPS")"
 		export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD="$(sed -n 's/^password=//p' "$PROPS")"
 	fi
-	echo "== Exporting RELEASE APK"
-	"$GODOT" --headless --path . --export-release "$PRESET" "$OUT"
+	echo "== Exporting RELEASE build"
+	"$GODOT" --headless --path . "${EXTRA[@]}" --export-release "$PRESET" "$OUT"
 fi
 
 if [[ ! -s "$OUT" ]]; then
@@ -90,7 +103,14 @@ if [[ ! -s "$OUT" ]]; then
 fi
 
 echo "== Verifying signature"
-if APKSIGNER=$(find_tool apksigner); then
+if [[ "$OUT" == *.aab ]]; then
+	JARSIGNER=$(find_tool jarsigner) || { echo "jarsigner (JDK) not found" >&2; exit 1; }
+	"$JARSIGNER" -verify "$OUT" | grep -q "jar verified" || {
+		echo "Signature verification FAILED" >&2
+		exit 1
+	}
+	echo "jar verified (signed with $(sed -n 's/^alias=//p' signing/release.properties 2>/dev/null || echo 'your key'))"
+elif APKSIGNER=$(find_tool apksigner); then
 	"$APKSIGNER" verify --verbose "$OUT" 2>/dev/null | grep -E '^Verifies|v2 scheme|v3 scheme' || {
 		echo "Signature verification FAILED" >&2
 		exit 1
@@ -100,4 +120,4 @@ else
 fi
 
 echo
-echo "APK ready: $OUT ($(du -h "$OUT" | cut -f1))"
+echo "Ready: $OUT ($(du -h "$OUT" | cut -f1))"

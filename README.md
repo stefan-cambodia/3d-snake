@@ -134,6 +134,7 @@ tools/build_android.sh                # release build -> build/android/snake3d.a
 tools/build_android.sh debug          # debug build (debug keystore)
 tools/build_android.sh --emulator     # x86_64 build for the Android emulator -> build/android/snake3d-x86_64.apk
 tools/build_android.sh --showcase     # demo build for screenshots -> build/android/snake3d-showcase.apk
+tools/build_android.sh --aab          # Android App Bundle for Google Play -> build/android/snake3d.aab
 ```
 
 The showcase build installs as a separate app (*3D Snake Showcase*) with a demo profile, and
@@ -141,6 +142,15 @@ the autopilot plays every run: see [docs/screenshots](docs/screenshots/README.md
 
 The script imports the project, exports with the `Android` preset from `export_presets.cfg`, and
 checks the APK signature with `apksigner`.
+
+**App Bundle (Google Play).** Play only accepts `.aab` files, which Godot builds with Gradle. Run
+`tools/setup_godot.sh --gradle` once: it adds the Android source template and a JDK 17 in
+`tools/jdk-17/` (Godot 4.7's Gradle 8.11 does not run on newer Java). The first `--aab` build
+unpacks Godot's Android project into `android/build/` (git-ignored) and downloads Gradle's
+dependencies, so it needs internet and takes several minutes; later builds are faster. The bundle is
+signed with the same release key and checked with `jarsigner`. The store listing, graphics and
+publishing steps are in [store/README.md](store/README.md); the privacy policy is
+[PRIVACY.md](PRIVACY.md).
 
 **Signing.** The first release build creates `signing/release.keystore` with a random password
 stored next to it in `signing/release.properties`. That folder is git-ignored. **Back it up**: an

@@ -1,10 +1,12 @@
 # Godot
 .godot/
 *.import.tmp
-/android/build/
+/android/
 
 # Local toolchain (downloaded by tools/setup_godot.sh)
 /tools/godot/
+/tools/jdk-17/
+/tools/bundletool.jar
 /tools/.font_cache/
 
 # Generated from assets/i18n/strings.csv on import

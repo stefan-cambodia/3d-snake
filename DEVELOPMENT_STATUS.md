@@ -25,6 +25,7 @@ them (see Known issues).
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
 | Relief build on the phone (2026-11-08) | Installed over the previous version, profile kept. **Medium quality (the phone default): steady 60 fps** with the new 60 fps cap (98% of frames at 16 ms over 85 s of autopilot play, 0 dropped). Without the cap the 120 Hz screen got an uneven mix of 8 ms and 16 ms frames (84 fps average). High quality: 54.5 fps (13% of frames at 33 ms). Launch to main loop: 2.8 s (3.6 s on the first launch after the update, which recompiles the changed shaders). Terraces, walls, ramps and the snake climbing a ramp checked on screen |
 | Emulator soak (2026-11-08) | 7 minutes of autopilot runs: no errors (the pre-fix build hit the shader instance limit after 1.5–4 minutes) |
+| App Bundle `build/android/snake3d.aab` (`tools/build_android.sh --aab`) | **Built, 34 MB**, Gradle 8.11 on JDK 17, signed with the release key (`jarsigner` verified). Not yet installed on a device (needs bundletool or a Play test track) |
 
 ## Features
 
@@ -222,6 +223,31 @@ them (see Known issues).
   `docs/screenshots/README.md` lists the versions and how to add the next one. The README gallery
   shows 1.1.0.
 
+## Changes: Google Play preparation (2026-11-08)
+
+- **App Bundle**: `tools/build_android.sh --aab` builds `build/android/snake3d.aab` (34 MB) with
+  Gradle through a new *Android Play* preset (same package, version and signing key as the APK). The
+  game data travels in an install-time asset pack, as Godot 4.7 does. `tools/setup_godot.sh
+  --gradle` fetches what it needs: Godot's Android source template and Eclipse Temurin JDK 17 in
+  `tools/jdk-17/` (checksum verified), because Godot 4.7's Gradle 8.11 runs on Java 17–23 only and
+  this machine has Java 27 (and 25 in Android Studio). Godot's `--install-android-build-template`
+  alone starts the editor and never exits, so the build script passes it with the export instead.
+  First build: about 4 minutes with Gradle's downloads. Checked: `jarsigner` verifies the bundle;
+  the manifest has package `com.studio.snake3d`, version 1.1.0 (2), VIBRATE as the only requested
+  permission, no Internet.
+- **Vulkan was already optional**: the manifest marks `android.hardware.vulkan.level` and
+  `android.hardware.vulkan.version` `required="false"` (only OpenGL ES 3.0 is required, the
+  fallback renderer), so Play does not hide the game from phones without Vulkan. The earlier
+  known-issue note saying otherwise was wrong.
+- **Upload key**: the existing `signing/release.keystore` (RSA 2048, valid until 2054) meets Play's
+  requirement (valid past 2033). It must be backed up; it stays git-ignored.
+- **Store listing** in `store/`: 512×512 icon and 1024×500 feature graphic
+  (`tools/make_store_assets.py`), English/French/Khmer texts, the screenshots to upload, Data
+  safety and content-rating answers, and the publishing steps, including the signing choice that
+  decides whether the Play version can update an APK-installed copy.
+- **Privacy policy** in `PRIVACY.md` (English and French), public on GitHub: no data collected, no
+  Internet access, saves stay on the device.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -241,9 +267,9 @@ them (see Known issues).
   looping Ogg streams that the engine's audio server is still holding at shutdown. Stopping the
   players in `_exit_tree` did not remove the warning. It only happens at exit and does not affect
   play.
-- The manifest declares the Vulkan hardware features (Godot adds them for the Mobile renderer).
-  Sideloading is not affected, but a Play Store listing would hide the game from devices without
-  Vulkan.
+- The App Bundle has only been checked structurally (signature, contents, manifest), not installed
+  on a device: that needs Google's bundletool (`build-apks` / `install-apks`) or a Play internal
+  test track.
 - With no steering, the snake reaches the barrier about 6 s after "GO!". This is intended: the
   first-run tutorial shows how to steer.
 - Audio and haptics were checked through Android's own reports (audio stream started and unmuted,
@@ -265,9 +291,9 @@ them (see Known issues).
    eight there, so medium stays the default.
 3. Listen to the audio mix and feel the haptics on a phone (Android reports both working), and try
    *Reduced motion* during a real run on the phone (only the automated tests cover it in play).
-4. For a Play Store release: switch to a Gradle build to produce an AAB, decide whether the Vulkan
-   features should be marked optional, add store assets and a privacy policy (the game collects no
-   data), and use a long-lived upload key.
+4. For a Play Store release (prepared, see [store/README.md](store/README.md)): create the Play
+   Console app, fill in the listing, upload `build/android/snake3d.aab` to internal testing and test
+   it on a phone, back up `signing/`, and have a native speaker check the Khmer listing text.
 5. Give each sanctuary (theme) its own relief layout. Today the three sanctuaries share one island
    (seed 20241107) and only change light, sky and colours. Switching would rebuild the terrain
    mesh (about 0.3 s on the PC).

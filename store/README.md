@@ -1,0 +1,122 @@
+# Google Play listing — 3D Snake
+
+Everything needed to fill in the Play Console for **3D Snake 1.1.0 (versionCode 2)**.
+
+| What | File |
+|---|---|
+| App bundle to upload | `build/android/snake3d.aab` — `tools/build_android.sh --aab` (run `tools/setup_godot.sh --gradle` once first) |
+| App icon, 512×512 | [`icon-512.png`](icon-512.png) |
+| Feature graphic, 1024×500 | [`feature-graphic.png`](feature-graphic.png) |
+| Phone screenshots (16:9, 1920×1080) | from [`docs/screenshots/v1.1`](../docs/screenshots/v1.1/README.md): 02, 03, 06, 08, 12, 17, 20, 22 (Play takes 2–8) |
+| Privacy policy URL | <https://github.com/stefan-cambodia/3d-snake/blob/main/PRIVACY.md> |
+
+`python3 tools/make_store_assets.py` rebuilds the icon and the feature graphic.
+
+## Store listing
+
+- **App name** (30 max): `3D Snake`
+- **Category**: Games → Arcade · **Tags**: Snake, Arcade, Casual
+- **Contact email**: _your developer e-mail (required by Play; not stored in this repository)_
+- **Ads**: none · **In-app purchases**: none
+
+### English
+
+**Short description** (80 max):
+Guide a living serpent across an ancient island of terraces and ruins.
+
+**Full description**:
+
+> Guide a living serpent across an ancient island sanctuary.
+>
+> 3D Snake is the classic snake game reimagined in 3D: steer smoothly, eat sunfruit to grow, and
+> wind your ever-longer body through ruins, pillars and stone terraces, without biting your own tail.
+>
+> • Smooth, continuous steering: slide a finger, tap the sides, or use a joystick
+> • An island with real relief: climb paved ramps onto raised terraces and glide over hills, but the
+>   stone walls are as hard as any pillar
+> • Surge crystals for speed and double points, rare relics marked by a beam of light, combos and
+>   Close Call bonuses
+> • 14 stages: the pace quickens and new monoliths rise from the ground
+> • 8 serpent skins and 3 sanctuaries to unlock: Golden Dawn, Moonlit Shrine and Misty Morning
+> • Records, haptic feedback, a left-handed layout and a Reduced motion option
+> • 14 languages, including Khmer and Thai
+> • No ads, no in-app purchases, no internet connection needed, no data collected
+
+### Français
+
+**Description courte** :
+Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
+
+**Description complète** :
+
+> Guidez un serpent vivant à travers un sanctuaire insulaire ancien.
+>
+> 3D Snake réinvente le jeu du serpent en 3D : dirigez en douceur, mangez des fruits solaires pour
+> grandir et faites serpenter votre corps toujours plus long entre ruines, piliers et terrasses de
+> pierre, sans vous mordre la queue.
+>
+> • Direction fluide et continue : glissez le doigt, touchez les côtés ou utilisez un joystick
+> • Une île avec un vrai relief : montez sur les terrasses par leurs rampes pavées, glissez sur les
+>   collines, mais attention, les murs de pierre sont aussi durs qu'un pilier
+> • Cristaux Surge pour la vitesse et les points doublés, reliques rares signalées par un rayon de
+>   lumière, combos et bonus « Close Call »
+> • 14 niveaux : le rythme s'accélère et de nouveaux monolithes surgissent du sol
+> • 8 apparences de serpent et 3 sanctuaires à débloquer : Aube dorée, Sanctuaire lunaire et Matin
+>   brumeux
+> • Records, retour haptique, disposition pour gauchers et option « Mouvements réduits »
+> • 14 langues, dont le khmer et le thaï
+> • Sans publicité, sans achat intégré, sans connexion Internet, aucune donnée collectée
+
+### ខ្មែរ (to be reviewed by a native speaker before publishing)
+
+**ការពិពណ៌នាខ្លី**:
+ដឹកនាំពស់មានជីវិត ឆ្លងកាត់កោះបុរាណ ដែលមានវេទិកាថ្ម និងប្រាសាទបាក់បែក។
+
+**ការពិពណ៌នាពេញ**:
+
+> ដឹកនាំពស់មានជីវិត ឆ្លងកាត់ទីសក្ការៈលើកោះបុរាណមួយ។
+>
+> 3D Snake គឺជាហ្គេមពស់បែបបុរាណ ដែលបង្កើតឡើងវិញជាលក្ខណៈ 3D៖ បញ្ជាទិសយ៉ាងរលូន ញ៉ាំផ្លែឈើព្រះអាទិត្យ
+> ដើម្បីលូតលាស់ ហើយបត់បែនខ្លួនដែលកាន់តែវែងរបស់អ្នក ឆ្លងកាត់ប្រាសាទបាក់បែក សសរ និងវេទិកាថ្ម
+> ដោយមិនខាំកន្ទុយខ្លួនឯង។
+>
+> • ការបញ្ជាទិសរលូន៖ អូសម្រាមដៃ ចុចសងខាង ឬប្រើដងបញ្ជា
+> • កោះមានភ្នំ និងទីទួល៖ ឡើងលើវេទិកាខ្ពស់ៗ តាមផ្លូវឡើងក្រាលថ្ម ប៉ុន្តែជញ្ជាំងថ្មរឹងដូចសសរដែរ
+> • គ្រីស្តាល់ល្បឿនពិសេស វត្ថុបុរាណកម្រ ពិន្ទុទ្វេដង និងប្រាក់រង្វាន់
+> • ១៤ កម្រិត៖ ល្បឿនកាន់តែលឿន ហើយថ្មធំៗងើបចេញពីដី
+> • រូបរាងពស់ ៨ និងទីសក្ការៈ ៣ សម្រាប់ដោះសោ
+> • មាន ១៤ ភាសា រួមទាំងភាសាខ្មែរ និងភាសាថៃ
+> • គ្មានការផ្សាយពាណិជ្ជកម្ម គ្មានការទិញក្នុងកម្មវិធី មិនត្រូវការអ៊ីនធឺណិត និងមិនប្រមូលទិន្នន័យ
+
+## App content (Play Console → Policy → App content)
+
+- **Privacy policy**: the URL above.
+- **Ads**: "No, my app does not contain ads".
+- **App access**: all functionality is available without special access.
+- **Data safety**: "No" to *Does your app collect or share any of the required user data types?*
+  The app has no Internet permission; the only permission is VIBRATE; saves stay on the device.
+- **Content rating** (IARC questionnaire): category *Game*; no violence beyond a cartoon snake
+  bumping into stones, no fear, sex, language, drugs, gambling, user interaction, sharing of
+  location or digital purchases. Expected rating: Everyone / PEGI 3.
+- **Target audience**: choose the age groups you want. Including under-13s brings the Families
+  policy into play (the app already meets it: no ads, no data collection).
+
+## Publishing steps
+
+1. Back up `signing/release.keystore` and `signing/release.properties` somewhere safe and private
+   (password manager, encrypted drive). They are git-ignored. The key (RSA 2048, valid until 2054)
+   is the **upload key**: every future update must be signed with it.
+2. Play Console → *Create app* → name *3D Snake*, game, free.
+3. *Setup → App integrity*: keep **Play App Signing** on (Google holds the app-signing key; a lost
+   upload key can then be reset through Play support). Note: by default Google then signs the app
+   with a key of its own, so the Play version cannot update a copy installed from the APK file
+   (same package, different signature): such players must uninstall first and lose their progress.
+   To avoid that, choose to *use your own key* as the app-signing key and upload
+   `signing/release.keystore` with Google's PEPK tool; then the APK and the Play version match.
+4. Fill in the store listing and app content above.
+5. *Testing → Internal testing* → create a release, upload `build/android/snake3d.aab`, add testers,
+   then promote to closed/open testing and production. New personal developer accounts must run a
+   closed test with testers for 14 days before production.
+6. For each update: raise `version/code` (and `version/name`) in `export_presets.cfg` for all
+   presets and `config/version` in `project.godot`, add a `CHANGELOG.md` entry, rebuild with
+   `tools/build_android.sh --aab`.
