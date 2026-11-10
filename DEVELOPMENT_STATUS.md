@@ -311,9 +311,9 @@ them (see Known issues).
 - **Seen on the emulator** (Android 15, OpenGL, Showcase mode): the Crimson Dusk island loads from
   the sanctuary picker and the autopilot plays on it; the Lotus Cobra skin; the two new settings in
   English and Khmer (subscript consonants correct); larger text in play in English and Khmer.
-  **Not seen on screen: the blue and yellow danger glow.** The autopilot kept clear of obstacles
-  in about 100 captured frames, so only the automated test covers the tint.
-- **Screenshots**: 13 new ones in `docs/screenshots/v1.3/` (what is new); older folders untouched.
+  The blue and yellow danger glow were seen later the same day, in the plain emulator build, by
+  starting a run and not steering (the autopilot never came close enough to an obstacle).
+- **Screenshots**: 15 new ones in `docs/screenshots/v1.3/` (what is new); older folders untouched.
 - **On the phone** (Galaxy A56, 2026-11-10): the 1.3.0 release APK installed over 1.2.0 (Android
   reports 1.3.0, code 4), starts with Vulkan, profile kept (the owner's language and best score).
 - **Frame rate at medium quality (the phone default) on the phone**, Showcase build with
@@ -371,5 +371,7 @@ them (see Known issues).
 5. Play a real run by hand on the Moonlit Shrine, Misty Morning and Crimson Dusk islands on the
    phone (so far only the autopilot has played them there; medium quality holds 60 fps on all).
 6. On the phone, look at the blue and yellow danger glow and at *Larger in-game text* during a real
-   run (the glow's new colours have not been seen on any screen yet, only tested).
+   run (the glow's new colours have been seen on the emulator only: screenshots 14 and 15 of
+   `docs/screenshots/v1.3`). Yellow stands out less than blue on Crimson Dusk's warm light; a
+   person should judge whether it is strong enough there.
 7. Optional: more languages, more sanctuaries and skins.
