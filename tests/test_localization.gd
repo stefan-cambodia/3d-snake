@@ -186,6 +186,37 @@ func test_ui_fits_in_every_language() -> void:
 	dispose_main(main)
 
 
+## In Skins & Sanctuaries a name can take two lines (and Khmer lines are tall): the swatch
+## and the name must stay inside their card in every language.
+func test_skin_and_sanctuary_names_stay_inside_their_cards() -> void:
+	var main := make_main()
+	var ui: UiRoot = main.ui
+	var before := Localization.current()
+	var old_size := tree.root.size
+	tree.root.size = Vector2i(UI_SIZE)
+	ui.show_only(ui.skins)
+	for code in Localization.LOCALES:
+		Localization.apply(code)
+		ui.skins._on_open()
+		await tree.process_frame
+		await tree.process_frame
+		var cards: Array[Node] = []
+		cards.append_array(ui.skins._skin_grid.get_children())
+		cards.append_array(ui.skins._theme_row.get_children())
+		check_eq(cards.size(), SkinCatalog.SKINS.size() + WorldThemes.THEMES.size(), "%s: one card per skin and sanctuary" % code)
+		for c in cards:
+			var card := c as Control
+			var box := card.get_child(0) as Control
+			# The box is anchored inside the card with a top and bottom inset; a Button
+			# does not grow with its children, so compare with the card's own height.
+			var room := card.size.y - box.offset_top + box.offset_bottom
+			var need := box.get_combined_minimum_size().y
+			check(need <= room + 0.5, "%s: card content fits (%.0f px in %.0f)" % [code, need, room])
+	tree.root.size = old_size
+	Localization.apply(before)
+	dispose_main(main)
+
+
 ## Bottom edge on screen of the lowest visible control in a column.
 func _content_bottom(col: Control) -> float:
 	var bottom := 0.0

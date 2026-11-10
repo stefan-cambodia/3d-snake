@@ -15,7 +15,7 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **66 tests, 39,956 checks, 0 failures** (about 41 s) |
+| Headless test suite (`tools/run_tests.sh`) | **67 tests, 40,180 checks, 0 failures** (about 42 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
@@ -337,7 +337,8 @@ them (see Known issues).
 - The Showcase demo profile now has a best stage of 8, so it still unlocks every skin.
 - 2 new strings in the 14 languages (AI-written except English and French, like the others); the
   fallback fonts were rebuilt for the new characters.
-- Tests: no new ones; the suite passes (66 tests, 39,956 checks, 0 failed).
+- Tests: `test_skin_and_sanctuary_names_stay_inside_their_cards` (every card, in the 14 languages;
+  it fails without the swatch fix). 67 tests in all, 40,180 checks, 0 failed.
 - Built: release APK, App Bundle, Showcase APK, emulator APK, all 1.4.0 (5).
 - **Seen on the emulator** (Android 15, OpenGL, Showcase mode): the Jade Monsoon island loads from
   the sanctuary picker and the autopilot played a 3-minute run on it to stage 7 (53.9 m) with the
