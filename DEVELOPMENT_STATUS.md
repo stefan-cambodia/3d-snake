@@ -277,9 +277,17 @@ them (see Known issues).
   the menus, Khmer. The v1.0 and v1.1 folders are untouched.
 - Seen while taking them, on the emulator only: every sanctuary's island loads and plays, the
   language switch works live, Khmer renders correctly in the menu, How to play, Records and the HUD.
-- **On the phone**: the 1.2.0 release APK installed over 1.1.0 on the Galaxy A56 as an update
-  (Android reports version 1.2.0, code 3). The phone was locked, so 1.2.0 has not been launched or
-  played on it yet; the kept profile and the two new islands remain to be checked there.
+- **On the phone** (Galaxy A56, 2026-11-10): the 1.2.0 release APK installed over 1.1.0 as an
+  update (Android reports version 1.2.0, code 3). It starts with the Vulkan renderer and the profile
+  was kept: the owner's language, best score, records table and unlocked skins are all there.
+- **The new islands on the phone**, with the 1.2.0 Showcase build (so the owner's scores were not
+  touched): choosing Moonlit Shrine rebuilt the island in 449 ms and Misty Morning in 422 ms; the
+  autopilot played about 35 s on each (terraces, ramps, shore, barrier all drawn correctly), with no
+  errors in the log. Frame rate at the Showcase build's *high* quality, counting the menu fade and
+  with a picture-in-picture video from another app on screen: 53.4 fps average on Moonlit Shrine,
+  52.5 on Misty Morning, no janky frames reported, which matches what *high* gave on the 1.1.0
+  island (about one frame in eight missed). Not measured at the default (medium) quality on the
+  new islands.
 
 ## Known issues and limitations
 
@@ -325,7 +333,7 @@ them (see Known issues).
 4. For a Play Store release (prepared, see [store/README.md](store/README.md)): create the Play
    Console app, fill in the listing, upload `build/android/snake3d.aab` to internal testing and test
    it on a phone, back up `signing/`, and have a native speaker check the Khmer listing text.
-5. Play 1.2.0 on the phone (it is installed but has not been launched there): check that the
-   profile was kept and try the Moonlit Shrine and Misty Morning islands.
+5. Play a real run by hand on the Moonlit Shrine and Misty Morning islands on the phone (so far
+   only the autopilot has played them there), and measure the frame rate at medium quality.
 6. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
    HUD text, an option for the danger vignette's colour).
