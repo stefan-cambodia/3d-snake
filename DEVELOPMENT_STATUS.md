@@ -344,8 +344,16 @@ them (see Known issues).
   Amethyst Krait skin, no errors in the log; *Skins & Sanctuaries* in English, Khmer and Thai,
   where two-line names now stay inside their cards.
 - **Screenshots**: 14 new ones in `docs/screenshots/v1.4/`; older folders untouched.
-- **Not done on the phone**: 1.4.0 has not been installed on the Galaxy A56 (it was in use during
-  this session), so the new island's frame rate and look under Vulkan are unmeasured.
+- **On the phone** (Galaxy A56, 2026-11-11): the 1.4.0 release APK installed over 1.3.0 (Android
+  reports 1.4.0, code 5); the game itself was not opened afterwards, so "profile kept" was not
+  looked at this time. In the Showcase build (Vulkan, `--quality=1`, French): *Skins &
+  Sanctuaries* fits on one screen with two-line names inside their cards; Jade Monsoon loads in
+  438–519 ms and the autopilot played three runs on it with no errors in the log.
+- **Frame rate at medium quality on the phone**, 35 s of autopilot play, a picture-in-picture
+  video from another app on screen: Jade Monsoon 99.7 % of frames at 16 ms in one run and 90.7 %
+  in another (9 % at 33 ms, 56.7 fps average; that stretch included a Surge); Crimson Dusk,
+  measured between the two for comparison, 98.7 %. No dropped frames in any of them. So the new
+  island holds 60 fps like the others most of the time; the slower stretch was not reproduced.
 
 ## Known issues and limitations
 
@@ -397,6 +405,6 @@ them (see Known issues).
    run (the glow's new colours have been seen on the emulator only: screenshots 14 and 15 of
    `docs/screenshots/v1.3`). Yellow stands out less than blue on Crimson Dusk's warm light; a
    person should judge whether it is strong enough there.
-7. Install 1.4.0 on the phone (over 1.3.0, the profile should be kept), look at the Jade Monsoon
-   island under Vulkan and measure its frame rate at medium quality like the other islands.
+7. Play a real run by hand on Jade Monsoon on the phone, and watch for slow stretches there (one
+   35 s measurement out of two had 9 % of frames at 33 ms).
 8. Optional: more languages, more sanctuaries and skins.
