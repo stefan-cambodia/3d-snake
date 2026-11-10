@@ -153,6 +153,10 @@ func _on_setting_changed(key: String, value: Variant) -> void:
 		"reduced_motion":
 			camera.reduced_motion = bool(value)
 			ui.hud.reduced_motion = bool(value)
+		"hud_large":
+			ui.hud.set_large_text(bool(value))
+		"danger_color":
+			ui.hud.set_danger_color(int(value))
 		"show_fps":
 			ui.set_fps_visible(bool(value))
 

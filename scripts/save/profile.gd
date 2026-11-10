@@ -23,6 +23,8 @@ const DEFAULT_SETTINGS := {
 	"language": "",
 	"show_fps": false,
 	"reduced_motion": false,
+	"hud_large": false, # larger HUD text
+	"danger_color": 0, # danger vignette: 0 red, 1 blue, 2 yellow
 }
 
 const DEFAULT_STATS := {

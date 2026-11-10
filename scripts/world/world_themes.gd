@@ -1,6 +1,6 @@
 class_name WorldThemes
 extends RefCounted
-## The three sanctuaries: each has its own island (`terrain_seed`: a different
+## The sanctuaries: each has its own island (`terrain_seed`: a different
 ## relief, terraces and shore) and its own light and atmosphere. A theme is only
 ## parameters, so new ones can be added without touching gameplay code.
 
@@ -34,6 +34,16 @@ const THEMES: Array[Dictionary] = [
 		"grass_a": Color(0.20, 0.42, 0.22), "grass_b": Color(0.36, 0.55, 0.28),
 		"emissive_boost": 0.5, "motes": Color(0.9, 1.0, 0.95), "night": false, "cloud_tint": Color(0.95, 0.97, 0.97),
 		"exposure": 0.95,
+	},
+	{
+		"id": "dusk", "name": "THEME_DUSK", "unlock": {"stat": "runs", "value": 25}, "terrain_seed": 20241120,
+		"sky_top": Color(0.13, 0.11, 0.38), "sky_horizon": Color(0.96, 0.50, 0.30), "sky_ground": Color(0.14, 0.10, 0.14),
+		"sun_color": Color(1.0, 0.68, 0.48), "sun_energy": 1.25, "sun_pitch": -14.0, "sun_yaw": 62.0,
+		"ambient_energy": 0.6, "fog_color": Color(0.60, 0.40, 0.44), "fog_density": 0.0042,
+		"water_deep": Color(0.06, 0.07, 0.18), "water_shallow": Color(0.36, 0.28, 0.38),
+		"grass_a": Color(0.20, 0.38, 0.17), "grass_b": Color(0.42, 0.50, 0.22),
+		"emissive_boost": 1.2, "motes": Color(1.0, 0.6, 0.35), "night": false, "cloud_tint": Color(1.0, 0.66, 0.58),
+		"exposure": 1.0,
 	},
 ]
 

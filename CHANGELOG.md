@@ -2,7 +2,25 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`).
+
+## 1.3.0 (4) — 2026-11-10
+
+Screenshots: [docs/screenshots/v1.3](docs/screenshots/v1.3/README.md)
+
+### Added
+- **A fourth sanctuary, Crimson Dusk**: a low sun, a violet and pink sky, and an island of its own
+  (three terraces). Unlocked after 25 runs.
+- **A ninth skin, Lotus Cobra** (pink with pale stripes). Unlocked after eating 300 fruit in total.
+- **Larger in-game text** (Settings → Accessibility): the score, best score, stage, combo, length,
+  hints and point popups are drawn 1.3 times bigger.
+- **Danger warning colour** (Settings → Accessibility): the glow at the screen edges when the
+  serpent is close to an obstacle can be red (as before), blue or yellow. Dark red is hard to see
+  with red-blind vision.
+- All of the above in the 14 languages.
+
+### Changed
+- *Skins & Sanctuaries* shows the skins five to a row and the sanctuaries four to a row.
 
 ## 1.2.0 (3) — 2026-11-10
 

@@ -54,6 +54,11 @@ func _build() -> void:
 	var motion_hint := UiTheme.label("SET_REDUCED_MOTION_HINT", 18, "light", UiTheme.MUTED)
 	motion_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.add_child(motion_hint)
+	b.add_child(MenuScreens.setting_row("SET_HUD_LARGE", MenuScreens.toggle(Profile.get_setting("hud_large"), func(v: bool) -> void: Profile.set_setting("hud_large", v))))
+	b.add_child(MenuScreens.setting_row("SET_DANGER_COLOR", MenuScreens.segmented(["DANGER_RED", "DANGER_BLUE", "DANGER_YELLOW"], int(Profile.get_setting("danger_color")), func(i: int) -> void: Profile.set_setting("danger_color", i))))
+	var danger_hint := UiTheme.label("SET_DANGER_COLOR_HINT", 18, "light", UiTheme.MUTED)
+	danger_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b.add_child(danger_hint)
 
 	b.add_child(MenuScreens.section("SET_GRAPHICS"))
 	b.add_child(MenuScreens.setting_row("SET_QUALITY", MenuScreens.segmented(["Q_LOW", "Q_MEDIUM", "Q_HIGH"], int(Profile.get_setting("quality")), func(i: int) -> void: Profile.set_setting("quality", i))))

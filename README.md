@@ -8,18 +8,19 @@ monoliths that rise out of the ground as the stages climb. The island has relief
 and raised stone terraces whose walls block the way but whose paved ramps let the serpent climb up
 and back down. Every model, texture, sound and music track is generated procedurally (see `tools/`). The only third-party assets are the fonts (Cinzel, Outfit and Noto, all under the SIL OFL).
 
-![3D Snake main menu](docs/screenshots/v1.2/01-main-menu.jpg)
+![3D Snake main menu](docs/screenshots/v1.3/01-main-menu-dusk.jpg)
 
 | | | |
 |---|---|---|
 | ![Golden Dawn terraces](docs/screenshots/v1.2/02-dawn-terraces.jpg) | ![Surge on a terrace](docs/screenshots/v1.2/03-dawn-surge.jpg) | ![Moonlit Shrine, Stage 3](docs/screenshots/v1.2/07-night-stage-3.jpg) |
-| ![Moonlit Shrine relic](docs/screenshots/v1.2/09-night-relic.jpg) | ![Misty Morning shore](docs/screenshots/v1.2/15-mist-shore.jpg) | ![Misty Morning ramp](docs/screenshots/v1.2/17-mist-ramp.jpg) |
-| ![Skins and sanctuaries](docs/screenshots/v1.2/18-skins-sanctuaries.jpg) | ![Accessibility settings](docs/screenshots/v1.2/22-settings-accessibility.jpg) | ![Khmer](docs/screenshots/v1.2/24-khmer-main-menu.jpg) |
+| ![Moonlit Shrine relic](docs/screenshots/v1.2/09-night-relic.jpg) | ![Misty Morning shore](docs/screenshots/v1.2/15-mist-shore.jpg) | ![Crimson Dusk terrace](docs/screenshots/v1.3/06-dusk-terrace.jpg) |
+| ![Skins and sanctuaries](docs/screenshots/v1.3/09-skins-sanctuaries.jpg) | ![Accessibility settings](docs/screenshots/v1.3/10-settings-accessibility.jpg) | ![Khmer](docs/screenshots/v1.2/24-khmer-main-menu.jpg) |
 
-More in [docs/screenshots/v1.2](docs/screenshots/v1.2/README.md) (26 images, 1920×1080, plus a contact
-sheet). Screenshots of earlier versions are kept in the [screenshot history](docs/screenshots/README.md).
+More in [docs/screenshots/v1.3](docs/screenshots/v1.3/README.md) (13 images of what is new in 1.3.0)
+and [docs/screenshots/v1.2](docs/screenshots/v1.2/README.md) (26 images of the three older islands),
+1920×1080, each with a contact sheet. Screenshots of earlier versions are kept in the [screenshot history](docs/screenshots/README.md).
 
-- Package id: `com.studio.snake3d`, version 1.2.0 (code 3)
+- Package id: `com.studio.snake3d`, version 1.3.0 (code 4)
 - Android 7.0+ (API 24), arm64-v8a, landscape
 - Renderer: Godot *Mobile* (Vulkan); Godot falls back to OpenGL ES 3 when a device has no usable Vulkan driver at startup
 - 14 languages: English, Français, ខ្មែរ (Khmer), ไทย (Thai), Español, Português, Deutsch, Italiano, Türkçe,
@@ -61,13 +62,16 @@ main menu does the same).
 **Accessibility:** *Settings → Accessibility → Reduced motion* turns off camera shake, banking in
 turns, the field-of-view zoom on boost and Surge, and the speed lines, for players prone to motion
 sickness. The arrows at the screen edge that point to off-screen items also differ in shape (a
-diamond for a Surge crystal, a ring for a relic), so they don't rely on telling cyan from violet.
+diamond for a Surge crystal, a ring for a relic), so they don't rely on telling cyan from violet. *Larger in-game text* draws the score, stage,
+combo, length, hints and point popups 1.3 times bigger, and *Danger warning colour* changes the red
+glow at the screen edges (shown when the serpent is close to an obstacle) to blue or yellow, which
+are easier to see with red-blind vision.
 
 **Scoring:** sunfruit 10 points, Surge crystal 25 (plus double points and extra speed for 5 s),
 violet relic 150. Pickups within 3.2 s of each other build a combo multiplier up to ×3. Grazing an
 obstacle without touching it gives a *Close Call* bonus. Every 6 fruits moves you up a stage
 (14 in total): the snake gets faster and more monoliths rise. Score, length and stage
-milestones unlock 7 more serpent skins and 2 more sanctuary themes.
+milestones unlock 8 more serpent skins and 3 more sanctuaries, each with its own island.
 
 **Relief:** each sanctuary is an island of its own (Golden Dawn, Moonlit Shrine and Misty Morning
 have different terraces, hills and shores). The snake follows the ground over hills and up ramps. Any ground steeper than about 39°
@@ -119,7 +123,7 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-64 tests cover snake movement and steering, the relief and each sanctuary's island (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
+66 tests cover snake movement and steering, the relief and each sanctuary's island (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
 autopilot run, the real main scene's state machine, camera, and HUD/touch layout around display

@@ -1,6 +1,6 @@
 # Development status — 3D Snake
 
-_Last updated: 2026-11-10 · version 1.2.0 (code 3) · history in [CHANGELOG.md](CHANGELOG.md)_
+_Last updated: 2026-11-10 · version 1.3.0 (code 4) · history in [CHANGELOG.md](CHANGELOG.md)_
 
 ## Summary
 
@@ -15,11 +15,11 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **64 tests, 39,579 checks, 0 failures** (about 36 s) |
+| Headless test suite (`tools/run_tests.sh`) | **66 tests, 39,889 checks, 0 failures** (about 36 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
-| Manifest | `com.studio.snake3d`, version 1.2.0 (3), minSdk 24, targetSdk 36, only the VIBRATE permission |
+| Manifest | `com.studio.snake3d`, version 1.3.0 (4), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
@@ -58,13 +58,14 @@ them (see Known issues).
 - Haptic feedback, a first-run tutorial, and AI attract mode behind the main menu.
 
 **Meta and UI**
-- Main menu with a **Quit** button (hidden on iOS and the web), Skins & Sanctuaries (8 skins, 3 themes, unlocked through milestones), Records (top 10
+- Main menu with a **Quit** button (hidden on iOS and the web), Skins & Sanctuaries (9 skins, 4 sanctuaries each with its own island, unlocked through milestones), Records (top 10
   plus lifetime stats), Settings, How to play / About, pause menu, and a game-over screen with
   new-best and unlock announcements.
 - 3 steering schemes (drag, tap sides, joystick), sensitivity, left-handed layout, camera distance
   and smoothing, volumes, FPS counter.
-- Accessibility: a *Reduced motion* option (no camera shake, banking, FOV zoom or speed lines), and
-  off-screen item arrows that differ in shape as well as colour.
+- Accessibility: a *Reduced motion* option (no camera shake, banking, FOV zoom or speed lines),
+  *Larger in-game text* (HUD texts 1.3 times bigger), a choice of colour for the danger glow (red,
+  blue or yellow), and off-screen item arrows that differ in shape as well as colour.
 - **14 languages**: English, French, Khmer, Thai, Spanish, Portuguese (Brazil), German, Italian,
   Turkish, Indonesian, Russian, Japanese, Korean, Simplified Chinese. All text lives in
   `assets/i18n/strings.csv`; the phone's language is picked on first launch and can be changed live
@@ -289,6 +290,40 @@ them (see Known issues).
   island (about one frame in eight missed). Not measured at the default (medium) quality on the
   new islands.
 
+## Changes: version 1.3.0 (2026-11-10)
+
+- **Crimson Dusk**, a fourth sanctuary (`dusk` in `WorldThemes`, island seed 20241120: three
+  terraces, five hills; unlocked at 25 runs), and **Lotus Cobra**, a ninth skin (300 fruit in
+  total). Both are only parameters; the existing tests check the new island like the others
+  (two ramps per terrace, whole island reachable over several layouts).
+- *Skins & Sanctuaries*: skins five to a row (two rows for nine), sanctuaries four to a row; the
+  panel is 60 px wider.
+- **Larger in-game text** (`hud_large`): `Hud.set_large_text()` scales the score, best, stage,
+  combo, length, banner subtitle, tutorial hint and point popups by 1.3 and moves the stage bar,
+  combo ring and labels so nothing overlaps.
+- **Danger warning colour** (`danger_color`: red, blue, yellow): the vignette texture is now white
+  and tinted by `Hud.set_danger_color()`; red gives exactly the old look.
+- 8 new strings in the 14 languages (AI-written except English and French, like the others); the
+  fallback fonts were rebuilt for the new characters.
+- Tests: `test_larger_hud_text_scales_and_stays_tidy` and `test_danger_colour_setting`
+  (66 tests in all, 0 failed).
+- Built: release APK, App Bundle, Showcase APK, emulator APK, all 1.3.0 (4).
+- **Seen on the emulator** (Android 15, OpenGL, Showcase mode): the Crimson Dusk island loads from
+  the sanctuary picker and the autopilot plays on it; the Lotus Cobra skin; the two new settings in
+  English and Khmer (subscript consonants correct); larger text in play in English and Khmer.
+  **Not seen on screen: the blue and yellow danger glow.** The autopilot kept clear of obstacles
+  in about 100 captured frames, so only the automated test covers the tint.
+- **Screenshots**: 13 new ones in `docs/screenshots/v1.3/` (what is new); older folders untouched.
+- **On the phone** (Galaxy A56, 2026-11-10): the 1.3.0 release APK installed over 1.2.0 (Android
+  reports 1.3.0, code 4), starts with Vulkan, profile kept (the owner's language and best score).
+- **Frame rate at medium quality (the phone default) on the phone**, Showcase build with
+  `--quality=1`, 35 s of autopilot play per island, a picture-in-picture video from another app on
+  screen: Misty Morning 99.2 % of frames at 16 ms, Crimson Dusk 99.1 %, Moonlit Shrine 98.8 %;
+  no dropped frames, so a steady 60 fps on all three. Islands rebuilt in 523–541 ms when
+  switching. Golden Dawn was measured the same way in 1.1.0.
+- Not done: installing the App Bundle on a device. That needs Google's bundletool, and downloading
+  it was not permitted in this session.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -322,8 +357,8 @@ them (see Known issues).
 
 ## Remaining work
 
-1. **Have native speakers review the translations**, Khmer first (including the new accessibility
-   strings).
+1. **Have native speakers review the translations**, Khmer first (including the accessibility
+   strings and the 1.3.0 names: Crimson Dusk, Lotus Cobra).
 2. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
    Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
    runs the default (medium) at a steady 60 fps with the relief; high drops about one frame in
@@ -333,7 +368,8 @@ them (see Known issues).
 4. For a Play Store release (prepared, see [store/README.md](store/README.md)): create the Play
    Console app, fill in the listing, upload `build/android/snake3d.aab` to internal testing and test
    it on a phone, back up `signing/`, and have a native speaker check the Khmer listing text.
-5. Play a real run by hand on the Moonlit Shrine and Misty Morning islands on the phone (so far
-   only the autopilot has played them there), and measure the frame rate at medium quality.
-6. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
-   HUD text, an option for the danger vignette's colour).
+5. Play a real run by hand on the Moonlit Shrine, Misty Morning and Crimson Dusk islands on the
+   phone (so far only the autopilot has played them there; medium quality holds 60 fps on all).
+6. On the phone, look at the blue and yellow danger glow and at *Larger in-game text* during a real
+   run (the glow's new colours have not been seen on any screen yet, only tested).
+7. Optional: more languages, more sanctuaries and skins.

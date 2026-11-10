@@ -17,6 +17,13 @@ var left_handed: bool = false
 var scheme: int = 0
 ## Accessibility: no speed lines (the camera handles the rest of reduced motion).
 var reduced_motion: bool = false
+## Accessibility: HUD texts drawn LARGE_TEXT_SCALE times bigger.
+var large_text: bool = false
+
+const LARGE_TEXT_SCALE := 1.3
+## Danger vignette tints (setting "danger_color"): the default dark red is hard
+## to see with red-blind vision, so a bright blue and a yellow are offered.
+const DANGER_COLORS: Array[Color] = [Color(0.6, 0.05, 0.02), Color(0.1, 0.5, 1.0), Color(1.0, 0.82, 0.1)]
 
 var _score_label: Label
 var _best_label: Label
@@ -48,6 +55,9 @@ var _danger: float = 0.0
 var _time: float = 0.0
 var _tutorial_t: float = 0.0
 var _score_pulse: float = 0.0
+var _scaled_labels: Array = [] # [[Label, base font size]]
+var _bar_y: float = 50.0
+var _ring_y: float = 120.0
 
 
 func _ready() -> void:
@@ -56,9 +66,10 @@ func _ready() -> void:
 
 	_vignette = TextureRect.new()
 	var g := Gradient.new()
-	g.set_color(0, Color(0.6, 0.05, 0.02, 0.0))
-	g.set_color(1, Color(0.6, 0.05, 0.02, 0.85))
-	g.add_point(0.6, Color(0.6, 0.05, 0.02, 0.0))
+	# White, tinted through self_modulate (see set_danger_color).
+	g.set_color(0, Color(1, 1, 1, 0.0))
+	g.set_color(1, Color(1, 1, 1, 0.85))
+	g.add_point(0.6, Color(1, 1, 1, 0.0))
 	var gt := GradientTexture2D.new()
 	gt.gradient = g
 	gt.fill = GradientTexture2D.FILL_RADIAL
@@ -69,6 +80,7 @@ func _ready() -> void:
 	_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_vignette.modulate.a = 0.0
+	_vignette.self_modulate = DANGER_COLORS[0]
 	add_child(_vignette)
 
 	_canvas = Control.new()
@@ -138,8 +150,28 @@ func _ready() -> void:
 	_tutorial.add_theme_constant_override("outline_size", 8)
 	_tutorial.modulate.a = 0.0
 	add_child(_tutorial)
+	_scaled_labels = [[_score_label, 56], [_best_label, 20], [_stage_label, 21], [_combo_label, 30],
+			[_length_label, 22], [_banner_sub, 24], [_tutorial, 26]]
 	resized.connect(_layout)
 	_layout()
+
+
+func text_scale() -> float:
+	return LARGE_TEXT_SCALE if large_text else 1.0
+
+
+## Accessibility: larger score, best, stage, combo, length, hint and popup texts.
+func set_large_text(on: bool) -> void:
+	large_text = on
+	var k := text_scale()
+	for e in _scaled_labels:
+		(e[0] as Label).add_theme_font_size_override("font_size", roundi(float(e[1]) * k))
+	_layout()
+
+
+## Accessibility: tint of the danger vignette (index into DANGER_COLORS).
+func set_danger_color(index: int) -> void:
+	_vignette.self_modulate = DANGER_COLORS[clampi(index, 0, DANGER_COLORS.size() - 1)]
 
 
 func set_safe_insets(insets: Vector4) -> void:
@@ -154,12 +186,20 @@ func safe_rect() -> Rect2:
 
 func _layout() -> void:
 	var r := safe_rect()
+	var k := text_scale()
+	_score_label.reset_size()
+	_best_label.reset_size()
 	_score_label.position = r.position + Vector2(40, 18)
-	_best_label.position = r.position + Vector2(44, 88)
+	_best_label.position = r.position + Vector2(44, 18 + 70 * k)
+	_stage_label.size = Vector2(280, 30) * k
 	_stage_label.position = Vector2(r.get_center().x - _stage_label.size.x * 0.5, r.position.y + 16)
-	_combo_label.position = Vector2(r.get_center().x - _combo_label.size.x * 0.5, r.position.y + 66)
-	_length_label.position = Vector2(r.position.x + 44 if not left_handed else r.end.x - 260, r.end.y - 64)
-	_length_label.size = Vector2(220, 40)
+	_bar_y = 16 + 34 * k
+	_combo_label.size = Vector2(280, 38) * k
+	_combo_label.position = Vector2(r.get_center().x - _combo_label.size.x * 0.5, r.position.y + _bar_y + 16)
+	_ring_y = _bar_y + 32 + 38 * k
+	_length_label.size = Vector2(220, 40) * k
+	_length_label.position = Vector2(r.position.x + 44 if not left_handed else r.end.x - 40 - _length_label.size.x, r.end.y - 24 - _length_label.size.y)
+	_tutorial.offset_top = -120 - 70 * k
 	_length_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if not left_handed else HORIZONTAL_ALIGNMENT_RIGHT
 	if touch:
 		# Touch zones are compared with event positions, i.e. viewport coordinates.
@@ -307,12 +347,13 @@ func popup(world_pos: Vector3, text: String, color: Color, size_px: int = 30) ->
 	if camera == null or camera.is_position_behind(world_pos):
 		return
 	var sp := camera.unproject_position(world_pos)
-	var l := UiTheme.label(text, size_px, "bold", color, HORIZONTAL_ALIGNMENT_CENTER)
+	var k := text_scale()
+	var l := UiTheme.label(text, roundi(size_px * k), "bold", color, HORIZONTAL_ALIGNMENT_CENTER)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
 	l.add_theme_constant_override("outline_size", 6)
-	l.size = Vector2(240, 44)
-	l.position = sp - Vector2(120, 40)
-	l.pivot_offset = Vector2(120, 22)
+	l.size = Vector2(240, 44) * k
+	l.position = sp - Vector2(120, 40) * k
+	l.pivot_offset = Vector2(120, 22) * k
 	l.scale = Vector2(0.6, 0.6)
 	_popups.add_child(l)
 	var tw := l.create_tween().set_parallel(true)
@@ -373,12 +414,12 @@ func _draw_canvas() -> void:
 	var sr := safe_rect()
 	var bw := 220.0
 	var bx := sr.get_center().x - bw * 0.5
-	var by := sr.position.y + 50.0
+	var by := sr.position.y + _bar_y
 	c.draw_rect(Rect2(bx, by, bw, 6), Color(0, 0, 0, 0.35))
 	c.draw_rect(Rect2(bx, by, bw * _stage_progress, 6), UiTheme.GOLD)
 	# Combo timer ring.
 	if _combo_mult > 1.0 and _combo_t > 0.0:
-		var cc := Vector2(sr.get_center().x, sr.position.y + 120.0)
+		var cc := Vector2(sr.get_center().x, sr.position.y + _ring_y)
 		c.draw_arc(cc, 16, -PI * 0.5, -PI * 0.5 + TAU * _combo_t, 32, Color(UiTheme.GOLD, 0.8), 3.0, true)
 
 	# Pause button.
