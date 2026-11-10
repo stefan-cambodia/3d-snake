@@ -1,6 +1,6 @@
 # Development status — 3D Snake
 
-_Last updated: 2026-11-10 · version 1.3.0 (code 4) · history in [CHANGELOG.md](CHANGELOG.md)_
+_Last updated: 2026-11-11 · version 1.4.0 (code 5) · history in [CHANGELOG.md](CHANGELOG.md)_
 
 ## Summary
 
@@ -15,11 +15,11 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **66 tests, 39,889 checks, 0 failures** (about 36 s) |
+| Headless test suite (`tools/run_tests.sh`) | **66 tests, 39,956 checks, 0 failures** (about 41 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
-| Manifest | `com.studio.snake3d`, version 1.3.0 (4), minSdk 24, targetSdk 36, only the VIBRATE permission |
+| Manifest | `com.studio.snake3d`, version 1.4.0 (5), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
@@ -58,7 +58,7 @@ them (see Known issues).
 - Haptic feedback, a first-run tutorial, and AI attract mode behind the main menu.
 
 **Meta and UI**
-- Main menu with a **Quit** button (hidden on iOS and the web), Skins & Sanctuaries (9 skins, 4 sanctuaries each with its own island, unlocked through milestones), Records (top 10
+- Main menu with a **Quit** button (hidden on iOS and the web), Skins & Sanctuaries (10 skins, 5 sanctuaries each with its own island, unlocked through milestones), Records (top 10
   plus lifetime stats), Settings, How to play / About, pause menu, and a game-over screen with
   new-best and unlock announcements.
 - 3 steering schemes (drag, tap sides, joystick), sensitivity, left-handed layout, camera distance
@@ -324,6 +324,29 @@ them (see Known issues).
 - Not done: installing the App Bundle on a device. That needs Google's bundletool, and downloading
   it was not permitted in this session.
 
+## Changes: version 1.4.0 (2026-11-11)
+
+- **Jade Monsoon**, a fifth sanctuary (`monsoon` in `WorldThemes`, island seed 20241114; unlocked
+  at 15 relics), and **Amethyst Krait**, a tenth skin (violet with gold bands; unlocked at
+  stage 8). Both are only parameters; the existing tests check the new island like the others.
+- *Skins & Sanctuaries*: sanctuaries five to a row; cards 110 px high with a 38 px swatch so both
+  skin rows and the sanctuary row fit on one screen without scrolling.
+- **Fixed**: the swatch `TextureRect` took its height from its 64 px texture and ignored the
+  smaller minimum size, which pushed a two-line name over the card's bottom edge
+  (`expand_mode = EXPAND_IGNORE_SIZE`).
+- The Showcase demo profile now has a best stage of 8, so it still unlocks every skin.
+- 2 new strings in the 14 languages (AI-written except English and French, like the others); the
+  fallback fonts were rebuilt for the new characters.
+- Tests: no new ones; the suite passes (66 tests, 39,956 checks, 0 failed).
+- Built: release APK, App Bundle, Showcase APK, emulator APK, all 1.4.0 (5).
+- **Seen on the emulator** (Android 15, OpenGL, Showcase mode): the Jade Monsoon island loads from
+  the sanctuary picker and the autopilot played a 3-minute run on it to stage 7 (53.9 m) with the
+  Amethyst Krait skin, no errors in the log; *Skins & Sanctuaries* in English, Khmer and Thai,
+  where two-line names now stay inside their cards.
+- **Screenshots**: 14 new ones in `docs/screenshots/v1.4/`; older folders untouched.
+- **Not done on the phone**: 1.4.0 has not been installed on the Galaxy A56 (it was in use during
+  this session), so the new island's frame rate and look under Vulkan are unmeasured.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -358,7 +381,7 @@ them (see Known issues).
 ## Remaining work
 
 1. **Have native speakers review the translations**, Khmer first (including the accessibility
-   strings and the 1.3.0 names: Crimson Dusk, Lotus Cobra).
+   strings and the newer names: Crimson Dusk, Lotus Cobra, Jade Monsoon, Amethyst Krait).
 2. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
    Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
    runs the default (medium) at a steady 60 fps with the relief; high drops about one frame in
@@ -374,4 +397,6 @@ them (see Known issues).
    run (the glow's new colours have been seen on the emulator only: screenshots 14 and 15 of
    `docs/screenshots/v1.3`). Yellow stands out less than blue on Crimson Dusk's warm light; a
    person should judge whether it is strong enough there.
-7. Optional: more languages, more sanctuaries and skins.
+7. Install 1.4.0 on the phone (over 1.3.0, the profile should be kept), look at the Jade Monsoon
+   island under Vulkan and measure its frame rate at medium quality like the other islands.
+8. Optional: more languages, more sanctuaries and skins.

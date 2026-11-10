@@ -5,7 +5,8 @@ overwritten, so this directory shows how the game looked at each release.
 
 | Version | Date | Folder | What it shows |
 |---|---|---|---|
-| **1.3.0** (current) | 2026-11-10 | [v1.3](v1.3/README.md) · [contact sheet](v1.3/overview.jpg) | 15 images of what is new: the Crimson Dusk sanctuary and its island, the Lotus Cobra skin, larger in-game text and the danger colour setting, Khmer |
+| **1.4.0** (current) | 2026-11-11 | [v1.4](v1.4/README.md) · [contact sheet](v1.4/overview.jpg) | 14 images of what is new: the Jade Monsoon sanctuary and its island, the Amethyst Krait skin, the Skins & Sanctuaries screen in English, Khmer and Thai |
+| 1.3.0 | 2026-11-10 | [v1.3](v1.3/README.md) · [contact sheet](v1.3/overview.jpg) | 15 images of what is new: the Crimson Dusk sanctuary and its island, the Lotus Cobra skin, larger in-game text and the danger colour setting, Khmer |
 | 1.2.0 | 2026-11-10 | [v1.2](v1.2/README.md) · [contact sheet](v1.2/overview.jpg) | 26 images: the three islands (Golden Dawn, and the new Moonlit Shrine and Misty Morning islands), menus, Khmer |
 | 1.1.0 | 2026-11-08 | [v1.1](v1.1/README.md) · [contact sheet](v1.1/overview.jpg) | 24 images: the relief (hills, walled terraces, paved ramps), the new name *3D Snake*, the Reduced motion setting, all three sanctuaries, menus, Khmer |
 | 1.0.0 | 2026-11-07 | [v1.0](v1.0/README.md) · [contact sheet](v1.0/overview.jpg) | 20 images of the first release, then called *Serpent Sanctum*: a flat island |

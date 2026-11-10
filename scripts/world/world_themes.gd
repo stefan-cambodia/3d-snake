@@ -45,6 +45,16 @@ const THEMES: Array[Dictionary] = [
 		"emissive_boost": 1.2, "motes": Color(1.0, 0.6, 0.35), "night": false, "cloud_tint": Color(1.0, 0.66, 0.58),
 		"exposure": 1.0,
 	},
+	{
+		"id": "monsoon", "name": "THEME_MONSOON", "unlock": {"stat": "total_rare", "value": 15}, "terrain_seed": 20241114,
+		"sky_top": Color(0.16, 0.22, 0.27), "sky_horizon": Color(0.52, 0.62, 0.60), "sky_ground": Color(0.10, 0.14, 0.13),
+		"sun_color": Color(0.80, 0.92, 0.88), "sun_energy": 0.95, "sun_pitch": -62.0, "sun_yaw": 300.0,
+		"ambient_energy": 0.7, "fog_color": Color(0.36, 0.48, 0.47), "fog_density": 0.0085,
+		"water_deep": Color(0.03, 0.14, 0.13), "water_shallow": Color(0.16, 0.42, 0.34),
+		"grass_a": Color(0.10, 0.26, 0.13), "grass_b": Color(0.22, 0.38, 0.17),
+		"emissive_boost": 1.3, "motes": Color(0.7, 1.0, 0.8), "night": false, "cloud_tint": Color(0.42, 0.50, 0.54),
+		"exposure": 1.0,
+	},
 ]
 
 

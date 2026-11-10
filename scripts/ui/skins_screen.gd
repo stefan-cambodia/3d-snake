@@ -16,8 +16,8 @@ func _ready() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_top", 24)
-	margin.add_theme_constant_override("margin_bottom", 24)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_bottom", 14)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(margin)
 	var panel := PanelContainer.new()
@@ -35,7 +35,9 @@ func _ready() -> void:
 	m.add_child(vb)
 	vb.add_child(make_title("SKINS_TITLE", 40))
 	var body := MenuScreens.scroll_body(vb, 400)
-	body.add_child(MenuScreens.section("SKINS_SERPENTS"))
+	var serpents := MenuScreens.section("SKINS_SERPENTS")
+	serpents.custom_minimum_size.y = 30
+	body.add_child(serpents)
 	_skin_grid = GridContainer.new()
 	_skin_grid.columns = 5
 	_skin_grid.add_theme_constant_override("h_separation", 10)
@@ -43,11 +45,13 @@ func _ready() -> void:
 	body.add_child(_skin_grid)
 	_detail = UiTheme.label("", 20, "body", UiTheme.MUTED)
 	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_detail.custom_minimum_size = Vector2(0, 52)
+	_detail.custom_minimum_size = Vector2(0, 46)
 	body.add_child(_detail)
-	body.add_child(MenuScreens.section("SKINS_SANCTUARIES"))
+	var sanctuaries := MenuScreens.section("SKINS_SANCTUARIES")
+	sanctuaries.custom_minimum_size.y = 30
+	body.add_child(sanctuaries)
 	_theme_row = GridContainer.new()
-	_theme_row.columns = 4
+	_theme_row.columns = 5
 	_theme_row.add_theme_constant_override("h_separation", 10)
 	_theme_row.add_theme_constant_override("v_separation", 10)
 	body.add_child(_theme_row)
@@ -85,7 +89,8 @@ func _swatch(colors: Array[Color]) -> TextureRect:
 	gt.height = 64
 	var tr_ := TextureRect.new()
 	tr_.texture = gt
-	tr_.custom_minimum_size = Vector2(108, 64)
+	tr_.custom_minimum_size = Vector2(108, 38)
+	tr_.expand_mode = TextureRect.EXPAND_IGNORE_SIZE  # else the 64 px texture sets the height
 	tr_.stretch_mode = TextureRect.STRETCH_SCALE
 	tr_.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return tr_
@@ -95,7 +100,7 @@ func _card_base(selected: bool, locked: bool) -> Button:
 	var b := Button.new()
 	b.toggle_mode = false
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(120, 124)
+	b.custom_minimum_size = Vector2(120, 110)
 	var st := UiTheme.box(Color(0.06, 0.09, 0.08, 0.9), 16, UiTheme.GOLD if selected else Color(1, 1, 1, 0.1), 3 if selected else 1)
 	b.add_theme_stylebox_override("normal", st)
 	b.add_theme_stylebox_override("hover", st)
@@ -173,7 +178,7 @@ func _theme_card(t: Dictionary) -> Button:
 	var id: String = t["id"]
 	var unlocked := Profile.is_theme_unlocked(id)
 	var b := _card_base(id == Profile.selected_theme, not unlocked)
-	b.custom_minimum_size = Vector2(152, 118)
+	b.custom_minimum_size = Vector2(120, 110)
 	var v := VBoxContainer.new()
 	v.set_anchors_preset(Control.PRESET_FULL_RECT)
 	v.offset_left = 6
@@ -183,7 +188,7 @@ func _theme_card(t: Dictionary) -> Button:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(v)
 	var sw := _swatch([t["sky_top"], t["sky_horizon"], t["grass_b"], t["water_deep"]])
-	sw.custom_minimum_size = Vector2(140, 54)
+	sw.custom_minimum_size = Vector2(108, 38)
 	v.add_child(sw)
 	var name := UiTheme.label(t["name"], 16, "semibold", UiTheme.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
 	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

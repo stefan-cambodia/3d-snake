@@ -69,6 +69,13 @@ const SKINS: Array[Dictionary] = [
 		"pattern_type": Pattern.STRIPES, "gloss": 0.6, "metallic": 0.0, "iridescence": 0.35, "emission": 0.0,
 		"unlock": {"stat": "total_food", "value": 300},
 	},
+	{
+		"id": "amethyst", "name": "SKIN_AMETHYST",
+		"back": Color(0.20, 0.08, 0.36), "side": Color(0.50, 0.30, 0.78), "belly": Color(0.88, 0.84, 0.96),
+		"pattern": Color(0.92, 0.80, 0.30), "accent": Color(0.75, 0.45, 1.0),
+		"pattern_type": Pattern.BANDS, "gloss": 0.8, "metallic": 0.25, "iridescence": 0.5, "emission": 0.0,
+		"unlock": {"stat": "best_stage", "value": 8},
+	},
 ]
 
 

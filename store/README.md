@@ -1,13 +1,13 @@
 # Google Play listing — 3D Snake
 
-Everything needed to fill in the Play Console for **3D Snake 1.3.0 (versionCode 4)**.
+Everything needed to fill in the Play Console for **3D Snake 1.4.0 (versionCode 5)**.
 
 | What | File |
 |---|---|
 | App bundle to upload | `build/android/snake3d.aab` — `tools/build_android.sh --aab` (run `tools/setup_godot.sh --gradle` once first) |
 | App icon, 512×512 | [`icon-512.png`](icon-512.png) |
 | Feature graphic, 1024×500 | [`feature-graphic.png`](feature-graphic.png) |
-| Phone screenshots (16:9, 1920×1080) | from [`docs/screenshots/v1.2`](../docs/screenshots/v1.2/README.md): 02, 03, 07, 09, 15, 17, and from [`docs/screenshots/v1.3`](../docs/screenshots/v1.3/README.md): 05, 06 (Play takes 2–8) |
+| Phone screenshots (16:9, 1920×1080) | from [`docs/screenshots/v1.2`](../docs/screenshots/v1.2/README.md): 02, 03, 07, 09, 15, 17, from [`docs/screenshots/v1.3`](../docs/screenshots/v1.3/README.md): 05, 06, and from [`docs/screenshots/v1.4`](../docs/screenshots/v1.4/README.md): 04, 07 (Play takes 2–8, so pick eight of these ten) |
 | Privacy policy URL | <https://github.com/stefan-cambodia/3d-snake/blob/main/PRIVACY.md> |
 
 `python3 tools/make_store_assets.py` rebuilds the icon and the feature graphic.
@@ -37,8 +37,8 @@ Guide a living serpent across an ancient island of terraces and ruins.
 > • Surge crystals for speed and double points, rare relics marked by a beam of light, combos and
 >   Close Call bonuses
 > • 14 stages: the pace quickens and new monoliths rise from the ground
-> • 9 serpent skins and 4 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
->   Shrine, Misty Morning and Crimson Dusk
+> • 10 serpent skins and 5 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
+>   Shrine, Misty Morning, Crimson Dusk and Jade Monsoon
 > • Records, haptic feedback, a left-handed layout, and accessibility options (reduced motion,
 >   larger in-game text, danger warning colour)
 > • 14 languages, including Khmer and Thai
@@ -63,8 +63,8 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
 > • Cristaux Surge pour la vitesse et les points doublés, reliques rares signalées par un rayon de
 >   lumière, combos et bonus « Close Call »
 > • 14 niveaux : le rythme s'accélère et de nouveaux monolithes surgissent du sol
-> • 9 apparences de serpent et 4 sanctuaires à débloquer, chacun sur son île : Aube dorée,
->   Sanctuaire lunaire, Matin brumeux et Crépuscule pourpre
+> • 10 apparences de serpent et 5 sanctuaires à débloquer, chacun sur son île : Aube dorée,
+>   Sanctuaire lunaire, Matin brumeux, Crépuscule pourpre et Mousson de jade
 > • Records, retour haptique, disposition pour gauchers et options d'accessibilité
 >   (mouvements réduits, texte de jeu plus grand, couleur de l'alerte de danger)
 > • 14 langues, dont le khmer et le thaï

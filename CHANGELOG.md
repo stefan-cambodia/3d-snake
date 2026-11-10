@@ -2,7 +2,25 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`).
+
+## 1.4.0 (5) — 2026-11-11
+
+Screenshots: [docs/screenshots/v1.4](docs/screenshots/v1.4/README.md)
+
+### Added
+- **A fifth sanctuary, Jade Monsoon**: an overcast grey-green sky, deep green grass, jade water and
+  an island of its own. Unlocked after collecting 15 relics.
+- **A tenth skin, Amethyst Krait** (violet with gold bands). Unlocked by reaching stage 8.
+- Both names in the 14 languages.
+
+### Changed
+- *Skins & Sanctuaries* shows the sanctuaries five to a row, like the skins; the cards are a little
+  lower so the two rows of skins and the row of sanctuaries fit on one screen.
+
+### Fixed
+- In *Skins & Sanctuaries*, a name written on two lines no longer runs over the bottom edge of its
+  card (seen with "Amethyst Krait", and in Khmer and Thai).
 
 ## 1.3.0 (4) — 2026-11-10
 
