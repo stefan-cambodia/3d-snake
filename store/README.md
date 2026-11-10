@@ -1,13 +1,13 @@
 # Google Play listing — 3D Snake
 
-Everything needed to fill in the Play Console for **3D Snake 1.1.0 (versionCode 2)**.
+Everything needed to fill in the Play Console for **3D Snake 1.2.0 (versionCode 3)**.
 
 | What | File |
 |---|---|
 | App bundle to upload | `build/android/snake3d.aab` — `tools/build_android.sh --aab` (run `tools/setup_godot.sh --gradle` once first) |
 | App icon, 512×512 | [`icon-512.png`](icon-512.png) |
 | Feature graphic, 1024×500 | [`feature-graphic.png`](feature-graphic.png) |
-| Phone screenshots (16:9, 1920×1080) | from [`docs/screenshots/v1.1`](../docs/screenshots/v1.1/README.md): 02, 03, 06, 08, 12, 17, 20, 22 (Play takes 2–8) |
+| Phone screenshots (16:9, 1920×1080) | from [`docs/screenshots/v1.2`](../docs/screenshots/v1.2/README.md): 02, 03, 07, 09, 11, 15, 17, 24 (Play takes 2–8) |
 | Privacy policy URL | <https://github.com/stefan-cambodia/3d-snake/blob/main/PRIVACY.md> |
 
 `python3 tools/make_store_assets.py` rebuilds the icon and the feature graphic.

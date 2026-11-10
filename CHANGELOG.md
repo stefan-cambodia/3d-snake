@@ -2,9 +2,11 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`).
 
-## Unreleased (next: 1.2.0)
+## 1.2.0 (3) — 2026-11-10
+
+Screenshots: [docs/screenshots/v1.2](docs/screenshots/v1.2/README.md)
 
 ### Added
 - **Each sanctuary has its own island**: Golden Dawn keeps the 1.1.0 island, Moonlit Shrine and

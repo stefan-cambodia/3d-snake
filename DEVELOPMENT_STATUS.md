@@ -1,6 +1,6 @@
 # Development status — 3D Snake
 
-_Last updated: 2026-11-08 · version 1.1.0 (code 2) · history in [CHANGELOG.md](CHANGELOG.md)_
+_Last updated: 2026-11-10 · version 1.2.0 (code 3) · history in [CHANGELOG.md](CHANGELOG.md)_
 
 ## Summary
 
@@ -19,7 +19,7 @@ them (see Known issues).
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
-| Manifest | `com.studio.snake3d`, version 1.1.0 (2), minSdk 24, targetSdk 36, only the VIBRATE permission |
+| Manifest | `com.studio.snake3d`, version 1.2.0 (3), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
@@ -248,7 +248,7 @@ them (see Known issues).
 - **Privacy policy** in `PRIVACY.md` (English and French), public on GitHub: no data collected, no
   Internet access, saves stay on the device.
 
-## Changes: an island per sanctuary (2026-11-08, unreleased)
+## Changes: an island per sanctuary (2026-11-08, released in 1.2.0)
 
 - Each theme in `WorldThemes` has a `terrain_seed`: Golden Dawn 20241107 (the 1.1.0 island),
   Moonlit Shrine 20241110, Misty Morning 20241112 (chosen for three terraces each and different
@@ -265,6 +265,21 @@ them (see Known issues).
 - **Fixed: off-screen item markers could cover the boost or pause button.** A marker that would is
   slid along the screen edge around the button (`Hud.avoid_buttons()`), for both handednesses;
   `test_markers_keep_clear_of_hud_buttons` checks every edge position.
+
+## Changes: version 1.2.0 (2026-11-10)
+
+- **Version 1.2.0 (code 3)**: an island per sanctuary, the Google Play preparation and the
+  off-screen marker fix (see [CHANGELOG.md](CHANGELOG.md)). Git tag `v1.2.0`.
+- Built with this version: the release APK, the App Bundle, the Showcase APK and the emulator APK;
+  the release APK's manifest reads version 1.2.0 (3). Test suite: 64 tests, 0 failed.
+- **Screenshots**: 26 new ones in `docs/screenshots/v1.2/` with a captioned contact sheet, taken on
+  the Android 15 emulator (OpenGL renderer) from a Showcase-mode build of 1.2.0: all three islands,
+  the menus, Khmer. The v1.0 and v1.1 folders are untouched.
+- Seen while taking them, on the emulator only: every sanctuary's island loads and plays, the
+  language switch works live, Khmer renders correctly in the menu, How to play, Records and the HUD.
+- **On the phone**: the 1.2.0 release APK installed over 1.1.0 on the Galaxy A56 as an update
+  (Android reports version 1.2.0, code 3). The phone was locked, so 1.2.0 has not been launched or
+  played on it yet; the kept profile and the two new islands remain to be checked there.
 
 ## Known issues and limitations
 
@@ -310,7 +325,7 @@ them (see Known issues).
 4. For a Play Store release (prepared, see [store/README.md](store/README.md)): create the Play
    Console app, fill in the listing, upload `build/android/snake3d.aab` to internal testing and test
    it on a phone, back up `signing/`, and have a native speaker check the Khmer listing text.
-5. Release 1.2.0 (per-sanctuary islands): bump the version, take a `docs/screenshots/v1.2/` series,
-   tag it, and install it on the phone.
+5. Play 1.2.0 on the phone (it is installed but has not been launched there): check that the
+   profile was kept and try the Moonlit Shrine and Misty Morning islands.
 6. Optional: more languages, more sanctuary themes and skins, more accessibility options (larger
    HUD text, an option for the danger vignette's colour).

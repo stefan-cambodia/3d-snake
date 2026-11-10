@@ -5,7 +5,8 @@ overwritten, so this directory shows how the game looked at each release.
 
 | Version | Date | Folder | What it shows |
 |---|---|---|---|
-| **1.1.0** (current) | 2026-11-08 | [v1.1](v1.1/README.md) · [contact sheet](v1.1/overview.jpg) | 24 images: the relief (hills, walled terraces, paved ramps), the new name *3D Snake*, the Reduced motion setting, all three sanctuaries, menus, Khmer |
+| **1.2.0** (current) | 2026-11-10 | [v1.2](v1.2/README.md) · [contact sheet](v1.2/overview.jpg) | 26 images: the three islands (Golden Dawn, and the new Moonlit Shrine and Misty Morning islands), menus, Khmer |
+| 1.1.0 | 2026-11-08 | [v1.1](v1.1/README.md) · [contact sheet](v1.1/overview.jpg) | 24 images: the relief (hills, walled terraces, paved ramps), the new name *3D Snake*, the Reduced motion setting, all three sanctuaries, menus, Khmer |
 | 1.0.0 | 2026-11-07 | [v1.0](v1.0/README.md) · [contact sheet](v1.0/overview.jpg) | 20 images of the first release, then called *Serpent Sanctum*: a flat island |
 
 What changed between versions is listed in [CHANGELOG.md](../../CHANGELOG.md).

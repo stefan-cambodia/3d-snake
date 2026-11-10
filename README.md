@@ -8,18 +8,18 @@ monoliths that rise out of the ground as the stages climb. The island has relief
 and raised stone terraces whose walls block the way but whose paved ramps let the serpent climb up
 and back down. Every model, texture, sound and music track is generated procedurally (see `tools/`). The only third-party assets are the fonts (Cinzel, Outfit and Noto, all under the SIL OFL).
 
-![3D Snake main menu](docs/screenshots/v1.1/01-main-menu.jpg)
+![3D Snake main menu](docs/screenshots/v1.2/01-main-menu.jpg)
 
 | | | |
 |---|---|---|
-| ![Terrace wall](docs/screenshots/v1.1/02-terrace-wall.jpg) | ![Surge on a terrace](docs/screenshots/v1.1/03-gameplay-surge.jpg) | ![Serpent on a ramp](docs/screenshots/v1.1/06-long-serpent-ramp.jpg) |
-| ![Moonlit Shrine relic](docs/screenshots/v1.1/08-night-relic.jpg) | ![Misty Morning ramp](docs/screenshots/v1.1/12-mist-ramp.jpg) | ![Skins and sanctuaries](docs/screenshots/v1.1/16-skins-sanctuaries.jpg) |
-| ![Game over](docs/screenshots/v1.1/17-game-over-new-best.jpg) | ![Accessibility settings](docs/screenshots/v1.1/20-settings-accessibility.jpg) | ![Khmer](docs/screenshots/v1.1/22-khmer-main-menu.jpg) |
+| ![Golden Dawn terraces](docs/screenshots/v1.2/02-dawn-terraces.jpg) | ![Surge on a terrace](docs/screenshots/v1.2/03-dawn-surge.jpg) | ![Moonlit Shrine, Stage 3](docs/screenshots/v1.2/07-night-stage-3.jpg) |
+| ![Moonlit Shrine relic](docs/screenshots/v1.2/09-night-relic.jpg) | ![Misty Morning shore](docs/screenshots/v1.2/15-mist-shore.jpg) | ![Misty Morning ramp](docs/screenshots/v1.2/17-mist-ramp.jpg) |
+| ![Skins and sanctuaries](docs/screenshots/v1.2/18-skins-sanctuaries.jpg) | ![Accessibility settings](docs/screenshots/v1.2/22-settings-accessibility.jpg) | ![Khmer](docs/screenshots/v1.2/24-khmer-main-menu.jpg) |
 
-More in [docs/screenshots/v1.1](docs/screenshots/v1.1/README.md) (24 images, 1920×1080, plus a contact
+More in [docs/screenshots/v1.2](docs/screenshots/v1.2/README.md) (26 images, 1920×1080, plus a contact
 sheet). Screenshots of earlier versions are kept in the [screenshot history](docs/screenshots/README.md).
 
-- Package id: `com.studio.snake3d`, version 1.1.0 (code 2)
+- Package id: `com.studio.snake3d`, version 1.2.0 (code 3)
 - Android 7.0+ (API 24), arm64-v8a, landscape
 - Renderer: Godot *Mobile* (Vulkan); Godot falls back to OpenGL ES 3 when a device has no usable Vulkan driver at startup
 - 14 languages: English, Français, ខ្មែរ (Khmer), ไทย (Thai), Español, Português, Deutsch, Italiano, Türkçe,
