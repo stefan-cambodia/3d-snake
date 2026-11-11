@@ -65,6 +65,16 @@ const THEMES: Array[Dictionary] = [
 		"emissive_boost": 0.9, "motes": Color(1.0, 1.0, 1.0), "night": false, "cloud_tint": Color(0.92, 0.95, 1.0),
 		"exposure": 0.95,
 	},
+	{
+		"id": "lagoon", "name": "THEME_LAGOON", "unlock": {"stat": "near_misses", "value": 100}, "terrain_seed": 20241201,
+		"sky_top": Color(0.10, 0.44, 0.86), "sky_horizon": Color(0.62, 0.86, 0.96), "sky_ground": Color(0.20, 0.30, 0.32),
+		"sun_color": Color(1.0, 0.97, 0.88), "sun_energy": 1.5, "sun_pitch": -58.0, "sun_yaw": 140.0,
+		"ambient_energy": 0.75, "fog_color": Color(0.66, 0.86, 0.92), "fog_density": 0.0028,
+		"water_deep": Color(0.02, 0.36, 0.48), "water_shallow": Color(0.22, 0.86, 0.80),
+		"grass_a": Color(0.20, 0.44, 0.19), "grass_b": Color(0.50, 0.64, 0.27),
+		"emissive_boost": 0.5, "motes": Color(1.0, 1.0, 0.85), "night": false, "cloud_tint": Color(1.0, 1.0, 1.0),
+		"exposure": 1.0,
+	},
 ]
 
 

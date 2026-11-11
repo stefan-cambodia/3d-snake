@@ -9,6 +9,7 @@ signal theme_selected(id: String)
 var _skin_grid: GridContainer
 var _theme_row: GridContainer
 var _detail: Label
+var _scroll: ScrollContainer
 
 
 func _ready() -> void:
@@ -35,6 +36,7 @@ func _ready() -> void:
 	m.add_child(vb)
 	vb.add_child(make_title("SKINS_TITLE", 40))
 	var body := MenuScreens.scroll_body(vb, 400)
+	_scroll = body.get_parent() as ScrollContainer
 	var serpents := MenuScreens.section("SKINS_SERPENTS")
 	serpents.custom_minimum_size.y = 30
 	body.add_child(serpents)
@@ -63,6 +65,19 @@ func _ready() -> void:
 
 func _on_open() -> void:
 	_rebuild()
+	_reveal_selected_theme()
+
+
+## The sanctuaries take more than one row, so the list scrolls: start with the
+## sanctuary in use on screen.
+func _reveal_selected_theme() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	for c in _theme_row.get_children():
+		if c.is_queued_for_deletion():
+			continue
+		if c.get_meta("theme_id", "") == Profile.selected_theme:
+			_scroll.ensure_control_visible(c as Control)
 
 
 func _rebuild() -> void:
@@ -178,6 +193,7 @@ func _theme_card(t: Dictionary) -> Button:
 	var id: String = t["id"]
 	var unlocked := Profile.is_theme_unlocked(id)
 	var b := _card_base(id == Profile.selected_theme, not unlocked)
+	b.set_meta("theme_id", id)
 	b.custom_minimum_size = Vector2(120, 110)
 	var v := VBoxContainer.new()
 	v.set_anchors_preset(Control.PRESET_FULL_RECT)

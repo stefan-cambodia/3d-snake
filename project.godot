@@ -12,7 +12,7 @@ config_version=5
 
 config/name="3D Snake"
 config/description="An immersive third-person 3D snake game set in an ancient lakeside sanctuary."
-config/version="1.5.0"
+config/version="1.6.0"
 run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 boot_splash/bg_color=Color(0.039, 0.055, 0.047, 1)
@@ -43,7 +43,7 @@ pointing/emulate_touch_from_mouse=true
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://assets/i18n/strings.en.translation", "res://assets/i18n/strings.fr.translation", "res://assets/i18n/strings.km.translation", "res://assets/i18n/strings.th.translation", "res://assets/i18n/strings.es.translation", "res://assets/i18n/strings.pt_BR.translation", "res://assets/i18n/strings.de.translation", "res://assets/i18n/strings.it.translation", "res://assets/i18n/strings.tr.translation", "res://assets/i18n/strings.id.translation", "res://assets/i18n/strings.ru.translation", "res://assets/i18n/strings.ja.translation", "res://assets/i18n/strings.ko.translation", "res://assets/i18n/strings.zh_CN.translation")
+locale/translations=PackedStringArray("res://assets/i18n/strings.en.translation", "res://assets/i18n/strings.fr.translation", "res://assets/i18n/strings.km.translation", "res://assets/i18n/strings.th.translation", "res://assets/i18n/strings.vi.translation", "res://assets/i18n/strings.es.translation", "res://assets/i18n/strings.pt_BR.translation", "res://assets/i18n/strings.de.translation", "res://assets/i18n/strings.it.translation", "res://assets/i18n/strings.tr.translation", "res://assets/i18n/strings.id.translation", "res://assets/i18n/strings.ru.translation", "res://assets/i18n/strings.ja.translation", "res://assets/i18n/strings.ko.translation", "res://assets/i18n/strings.zh_CN.translation")
 locale/fallback="en"
 locale/include_text_server_data=true
 

@@ -83,6 +83,13 @@ const SKINS: Array[Dictionary] = [
 		"pattern_type": Pattern.SOLID, "gloss": 0.95, "metallic": 0.15, "iridescence": 0.9, "emission": 0.0,
 		"unlock": {"stat": "best_length", "value": 60},
 	},
+	{
+		"id": "storm", "name": "SKIN_STORM",
+		"back": Color(0.12, 0.15, 0.22), "side": Color(0.26, 0.32, 0.44), "belly": Color(0.70, 0.76, 0.84),
+		"pattern": Color(1.0, 0.90, 0.30), "accent": Color(1.0, 0.95, 0.45),
+		"pattern_type": Pattern.RUNES, "gloss": 0.7, "metallic": 0.3, "iridescence": 0.2, "emission": 1.2,
+		"unlock": {"stat": "best_combo", "value": 8},
+	},
 ]
 
 

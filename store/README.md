@@ -1,6 +1,6 @@
 # Google Play listing — 3D Snake
 
-Everything needed to fill in the Play Console for **3D Snake 1.5.0 (versionCode 6)**.
+Everything needed to fill in the Play Console for **3D Snake 1.6.0 (versionCode 7)**.
 
 | What | File |
 |---|---|
@@ -37,11 +37,11 @@ Guide a living serpent across an ancient island of terraces and ruins.
 > • Surge crystals for speed and double points, rare relics marked by a beam of light, combos and
 >   Close Call bonuses
 > • 14 stages: the pace quickens and new monoliths rise from the ground
-> • 11 serpent skins and 6 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
->   Shrine, Misty Morning, Crimson Dusk, Jade Monsoon and Silver Frost
+> • 12 serpent skins and 7 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
+>   Shrine, Misty Morning, Crimson Dusk, Jade Monsoon, Silver Frost and Turquoise Lagoon
 > • Records, haptic feedback, a left-handed layout, and accessibility options (reduced motion,
 >   larger in-game text, danger warning colour)
-> • 14 languages, including Khmer and Thai
+> • 15 languages, including Khmer, Thai and Vietnamese
 > • No ads, no in-app purchases, no internet connection needed, no data collected
 
 ### Français
@@ -63,11 +63,12 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
 > • Cristaux Surge pour la vitesse et les points doublés, reliques rares signalées par un rayon de
 >   lumière, combos et bonus « Close Call »
 > • 14 niveaux : le rythme s'accélère et de nouveaux monolithes surgissent du sol
-> • 11 apparences de serpent et 6 sanctuaires à débloquer, chacun sur son île : Aube dorée,
->   Sanctuaire lunaire, Matin brumeux, Crépuscule pourpre, Mousson de jade et Givre d'argent
+> • 12 apparences de serpent et 7 sanctuaires à débloquer, chacun sur son île : Aube dorée,
+>   Sanctuaire lunaire, Matin brumeux, Crépuscule pourpre, Mousson de jade, Givre d'argent et
+>   Lagon turquoise
 > • Records, retour haptique, disposition pour gauchers et options d'accessibilité
 >   (mouvements réduits, texte de jeu plus grand, couleur de l'alerte de danger)
-> • 14 langues, dont le khmer et le thaï
+> • 15 langues, dont le khmer, le thaï et le vietnamien
 > • Sans publicité, sans achat intégré, sans connexion Internet, aucune donnée collectée
 
 ### ខ្មែរ (to be reviewed by a native speaker before publishing)
@@ -87,8 +88,8 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
 > • កោះមានភ្នំ និងទីទួល៖ ឡើងលើវេទិកាខ្ពស់ៗ តាមផ្លូវឡើងក្រាលថ្ម ប៉ុន្តែជញ្ជាំងថ្មរឹងដូចសសរដែរ
 > • គ្រីស្តាល់ល្បឿនពិសេស វត្ថុបុរាណកម្រ ពិន្ទុទ្វេដង និងប្រាក់រង្វាន់
 > • ១៤ កម្រិត៖ ល្បឿនកាន់តែលឿន ហើយថ្មធំៗងើបចេញពីដី
-> • រូបរាងពស់ ១១ និងទីសក្ការៈ ៦ សម្រាប់ដោះសោ
-> • មាន ១៤ ភាសា រួមទាំងភាសាខ្មែរ និងភាសាថៃ
+> • រូបរាងពស់ ១២ និងទីសក្ការៈ ៧ សម្រាប់ដោះសោ
+> • មាន ១៥ ភាសា រួមទាំងភាសាខ្មែរ ភាសាថៃ និងភាសាវៀតណាម
 > • គ្មានការផ្សាយពាណិជ្ជកម្ម គ្មានការទិញក្នុងកម្មវិធី មិនត្រូវការអ៊ីនធឺណិត និងមិនប្រមូលទិន្នន័យ
 
 ## App content (Play Console → Policy → App content)

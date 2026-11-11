@@ -2,7 +2,25 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`).
+
+## 1.6.0 (7) — 2026-11-11
+
+Screenshots: [docs/screenshots/v1.6](docs/screenshots/v1.6/README.md)
+
+### Added
+- **A seventh sanctuary, Turquoise Lagoon**: a high tropical sun, a clear blue sky, turquoise water
+  and an island of its own. Unlocked after 100 close calls in total.
+- **A twelfth skin, Storm Serpent** (slate blue with glowing gold runes). Unlocked by chaining a
+  combo of 8.
+- **Vietnamese** (Tiếng Việt), the 15th language. It is picked automatically on a phone set to
+  Vietnamese, and is drawn with Noto Sans throughout, because the game's usual fonts lack many
+  Vietnamese letters.
+- The two new names and the two new "how to unlock" sentences in the 15 languages.
+
+### Changed
+- *Skins & Sanctuaries* is now a scrolling list (the sanctuaries take two rows). It opens with the
+  sanctuary in use on screen.
 
 ## 1.5.0 (6) — 2026-11-11
 

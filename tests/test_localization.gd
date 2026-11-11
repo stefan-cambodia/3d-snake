@@ -95,14 +95,14 @@ func test_detect_device_language() -> void:
 		"fr_BE": "fr", "fr": "fr", "km_KH": "km", "km": "km", "th_TH": "th", "en_GB": "en",
 		"pt_PT": "pt_BR", "pt_BR": "pt_BR", "zh_TW": "zh_CN", "zh-Hans-CN": "zh_CN",
 		"ja_JP": "ja", "ko_KR": "ko", "in_ID": "id", "id_ID": "id", "ru_RU": "ru",
-		"tr_TR": "tr", "de_AT": "de", "es_MX": "es", "it_IT": "it", "vi_VN": "en", "": "en",
+		"tr_TR": "tr", "de_AT": "de", "es_MX": "es", "it_IT": "it", "vi_VN": "vi", "vi": "vi", "nl_NL": "en", "": "en",
 	}
 	for sys in cases:
 		check_eq(Localization.detect(sys), cases[sys], "device locale '%s'" % sys)
 
 
-func _chain(fv: FontVariation, fallback_files: Array) -> Array[Font]:
-	var chain: Array[Font] = [fv.base_font]
+func _chain(base: Font, fallback_files: Array) -> Array[Font]:
+	var chain: Array[Font] = [base]
 	for n in fallback_files:
 		chain.append(load(UiTheme.FALLBACK_DIR + n))
 	return chain
@@ -131,15 +131,26 @@ func test_fonts_cover_every_translation() -> void:
 		for key in data["order"]:
 			texts.append(data["rows"][key][i + 1])
 		for kind in ["title", "body"]:
-			var chain := _chain(UiTheme.font(kind) as FontVariation, UiTheme.fallback_names(code))
+			var chain := _chain(UiTheme.base_font(kind, code), UiTheme.fallback_names(code))
 			var missing := _missing_chars(chain, texts)
 			check(missing.is_empty(), "%s %s font covers all text; missing: %s" % [code, kind, str(missing).left(300)])
 	# The language picker shows every language's own name, whatever the locale.
 	var names: Array = Array(data["rows"]["LANGUAGE_NAME"]).slice(1)
-	var picker := _chain(UiTheme.font("picker") as FontVariation, UiTheme.FALLBACKS_ALL)
+	var picker := _chain(UiTheme.base_font("picker", "en"), UiTheme.FALLBACKS_ALL)
 	check(_missing_chars(picker, names).is_empty(), "picker font shows every language name")
 	check(UiTheme.fallback_names("en").is_empty(), "Latin languages keep the compact primary fonts")
 	check_eq(UiTheme.fallback_names("km"), ["NotoSansKhmer-Subset.ttf"], "Khmer uses Noto Sans Khmer")
+	# Vietnamese is drawn with one font, so no word mixes two typefaces.
+	var vi_font := UiTheme.base_font("body", "vi")
+	check(vi_font != UiTheme.base_font("body", "en"), "Vietnamese has a font of its own")
+	check(_missing_chars([vi_font], ["0123456789 x+-.,:;!?%()/&", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "·—•"]).is_empty(), "the Vietnamese font has digits, Latin letters and punctuation")
+	var before := Localization.current()
+	Localization.apply("vi")
+	check_eq((UiTheme.font("body") as FontVariation).base_font, vi_font, "choosing Vietnamese switches the body font")
+	check_eq((UiTheme.font("title") as FontVariation).base_font, vi_font, "and the title font")
+	Localization.apply("en")
+	check_eq((UiTheme.font("body") as FontVariation).base_font, UiTheme.base_font("body", "en"), "English gets Outfit back")
+	Localization.apply(before)
 
 
 ## Long or tall translations must not push menus off screen.
@@ -211,7 +222,8 @@ func test_skin_and_sanctuary_names_stay_inside_their_cards() -> void:
 			# does not grow with its children, so compare with the card's own height.
 			var room := card.size.y - box.offset_top + box.offset_bottom
 			var need := box.get_combined_minimum_size().y
-			check(need <= room + 0.5, "%s: card content fits (%.0f px in %.0f)" % [code, need, room])
+			var label := box.get_child(box.get_child_count() - 1) as Label
+			check(need <= room + 0.5, "%s: card content of '%s' fits (%.0f px in %.0f)" % [code, tr(label.text), need, room])
 	tree.root.size = old_size
 	Localization.apply(before)
 	dispose_main(main)

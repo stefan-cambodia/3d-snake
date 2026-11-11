@@ -39,6 +39,14 @@ FONTS = [
     ("NotoSansJP-Subset.ttf", "notosansjp/NotoSansJP%5Bwght%5D.ttf", ["ja"]),
     ("NotoSansKR-Subset.ttf", "notosanskr/NotoSansKR%5Bwght%5D.ttf", ["ko"]),
 ]
+# Languages whose whole text is drawn with one Noto font instead of Cinzel/Outfit, because
+# those lack many of its letters and a word mixing two fonts looks uneven:
+# (output name, source, locale). Covers ASCII, Latin-1 and the locale's own text.
+FULL_FONTS = [
+    ("NotoSansVi-Subset.ttf", "notosans/NotoSans%5Bwdth,wght%5D.ttf", "vi"),
+]
+VIETNAMESE = ("ăâđêôơưàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ")
+EXTRA_CHARS = {"vi": VIETNAMESE + VIETNAMESE.upper()}
 LICENSE_SRC = "notosans/OFL.txt"
 # Characters both primary fonts (titles: Cinzel, body: Outfit) already provide.
 PRIMARY_FONTS = [os.path.join(ROOT, "assets", "fonts", n) for n in ("Outfit.ttf", "Cinzel.ttf")]
@@ -72,12 +80,21 @@ def main() -> None:
     primary = set.intersection(*(set(TTFont(p).getBestCmap()) for p in PRIMARY_FONTS))
     os.makedirs(OUT_DIR, exist_ok=True)
     total = 0
-    for out_name, rel, locales in FONTS:
+    jobs = [(o, r, l, False) for o, r, l in FONTS] + [(o, r, [l], True) for o, r, l in FULL_FONTS]
+    for out_name, rel, locales, full in jobs:
         src = fetch(rel)
         cmap = set(TTFont(src).getBestCmap())
-        codes = texts.keys() if locales is None else locales
+        # Languages with a font of their own do not need their letters in the shared one.
+        own_font = {l for _, _, l in FULL_FONTS}
+        codes = [c for c in texts if c not in own_font] if locales is None else locales
         wanted = set("".join("".join(texts[c]) for c in codes) + names)
-        chars = sorted(ord(ch) for ch in wanted if ord(ch) in cmap and ord(ch) not in primary and not ch.isspace())
+        if full:
+            wanted = set("".join("".join(texts[c]) for c in codes) + EXTRA_CHARS.get(locales[0], ""))
+            wanted |= {chr(c) for c in list(range(0x20, 0x7F)) + list(range(0xA0, 0x100))}
+            wanted |= set("–—‘’“”•…×·")
+            chars = sorted(ord(ch) for ch in wanted if ord(ch) in cmap)
+        else:
+            chars = sorted(ord(ch) for ch in wanted if ord(ch) in cmap and ord(ch) not in primary and not ch.isspace())
         opts = subset.Options()
         opts.layout_features = ["*"]  # keep complex-script shaping
         opts.name_IDs = ["*"]

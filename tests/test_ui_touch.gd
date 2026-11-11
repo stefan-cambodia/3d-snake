@@ -119,3 +119,61 @@ func test_swipe_from_a_toggle_does_not_flip_it() -> void:
 	_press(vp, c, false)
 	check_eq(t.button_pressed, not was, "a tap still flips it")
 	dispose_main(main)
+
+
+## Skins & Sanctuaries scrolls now that the sanctuaries take two rows: it opens with the
+## sanctuary in use on screen, a swipe over the cards scrolls without choosing one, and a
+## tap still chooses.
+func test_skins_list_scrolls_and_shows_the_sanctuary_in_use() -> void:
+	var main := make_main()
+	var ui: UiRoot = main.ui
+	var old_theme: String = Profile.selected_theme
+	var old_skin: String = Profile.selected_skin
+	var old_stats: Dictionary = Profile.stats.duplicate(true)
+	var last: Dictionary = WorldThemes.THEMES[WorldThemes.THEMES.size() - 1]
+	for s in SkinCatalog.SKINS:
+		if not s["unlock"].is_empty():
+			Profile.stats[s["unlock"]["stat"]] = maxf(float(Profile.stats[s["unlock"]["stat"]]), float(s["unlock"]["value"]))
+	Profile.stats[last["unlock"]["stat"]] = last["unlock"]["value"]
+	Profile.selected_theme = last["id"]
+	Profile.selected_skin = "jade"
+	var old_size := tree.root.size
+	tree.root.size = Vector2i(1280, 720) # a 16:9 phone in landscape
+	ui.push(ui.skins)
+	for i in 6:
+		await tree.process_frame
+	var sc: ScrollContainer = ui.skins._scroll
+	var content := sc.get_child(sc.get_child_count() - 1) as Control
+	check(content.size.y > sc.size.y, "the list is taller than its window (%.0f / %.0f)" % [content.size.y, sc.size.y])
+	var card: Control = null
+	for c in ui.skins._theme_row.get_children():
+		if c.get_meta("theme_id", "") == last["id"]:
+			card = c
+	check(card != null, "the newest sanctuary has a card")
+	if card:
+		check(sc.get_global_rect().grow(1.0).encloses(card.get_global_rect()), "the sanctuary in use is on screen when the list opens")
+	# Swipe down over the skin cards: scrolls back to the top, chooses nothing.
+	var before := sc.scroll_vertical
+	check(before > 0, "the list opened scrolled down (%d)" % before)
+	var mid := sc.get_global_rect().get_center()
+	_swipe(main.get_viewport(), mid + Vector2(0, -80), mid + Vector2(0, 120))
+	for i in 3:
+		await tree.process_frame
+	check(sc.scroll_vertical < before, "a swipe scrolls the list (%d -> %d)" % [before, sc.scroll_vertical])
+	check_eq(Profile.selected_skin, "jade", "the swipe chose no skin")
+	check_eq(Profile.selected_theme, last["id"], "the swipe chose no sanctuary")
+	# Tap the second skin.
+	sc.scroll_vertical = 0
+	for i in 2:
+		await tree.process_frame
+	var second := ui.skins._skin_grid.get_child(1) as Control
+	var p := _centre(second)
+	_press(main.get_viewport(), p, true)
+	_press(main.get_viewport(), p, false)
+	await tree.process_frame
+	check_eq(Profile.selected_skin, SkinCatalog.SKINS[1]["id"], "a tap chooses a skin")
+	Profile.selected_theme = old_theme
+	Profile.selected_skin = old_skin
+	Profile.stats = old_stats
+	tree.root.size = old_size
+	dispose_main(main)

@@ -81,6 +81,40 @@ func test_frost_and_pearl_unlock_at_their_milestones() -> void:
 	p.free()
 
 
+## The 1.6.0 rewards: Turquoise Lagoon at 100 close calls (added up over the runs),
+## Storm Serpent at a combo of 8.
+func test_lagoon_and_storm_unlock_at_their_milestones() -> void:
+	var p := _fresh_profile()
+	p.record_run({"score": 10, "near_misses": 60, "combo": 7})
+	check(not p.is_theme_unlocked("lagoon"), "lagoon locked at 60 close calls")
+	check(not p.is_skin_unlocked("storm"), "storm locked at a combo of 7")
+	var r: Dictionary = p.record_run({"score": 10, "near_misses": 40, "combo": 8})
+	var ids: Array = []
+	for u in r["unlocked"]:
+		ids.append(u["id"])
+	check(ids.has("lagoon"), "lagoon announced at 100 close calls")
+	check(ids.has("storm"), "storm announced at a combo of 8")
+	check(p.is_theme_unlocked("lagoon"), "lagoon usable")
+	check(p.is_skin_unlocked("storm"), "storm usable")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(p.save_path))
+	p.free()
+
+
+## Every unlock rule must have its "how to unlock" sentence.
+func test_every_unlock_rule_has_a_description() -> void:
+	var rules: Array = []
+	for s in SkinCatalog.SKINS:
+		rules.append(s["unlock"])
+	for t in WorldThemes.THEMES:
+		rules.append(t["unlock"])
+	for rule in rules:
+		if rule.is_empty():
+			continue
+		var key: String = "REQ_" + str(rule["stat"]).to_upper()
+		check(tr(key) != key, "%s is translated" % key)
+		check(Profile.stats.has(rule["stat"]), "%s is a profile stat" % rule["stat"])
+
+
 func test_corrupt_file_falls_back_to_defaults() -> void:
 	var p := _fresh_profile()
 	var f := FileAccess.open(p.save_path, FileAccess.WRITE)
