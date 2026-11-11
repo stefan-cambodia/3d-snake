@@ -268,6 +268,11 @@ func apply_theme(p_theme: Dictionary) -> void:
 	_grass_mat.set_shader_parameter("base_col", (theme["grass_a"] as Color).darkened(0.35))
 	_grass_mat.set_shader_parameter("tip_col", (theme["grass_b"] as Color).lightened(0.05))
 	_foliage_mat.set_shader_parameter("tint", Color(0.55, 0.65, 0.8) if night else Color.WHITE)
+	# Optional leaf colours of the sanctuary (frosted, autumn...); green otherwise.
+	_foliage_mat.set_shader_parameter("leaf_mix", 1.0 if theme.has("leaf_a") else 0.0)
+	if theme.has("leaf_a"):
+		_foliage_mat.set_shader_parameter("leaf_col", theme["leaf_a"])
+		_foliage_mat.set_shader_parameter("leaf_col_b", theme["leaf_b"])
 	_barrier_mat.set_shader_parameter("base_alpha", 0.1 if night else 0.05)
 	if _lantern_glow:
 		(_lantern_glow.material_override as ShaderMaterial).set_shader_parameter("fade", 1.0 if night else 0.35)

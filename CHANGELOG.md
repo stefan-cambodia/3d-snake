@@ -2,7 +2,24 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`, `v1.7.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`, `v1.7.0`, `v1.8.0`).
+
+## 1.8.0 (9) — 2026-11-11
+
+Screenshots: [docs/screenshots/v1.8](docs/screenshots/v1.8/README.md)
+
+### Added
+- **A ninth sanctuary, Violet Aurora**: a second night island, under a violet sky with a teal glow
+  on the horizon. Unlocked by reaching stage 10.
+- **A fourteenth skin, Nebula Naga** (deep violet with glowing teal diamonds). Unlocked after
+  50 runs.
+- **Malay** (Bahasa Melayu) and **Filipino**, the 17th and 18th languages. Each is picked
+  automatically on a phone set to it.
+- The two new names in the 18 languages.
+
+### Changed
+- **The trees and bushes take the sanctuary's colours**: frosted on Silver Frost, orange and red on
+  Amber Autumn, teal and violet on Violet Aurora. The other sanctuaries keep their green trees.
 
 ## 1.7.0 (8) — 2026-11-11
 

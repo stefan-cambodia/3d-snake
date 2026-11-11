@@ -13,7 +13,7 @@ extends Node
 signal language_changed(code: String)
 
 ## Locale codes in the order the language picker shows them (CSV column names).
-const LOCALES: Array[String] = ["en", "fr", "km", "th", "vi", "hi", "es", "pt_BR", "de", "it", "tr", "id", "ru", "ja", "ko", "zh_CN"]
+const LOCALES: Array[String] = ["en", "fr", "km", "th", "vi", "hi", "es", "pt_BR", "de", "it", "tr", "id", "ms", "fil", "ru", "ja", "ko", "zh_CN"]
 
 var _current: String = "en"
 
@@ -34,6 +34,8 @@ static func detect(system_locale: String) -> String:
 	var lang := system_locale.replace("-", "_").get_slice("_", 0).to_lower()
 	if lang == "in": # legacy Java code for Indonesian
 		lang = "id"
+	if lang == "tl": # Tagalog: older code for Filipino
+		lang = "fil"
 	for code in LOCALES:
 		if code.get_slice("_", 0) == lang:
 			return code

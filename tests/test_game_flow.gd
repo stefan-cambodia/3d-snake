@@ -117,3 +117,23 @@ func test_switching_sanctuary_rebuilds_the_island() -> void:
 	check_eq(main.state, main.State.MENU, "still in the menu")
 	check_eq(main.camera.mode, ChaseCamera.Mode.SHOWCASE, "the skins close-up is kept")
 	dispose_main(main)
+
+
+## A sanctuary can give the trees its own leaf colours (Silver Frost, Amber Autumn, Violet
+## Aurora); the others keep the green built into the tree meshes.
+func test_sanctuaries_colour_the_leaves() -> void:
+	var main := make_main()
+	var mat: ShaderMaterial = main.world._foliage_mat
+	var coloured := 0
+	for t in WorldThemes.THEMES:
+		check_eq(t.has("leaf_a"), t.has("leaf_b"), "%s: both leaf colours or none" % t["id"])
+		main.world.apply_theme(t)
+		check_eq(float(mat.get_shader_parameter("leaf_mix")), 1.0 if t.has("leaf_a") else 0.0, "%s: leaf colours switched %s" % [t["id"], "on" if t.has("leaf_a") else "off"])
+		if t.has("leaf_a"):
+			coloured += 1
+			check_eq(mat.get_shader_parameter("leaf_col"), t["leaf_a"], "%s: first leaf colour reaches the shader" % t["id"])
+			check_eq(mat.get_shader_parameter("leaf_col_b"), t["leaf_b"], "%s: second leaf colour reaches the shader" % t["id"])
+	check(coloured >= 3, "frost, autumn and aurora colour their leaves")
+	check(not WorldThemes.get_theme("dawn").has("leaf_a"), "Golden Dawn keeps the green trees")
+	main.world.apply_theme(WorldThemes.get_theme(Profile.selected_theme))
+	dispose_main(main)

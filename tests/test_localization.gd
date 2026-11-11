@@ -95,7 +95,7 @@ func test_detect_device_language() -> void:
 		"fr_BE": "fr", "fr": "fr", "km_KH": "km", "km": "km", "th_TH": "th", "en_GB": "en",
 		"pt_PT": "pt_BR", "pt_BR": "pt_BR", "zh_TW": "zh_CN", "zh-Hans-CN": "zh_CN",
 		"ja_JP": "ja", "ko_KR": "ko", "in_ID": "id", "id_ID": "id", "ru_RU": "ru",
-		"tr_TR": "tr", "de_AT": "de", "es_MX": "es", "it_IT": "it", "vi_VN": "vi", "vi": "vi", "hi_IN": "hi", "nl_NL": "en", "": "en",
+		"tr_TR": "tr", "de_AT": "de", "es_MX": "es", "it_IT": "it", "vi_VN": "vi", "vi": "vi", "hi_IN": "hi", "ms_MY": "ms", "fil_PH": "fil", "tl_PH": "fil", "nl_NL": "en", "": "en",
 	}
 	for sys in cases:
 		check_eq(Localization.detect(sys), cases[sys], "device locale '%s'" % sys)

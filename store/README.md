@@ -1,6 +1,6 @@
 # Google Play listing — 3D Snake
 
-Everything needed to fill in the Play Console for **3D Snake 1.7.0 (versionCode 8)**.
+Everything needed to fill in the Play Console for **3D Snake 1.8.0 (versionCode 9)**.
 
 | What | File |
 |---|---|
@@ -37,12 +37,12 @@ Guide a living serpent across an ancient island of terraces and ruins.
 > • Surge crystals for speed and double points, rare relics marked by a beam of light, combos and
 >   Close Call bonuses
 > • 14 stages: the pace quickens and new monoliths rise from the ground
-> • 13 serpent skins and 8 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
->   Shrine, Misty Morning, Crimson Dusk, Jade Monsoon, Silver Frost, Turquoise Lagoon and Amber
->   Autumn
+> • 14 serpent skins and 9 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
+>   Shrine, Misty Morning, Crimson Dusk, Jade Monsoon, Silver Frost, Turquoise Lagoon, Amber
+>   Autumn and Violet Aurora
 > • Records, haptic feedback, a left-handed layout, and accessibility options (reduced motion,
 >   larger in-game text, danger warning colour)
-> • 16 languages, including Khmer, Thai, Vietnamese and Hindi
+> • 18 languages, including Khmer, Thai, Vietnamese, Malay, Filipino and Hindi
 > • No ads, no in-app purchases, no internet connection needed, no data collected
 
 ### Français
@@ -64,12 +64,12 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
 > • Cristaux Surge pour la vitesse et les points doublés, reliques rares signalées par un rayon de
 >   lumière, combos et bonus « Close Call »
 > • 14 niveaux : le rythme s'accélère et de nouveaux monolithes surgissent du sol
-> • 13 apparences de serpent et 8 sanctuaires à débloquer, chacun sur son île : Aube dorée,
+> • 14 apparences de serpent et 9 sanctuaires à débloquer, chacun sur son île : Aube dorée,
 >   Sanctuaire lunaire, Matin brumeux, Crépuscule pourpre, Mousson de jade, Givre d'argent,
->   Lagon turquoise et Automne ambré
+>   Lagon turquoise, Automne ambré et Aurore violette
 > • Records, retour haptique, disposition pour gauchers et options d'accessibilité
 >   (mouvements réduits, texte de jeu plus grand, couleur de l'alerte de danger)
-> • 16 langues, dont le khmer, le thaï, le vietnamien et le hindi
+> • 18 langues, dont le khmer, le thaï, le vietnamien, le malais, le filipino et le hindi
 > • Sans publicité, sans achat intégré, sans connexion Internet, aucune donnée collectée
 
 ### ខ្មែរ (to be reviewed by a native speaker before publishing)
@@ -89,8 +89,8 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
 > • កោះមានភ្នំ និងទីទួល៖ ឡើងលើវេទិកាខ្ពស់ៗ តាមផ្លូវឡើងក្រាលថ្ម ប៉ុន្តែជញ្ជាំងថ្មរឹងដូចសសរដែរ
 > • គ្រីស្តាល់ល្បឿនពិសេស វត្ថុបុរាណកម្រ ពិន្ទុទ្វេដង និងប្រាក់រង្វាន់
 > • ១៤ កម្រិត៖ ល្បឿនកាន់តែលឿន ហើយថ្មធំៗងើបចេញពីដី
-> • រូបរាងពស់ ១៣ និងទីសក្ការៈ ៨ សម្រាប់ដោះសោ
-> • មាន ១៦ ភាសា រួមទាំងភាសាខ្មែរ ភាសាថៃ ភាសាវៀតណាម និងភាសាហិណ្ឌី
+> • រូបរាងពស់ ១៤ និងទីសក្ការៈ ៩ សម្រាប់ដោះសោ
+> • មាន ១៨ ភាសា រួមទាំងភាសាខ្មែរ ភាសាថៃ ភាសាវៀតណាម និងភាសាហិណ្ឌី
 > • គ្មានការផ្សាយពាណិជ្ជកម្ម គ្មានការទិញក្នុងកម្មវិធី មិនត្រូវការអ៊ីនធឺណិត និងមិនប្រមូលទិន្នន័យ
 
 ### Tiếng Việt (to be reviewed by a native speaker before publishing)
@@ -112,9 +112,9 @@ Dẫn một con rắn sống động băng qua hòn đảo cổ với những b�
 > • Pha lê Bứt tốc cho tốc độ và nhân đôi điểm, cổ vật hiếm có cột sáng dẫn đường, combo và
 >   thưởng Suýt soát
 > • 14 màn: nhịp độ nhanh dần và cột đá mới trồi lên từ mặt đất
-> • 13 bộ da rắn và 8 thánh địa để mở khóa, mỗi thánh địa một hòn đảo riêng
+> • 14 bộ da rắn và 9 thánh địa để mở khóa, mỗi thánh địa một hòn đảo riêng
 > • Kỷ lục, phản hồi rung, bố cục cho người thuận tay trái và các tùy chọn trợ năng
-> • 16 ngôn ngữ, có tiếng Việt, tiếng Khmer và tiếng Thái
+> • 18 ngôn ngữ, có tiếng Việt, tiếng Khmer và tiếng Thái
 > • Không quảng cáo, không mua trong ứng dụng, không cần Internet, không thu thập dữ liệu
 
 ### हिन्दी (to be reviewed by a native speaker before publishing)
@@ -135,9 +135,9 @@ Dẫn một con rắn sống động băng qua hòn đảo cổ với những b�
 > • गति और दोगुने अंकों के लिए सर्ज क्रिस्टल, प्रकाश की किरण से चिह्नित दुर्लभ अवशेष, कॉम्बो और
 >   बाल-बाल बोनस
 > • 14 चरण: गति बढ़ती जाती है और ज़मीन से नए शिलाखंड उभरते हैं
-> • अनलॉक करने के लिए 13 सर्प रूप और 8 पवित्र स्थल, हर एक का अपना द्वीप
+> • अनलॉक करने के लिए 14 सर्प रूप और 9 पवित्र स्थल, हर एक का अपना द्वीप
 > • रिकॉर्ड, कंपन फ़ीडबैक, बाएँ हाथ का लेआउट और सुलभता विकल्प
-> • 16 भाषाएँ, जिनमें हिन्दी, खमेर, थाई और वियतनामी शामिल हैं
+> • 18 भाषाएँ, जिनमें हिन्दी, खमेर, थाई और वियतनामी शामिल हैं
 > • कोई विज्ञापन नहीं, कोई इन-ऐप ख़रीदारी नहीं, इंटरनेट की ज़रूरत नहीं, कोई डेटा संग्रह नहीं
 
 ## App content (Play Console → Policy → App content)

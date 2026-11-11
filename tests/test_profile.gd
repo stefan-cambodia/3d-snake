@@ -116,6 +116,23 @@ func test_autumn_and_tiger_unlock_at_their_milestones() -> void:
 	p.free()
 
 
+## The 1.8.0 rewards: Violet Aurora at stage 10, Nebula Naga at 50 runs.
+func test_aurora_and_nebula_unlock_at_their_milestones() -> void:
+	var p := _fresh_profile()
+	for i in 49:
+		p.record_run({"score": 10, "stage": 9})
+	check(not p.is_theme_unlocked("aurora"), "aurora locked at stage 9")
+	check(not p.is_skin_unlocked("nebula"), "nebula locked at 49 runs")
+	var r: Dictionary = p.record_run({"score": 10, "stage": 10})
+	var ids: Array = []
+	for u in r["unlocked"]:
+		ids.append(u["id"])
+	check(ids.has("aurora"), "aurora announced at stage 10")
+	check(ids.has("nebula"), "nebula announced at 50 runs")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(p.save_path))
+	p.free()
+
+
 ## Every unlock rule must have its "how to unlock" sentence.
 func test_every_unlock_rule_has_a_description() -> void:
 	var rules: Array = []

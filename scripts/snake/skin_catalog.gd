@@ -97,6 +97,13 @@ const SKINS: Array[Dictionary] = [
 		"pattern_type": Pattern.BANDS, "gloss": 0.5, "metallic": 0.0, "iridescence": 0.0, "emission": 0.0,
 		"unlock": {"stat": "total_food", "value": 600},
 	},
+	{
+		"id": "nebula", "name": "SKIN_NEBULA",
+		"back": Color(0.10, 0.04, 0.24), "side": Color(0.30, 0.12, 0.52), "belly": Color(0.62, 0.80, 0.86),
+		"pattern": Color(0.10, 0.80, 0.72), "accent": Color(0.50, 1.0, 0.90),
+		"pattern_type": Pattern.DIAMONDS, "gloss": 0.85, "metallic": 0.2, "iridescence": 0.9, "emission": 0.7,
+		"unlock": {"stat": "runs", "value": 50},
+	},
 ]
 
 

@@ -3,6 +3,7 @@ extends RefCounted
 ## The sanctuaries: each has its own island (`terrain_seed`: a different
 ## relief, terraces and shore) and its own light and atmosphere. A theme is only
 ## parameters, so new ones can be added without touching gameplay code.
+## Optional: "leaf_a" and "leaf_b", two colours for the trees' and bushes' leaves.
 
 const THEMES: Array[Dictionary] = [
 	{
@@ -64,6 +65,7 @@ const THEMES: Array[Dictionary] = [
 		"grass_a": Color(0.62, 0.72, 0.78), "grass_b": Color(0.88, 0.92, 0.95),
 		"emissive_boost": 0.9, "motes": Color(1.0, 1.0, 1.0), "night": false, "cloud_tint": Color(0.92, 0.95, 1.0),
 		"exposure": 0.95,
+		"leaf_a": Color(0.62, 0.76, 0.78), "leaf_b": Color(0.88, 0.93, 0.95),
 	},
 	{
 		"id": "lagoon", "name": "THEME_LAGOON", "unlock": {"stat": "near_misses", "value": 100}, "terrain_seed": 20241201,
@@ -84,6 +86,18 @@ const THEMES: Array[Dictionary] = [
 		"grass_a": Color(0.62, 0.30, 0.10), "grass_b": Color(0.86, 0.58, 0.16),
 		"emissive_boost": 0.7, "motes": Color(1.0, 0.62, 0.22), "night": false, "cloud_tint": Color(1.0, 0.88, 0.74),
 		"exposure": 1.0,
+		"leaf_a": Color(0.86, 0.40, 0.08), "leaf_b": Color(0.70, 0.14, 0.08),
+	},
+	{
+		"id": "aurora", "name": "THEME_AURORA", "unlock": {"stat": "best_stage", "value": 10}, "terrain_seed": 20241213,
+		"sky_top": Color(0.07, 0.02, 0.16), "sky_horizon": Color(0.08, 0.42, 0.36), "sky_ground": Color(0.03, 0.02, 0.06),
+		"sun_color": Color(0.66, 0.84, 1.0), "sun_energy": 0.75, "sun_pitch": -42.0, "sun_yaw": 20.0,
+		"ambient_energy": 0.5, "fog_color": Color(0.08, 0.14, 0.22), "fog_density": 0.006,
+		"water_deep": Color(0.03, 0.02, 0.10), "water_shallow": Color(0.10, 0.30, 0.34),
+		"grass_a": Color(0.07, 0.26, 0.22), "grass_b": Color(0.18, 0.54, 0.42),
+		"emissive_boost": 2.0, "motes": Color(0.70, 0.55, 1.0), "night": true, "cloud_tint": Color(0.40, 0.62, 0.60),
+		"exposure": 1.15,
+		"leaf_a": Color(0.18, 0.56, 0.48), "leaf_b": Color(0.56, 0.34, 0.66),
 	},
 ]
 

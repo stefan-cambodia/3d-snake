@@ -5,7 +5,8 @@ overwritten, so this directory shows how the game looked at each release.
 
 | Version | Date | Folder | What it shows |
 |---|---|---|---|
-| **1.7.0** (current) | 2026-11-11 | [v1.7](v1.7/README.md) · [contact sheet](v1.7/overview.jpg) | 19 images of what is new: the Amber Autumn sanctuary and its island, the Tiger Python skin, Hindi, the Vietnamese main menu, Khmer |
+| **1.8.0** (current) | 2026-11-11 | [v1.8](v1.8/README.md) · [contact sheet](v1.8/overview.jpg) | 22 images of what is new: the Violet Aurora sanctuary and its island, the Nebula Naga skin, the new leaf colours on Amber Autumn and Silver Frost, Malay, Filipino, Khmer |
+| 1.7.0 | 2026-11-11 | [v1.7](v1.7/README.md) · [contact sheet](v1.7/overview.jpg) | 19 images of what is new: the Amber Autumn sanctuary and its island, the Tiger Python skin, Hindi, the Vietnamese main menu, Khmer |
 | 1.6.0 | 2026-11-11 | [v1.6](v1.6/README.md) · [contact sheet](v1.6/overview.jpg) | 17 images of what is new: the Turquoise Lagoon sanctuary and its island, the Storm Serpent skin, the scrolling Skins & Sanctuaries screen, Vietnamese, Khmer |
 | 1.5.0 | 2026-11-11 | [v1.5](v1.5/README.md) · [contact sheet](v1.5/overview.jpg) | 15 images of what is new: the Silver Frost sanctuary and its island, the Pearl Naga skin, the Skins & Sanctuaries screen in English, Khmer and Thai |
 | 1.4.0 | 2026-11-11 | [v1.4](v1.4/README.md) · [contact sheet](v1.4/overview.jpg) | 14 images of what is new: the Jade Monsoon sanctuary and its island, the Amethyst Krait skin, the Skins & Sanctuaries screen in English, Khmer and Thai |
