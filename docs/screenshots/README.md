@@ -5,7 +5,8 @@ overwritten, so this directory shows how the game looked at each release.
 
 | Version | Date | Folder | What it shows |
 |---|---|---|---|
-| **2.0.0** (current) | 2026-11-11 | [v2.0](v2.0/README.md) · [contact sheet](v2.0/overview.jpg) | 21 images of the environment overhaul: each of the nine sanctuaries' monument and shore, an overview, rain and snow in play |
+| **2.1.0** (current) | 2026-11-12 | [v2.1](v2.1/README.md) · [contact sheet](v2.1/overview.jpg) | 8 images: the new monolith and brazier shapes in play on seven sanctuaries, and 2.0.0 running on the Galaxy A56 |
+| 2.0.0 | 2026-11-11 | [v2.0](v2.0/README.md) · [contact sheet](v2.0/overview.jpg) | 21 images of the environment overhaul: each of the nine sanctuaries' monument and shore, an overview, rain and snow in play |
 | 1.8.0 | 2026-11-11 | [v1.8](v1.8/README.md) · [contact sheet](v1.8/overview.jpg) | 22 images of what is new: the Violet Aurora sanctuary and its island, the Nebula Naga skin, the new leaf colours on Amber Autumn and Silver Frost, Malay, Filipino, Khmer |
 | 1.7.0 | 2026-11-11 | [v1.7](v1.7/README.md) · [contact sheet](v1.7/overview.jpg) | 19 images of what is new: the Amber Autumn sanctuary and its island, the Tiger Python skin, Hindi, the Vietnamese main menu, Khmer |
 | 1.6.0 | 2026-11-11 | [v1.6](v1.6/README.md) · [contact sheet](v1.6/overview.jpg) | 17 images of what is new: the Turquoise Lagoon sanctuary and its island, the Storm Serpent skin, the scrolling Skins & Sanctuaries screen, Vietnamese, Khmer |

@@ -1,6 +1,6 @@
 # Google Play listing — 3D Snake
 
-Everything needed to fill in the Play Console for **3D Snake 2.0.0 (versionCode 10)**.
+Everything needed to fill in the Play Console for **3D Snake 2.1.0 (versionCode 11)**.
 
 | What | File |
 |---|---|
@@ -139,6 +139,55 @@ Dẫn một con rắn sống động băng qua hòn đảo cổ với những b�
 > • रिकॉर्ड, कंपन फ़ीडबैक, बाएँ हाथ का लेआउट और सुलभता विकल्प
 > • 18 भाषाएँ, जिनमें हिन्दी, खमेर, थाई और वियतनामी शामिल हैं
 > • कोई विज्ञापन नहीं, कोई इन-ऐप ख़रीदारी नहीं, इंटरनेट की ज़रूरत नहीं, कोई डेटा संग्रह नहीं
+
+### Bahasa Melayu (to be reviewed by a native speaker before publishing)
+
+**Penerangan ringkas**:
+Pandu seekor ular hidup merentasi pulau purba yang penuh teres dan runtuhan.
+
+**Penerangan penuh**:
+
+> Pandu seekor ular hidup merentasi kuil di sebuah pulau purba.
+>
+> 3D Snake ialah permainan ular klasik yang dihidupkan semula dalam 3D: kemudi dengan lancar, makan
+> buah suria untuk membesar, dan liukkan badan yang semakin panjang di celah runtuhan, tiang dan
+> teres batu tanpa tergigit ekor sendiri.
+>
+> • Kemudi yang lancar dan berterusan: leret jari, ketik sisi atau guna kayu ria
+> • Pulau dengan bentuk muka bumi sebenar: naiki teres tinggi melalui tanjakan berturap batu, tetapi
+>   dinding batunya sekeras tiang
+> • Kristal Lonjakan untuk kelajuan dan mata berganda, relik jarang ditandai pancaran cahaya, kombo
+>   dan bonus Nyaris
+> • 14 tahap: rentak semakin laju dan monolit baharu muncul dari tanah
+> • 14 rupa ular dan 9 kuil untuk dibuka, setiap satu di pulaunya sendiri dengan seni binanya sendiri
+> • Rekod, getaran, susun atur kidal dan pilihan kebolehcapaian
+> • 18 bahasa, termasuk Bahasa Melayu, Khmer, Thai dan Vietnam
+> • Tiada iklan, tiada pembelian dalam aplikasi, tidak perlu Internet, tiada data dikumpul
+
+### Filipino (to be reviewed by a native speaker before publishing)
+
+**Maikling paglalarawan**:
+Gabayan ang isang buhay na ahas sa sinaunang isla ng mga terasa at guho.
+
+**Buong paglalarawan**:
+
+> Gabayan ang isang buhay na ahas sa santuwaryo ng isang sinaunang isla.
+>
+> Ang 3D Snake ay ang klasikong laro ng ahas na binuhay muli sa 3D: magmaneho nang makinis, kumain
+> ng sunfruit para humaba, at ipulupot ang humahaba mong katawan sa pagitan ng mga guho, haligi at
+> batong terasa nang hindi nakakagat ang sarili mong buntot.
+>
+> • Makinis at tuloy-tuloy na pagmamaneho: i-slide ang daliri, i-tap ang mga gilid o gumamit ng joystick
+> • Islang may totoong anyo ng lupa: umakyat sa matataas na terasa gamit ang mga rampang bato, pero
+>   ang mga pader nito ay kasintigas ng haligi
+> • Mga kristal na Surge para sa bilis at dobleng puntos, bihirang relikya na may sinag ng liwanag,
+>   combo at bonus na Muntik Na
+> • 14 na yugto: bumibilis ang takbo at may mga bagong monolitong umaahon mula sa lupa
+> • 14 na balat ng ahas at 9 na santuwaryong maa-unlock, bawat isa sa sarili nitong isla at may
+>   sarili nitong arkitektura
+> • Mga rekord, vibration, layout para sa kaliwete at mga opsyon sa accessibility
+> • 18 wika, kasama ang Filipino, Khmer, Thai at Vietnamese
+> • Walang ads, walang in-app purchase, hindi kailangan ng Internet, walang kinokolektang data
 
 ## App content (Play Console → Policy → App content)
 

@@ -1,6 +1,6 @@
 # Development status — 3D Snake
 
-_Last updated: 2026-11-11 · version 2.0.0 (code 10) · history in [CHANGELOG.md](CHANGELOG.md)_
+_Last updated: 2026-11-11 · version 2.1.0 (code 11) · history in [CHANGELOG.md](CHANGELOG.md)_
 
 ## Summary
 
@@ -15,11 +15,11 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **79 tests, 56,104 checks, 0 failures** (about 77 s) |
+| Headless test suite (`tools/run_tests.sh`) | **80 tests, 56,603 checks, 0 failures** (about 78 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
-| Manifest | `com.studio.snake3d`, version 2.0.0 (10), minSdk 24, targetSdk 36, only the VIBRATE permission |
+| Manifest | `com.studio.snake3d`, version 2.1.0 (11), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
@@ -517,6 +517,35 @@ stumps and one kind of column; only the colours and the relief differed.
   no level of detail of their own; islet and shore buildings do not adapt to a steep slope beyond
   standing on a deep foundation.
 
+## Changes: version 2.1.0 (2026-11-12)
+
+- **2.0.0 measured on the phone** (Galaxy A56, Vulkan, Showcase app, autopilot, 35 s each,
+  SurfaceFlinger frame statistics). Medium quality, the default: Turquoise Lagoon 2098 of 2104
+  frames at 16 ms, Jade Monsoon and Misty Morning the same picture (62.3 fps reported for all
+  three: a steady 60). High quality: Turquoise Lagoon 42.5 fps (814 frames at 16 ms, 641 at
+  33 ms); on the pre-2.0 islands high gave 54.5 fps. Jade Monsoon at high was not measured: the
+  Showcase app was closed on the phone before the measurement (no crash in the phone's log), and
+  nothing more was launched there.
+- **Lighter scenery, aimed at the high setting**: ground cover meshes cut down (fern 112 → 72
+  triangles, pebbles 320 → 60, flowers to 21) and drawn in four batches per kind, one per quarter
+  of the island, hidden beyond 60 m; shore architecture in 12 sectors instead of 6; only stone
+  casts shadows (not urns, bells or timber); rain 420 → 300 drops. **Not verified**: the emulator
+  varies by 4 to 5 fps from run to run on the same build (49.4 to 53.6 fps), more than the
+  effect, so only the phone can tell. A `--perf=noarch,noarchshadows,noflora,noweather,noshafts`
+  option switches parts of the scenery off for such measurements.
+- **Monoliths and braziers per sanctuary** (`"monolith"` and `"brazier"` in `SanctuaryStyles`):
+  four monolith shapes and three brazier shapes, all inside the old collision footprint; the
+  rising monoliths use the same shape.
+- Store listing: Malay and Filipino texts added.
+- Tests (1 new, 80 in all, 56,603 checks, 0 failed): every monolith and brazier shape fits its
+  collision and keeps its height.
+- **Seen on the emulator** (Android 15, OpenGL, Showcase mode): the autopilot played each of the
+  nine sanctuaries for about a minute, no errors in the log.
+- Built: release APK, App Bundle, Showcase APK, emulator APK, all 2.1.0 (11).
+- **On the phone now**: the owner's game is still 1.4.0; 2.0.0 is installed beside it as a
+  separate app, *3D Snake 2.0* (`com.studio.snake3d.v2`, its own empty profile), at the owner's
+  request not to replace the old version; the Showcase app is 2.0.0.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -571,7 +600,8 @@ stumps and one kind of column; only the colours and the relief differed.
    person should judge whether it is strong enough there.
 7. Play a real run by hand on Jade Monsoon on the phone, and watch for slow stretches there (one
    35 s measurement out of two had 9 % of frames at 33 ms).
-8. Install 2.0.0 on the phone (1.5.0 to 2.0.0 have only run on the emulator): check that the
-   update keeps the profile, look at the new architecture under Vulkan, and above all measure the
-   frame rate there, and try scrolling *Skins & Sanctuaries* with a finger.
-9. Optional: more languages, more sanctuaries and skins; Malay and Filipino store listings.
+8. Measure 2.1.0 at high quality on the phone (2.0.0 gave 42.5 fps on Turquoise Lagoon; 2.1.0's
+   lighter scenery is unmeasured), and decide whether to update the owner's 1.4.0 in place: check
+   then that the update keeps the profile. Also try scrolling *Skins & Sanctuaries* with a
+   finger.
+9. Optional: more languages, more sanctuaries and skins.

@@ -2,7 +2,28 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`, `v1.7.0`, `v1.8.0`, `v2.0.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`, `v1.7.0`, `v1.8.0`, `v2.0.0`, `v2.1.0`).
+
+## 2.1.0 (11) — 2026-11-12
+
+Screenshots: [docs/screenshots/v2.1](docs/screenshots/v2.1/README.md)
+
+### Added
+- **The playfield's own stones follow the sanctuary too**: monoliths (and the ones that rise
+  during a run) come as plain slabs, steles with a pediment, pointed obelisks or roofed posts;
+  braziers as a scalloped bowl, a slender chalice or a square fire-altar. Their collision is
+  unchanged.
+- Store listing text in Malay and Filipino (`store/README.md`).
+
+### Changed
+- **Lighter scenery at the high quality setting**: ferns, flowers and pebbles use much simpler
+  meshes and are drawn a quarter of the island at a time; the shore architecture is cut into
+  twelve sectors instead of six and only its stone casts shadows; less rain.
+
+### Measured
+- On a Galaxy A56 (Vulkan), 2.0.0 held a steady 60 fps at medium quality, the default, on
+  Turquoise Lagoon, Jade Monsoon and Misty Morning. At high quality Turquoise Lagoon ran at
+  42.5 fps. 2.1.0's lighter scenery has not been measured on the phone yet.
 
 ## 2.0.0 (10) — 2026-11-11
 

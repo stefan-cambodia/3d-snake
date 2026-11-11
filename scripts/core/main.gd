@@ -51,6 +51,8 @@ func _ready() -> void:
 		Engine.max_fps = 60
 	_rng.randomize()
 	_parse_args()
+	if _args.has("perf"):
+		WorldView.perf_off = Array(str(_args["perf"]).split(","))
 	if _args.has("showcase"):
 		_seed_showcase_profile()
 	# Screenshots: --theme=<id> and --skin=<id> pick an unlocked sanctuary and skin,

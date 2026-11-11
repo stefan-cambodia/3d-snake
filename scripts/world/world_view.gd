@@ -36,6 +36,9 @@ var style: Dictionary
 ## Where the architecture stands (SanctuaryBuilder.plan) and what it costs.
 var architecture_plan: Array[Dictionary] = []
 var architecture_triangles: int = 0
+## Switches for measuring what each part of the scenery costs (--perf=a,b,c):
+## "noarch", "noarchshadows", "noflora", "noweather", "noshafts".
+static var perf_off: Array = []
 var quality: int = 2
 
 var environment: Environment
@@ -701,6 +704,8 @@ func _build_arena_ring() -> void:
 ## The sanctuary's monument, shrines, ruins and props (SanctuaryBuilder), merged
 ## into a few meshes per zone so the camera culls whole zones.
 func _build_architecture() -> void:
+	if perf_off.has("noarch"):
+		return
 	var result := SanctuaryBuilder.build(terrain, style)
 	architecture_plan = result["plan"]
 	architecture_triangles = result["triangles"]
@@ -722,7 +727,8 @@ func _build_architecture() -> void:
 					mi.material_override = _accent_mat
 				_:
 					mi.material_override = _emissive_mat
-			var shadows: bool = g["shadows"] and key != "glow"
+			# Only the stone casts shadows: urns, bells and timber are too small to matter.
+			var shadows: bool = g["shadows"] and key == "stone" and not perf_off.has("noarchshadows")
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			root.add_child(mi)
 
@@ -755,7 +761,7 @@ func _tree_mesh(kind: String, seed_value: int) -> ArrayMesh:
 
 ## Shafts of sunlight slanting down behind the great monument (day only).
 func _build_shafts() -> void:
-	if not bool(style.get("shafts", false)) or bool(theme["night"]):
+	if not bool(style.get("shafts", false)) or bool(theme["night"]) or perf_off.has("noshafts"):
 		return
 	var mat := ShaderMaterial.new()
 	mat.shader = SHAFT_SHADER
@@ -814,24 +820,37 @@ func _flora_spots(rng: RandomNumberGenerator, clusters: int, per_cluster: int, s
 func _add_flora(node_name: String, mesh: ArrayMesh, spots: Array[Transform3D], mat: Material) -> void:
 	if spots.is_empty():
 		return
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = mesh
-	mm.instance_count = spots.size()
-	for i in spots.size():
-		mm.set_instance_transform(i, spots[i])
-	var mi := MultiMeshInstance3D.new()
-	mi.name = node_name
-	mi.multimesh = mm
-	mi.material_override = mat
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.visibility_range_end = 70.0
-	_terrain_root.add_child(mi)
+	# One instanced batch per quarter of the island, so the camera culls the
+	# quarters behind it. The first batch keeps the plain name.
+	var quarters: Array = [[], [], [], []]
+	for xf in spots:
+		quarters[(1 if xf.origin.x >= 0.0 else 0) + (2 if xf.origin.z >= 0.0 else 0)].append(xf)
+	var made := 0
+	for q in 4:
+		var list: Array = quarters[q]
+		if list.is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = mesh
+		mm.instance_count = list.size()
+		for i in list.size():
+			mm.set_instance_transform(i, list[i])
+		var mi := MultiMeshInstance3D.new()
+		mi.name = node_name if made == 0 else "%s_%d" % [node_name, q]
+		mi.multimesh = mm
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visibility_range_end = 60.0
+		_terrain_root.add_child(mi)
+		made += 1
 
 
 ## Ferns, flowers, pebbles and the sanctuary's own ground detail (fallen leaves,
 ## ice, glowing mushrooms...).
 func _build_flora() -> void:
+	if perf_off.has("noflora"):
+		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = terrain.seed_value * 71 + 9
 	var k: float = [0.45, 0.75, 1.0][quality]
@@ -871,14 +890,14 @@ func _apply_weather(kind: String) -> void:
 		return
 	# amount, lifetime, quad size, colour, gravity, speed, emitter height, box half height, additive, upright streak
 	var cfg := {
-		"rain": [420, 1.1, Vector2(0.025, 0.7), Color(0.75, 0.86, 0.9, 0.34), -22.0, 4.0, 11.0, 1.0, false, true],
+		"rain": [300, 1.1, Vector2(0.025, 0.7), Color(0.75, 0.86, 0.9, 0.34), -22.0, 4.0, 11.0, 1.0, false, true],
 		"snow": [260, 7.0, Vector2(0.07, 0.07), Color(1.0, 1.0, 1.0, 0.9), -1.1, 0.5, 8.0, 3.0, false, false],
 		"leaves": [70, 8.0, Vector2(0.16, 0.11), Color(0.92, 0.46, 0.1, 1.0), -0.9, 0.7, 8.0, 3.0, false, false],
 		"embers": [70, 5.0, Vector2(0.06, 0.06), Color(1.0, 0.5, 0.16, 1.0), 0.7, 0.4, 0.6, 1.0, true, false],
 		"pollen": [60, 9.0, Vector2(0.05, 0.05), Color(1.0, 0.94, 0.6, 0.8), 0.03, 0.2, 2.0, 2.0, true, false],
 		"mist": [10, 14.0, Vector2(11.0, 5.0), Color(0.86, 0.9, 0.9, 0.1), 0.0, 0.35, 1.2, 0.8, false, false],
 	}
-	if not cfg.has(kind) or quality == 0:
+	if not cfg.has(kind) or quality == 0 or perf_off.has("noweather"):
 		_weather.visible = false
 		_weather.emitting = false
 		return
@@ -1178,9 +1197,9 @@ func _build_mesh_cache() -> void:
 		_mesh_cache["%s:%d" % [Obstacle.KIND_PILLAR, v]] = SanctuaryKit.column_mesh(order, 5.5, 0.55, false, 10 + v, 16 if quality > 0 else 12)
 		_mesh_cache["%s:%d" % [Obstacle.KIND_BROKEN_PILLAR, v]] = SanctuaryKit.column_mesh(order, 2.5, 0.55, true, 20 + v, 16 if quality > 0 else 12)
 		_mesh_cache["%s:%d" % [Obstacle.KIND_ROCKS, v]] = WorldMeshes.rocks(1.25, 1.5, 30 + v)
-		_mesh_cache["%s:%d" % [Obstacle.KIND_MONOLITH, v]] = WorldMeshes.monolith(3.2, 40 + v)
+		_mesh_cache["%s:%d" % [Obstacle.KIND_MONOLITH, v]] = WorldMeshes.monolith(3.2, 40 + v, int(style.get("monolith", 0)))
 		_mesh_cache["%s:%d" % [Obstacle.KIND_WALL, v]] = WorldMeshes.wall(1.8, 50 + v)
-	_mesh_cache["%s:0" % Obstacle.KIND_BRAZIER] = WorldMeshes.brazier()
+	_mesh_cache["%s:0" % Obstacle.KIND_BRAZIER] = WorldMeshes.brazier(int(style.get("brazier", 0)))
 	_mesh_cache["%s:0" % Obstacle.KIND_FALLEN_COLUMN] = WorldMeshes.fallen_column(60)
 	_mesh_cache["%s:1" % Obstacle.KIND_FALLEN_COLUMN] = WorldMeshes.fallen_column(61)
 

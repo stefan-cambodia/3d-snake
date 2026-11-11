@@ -23,7 +23,8 @@ and back down. Every model, texture, sound and music track is generated procedur
 | ![Violet Aurora, braziers in the night](docs/screenshots/v1.8/03-aurora-braziers.jpg) | ![Amber Autumn, orange and red trees](docs/screenshots/v1.8/14-autumn-leaves.jpg) | ![Silver Frost, frosted trees](docs/screenshots/v1.8/16-frost-leaves.jpg) |
 | ![Accessibility settings](docs/screenshots/v1.3/10-settings-accessibility.jpg) | ![Khmer](docs/screenshots/v1.2/24-khmer-main-menu.jpg) | ![Skins and sanctuaries in Khmer](docs/screenshots/v1.5/14-khmer-skins-sanctuaries.jpg) |
 
-More in [docs/screenshots/v2.0](docs/screenshots/v2.0/README.md) (21 images of the 2.0.0 environment overhaul),
+More in [docs/screenshots/v2.1](docs/screenshots/v2.1/README.md) (8 images of 2.1.0, one taken on the phone),
+[docs/screenshots/v2.0](docs/screenshots/v2.0/README.md) (21 images of the 2.0.0 environment overhaul),
 [docs/screenshots/v1.8](docs/screenshots/v1.8/README.md) (22 images of what was new in 1.8.0),
 [docs/screenshots/v1.7](docs/screenshots/v1.7/README.md) (19 images of what was new in 1.7.0),
 [docs/screenshots/v1.6](docs/screenshots/v1.6/README.md) (17 images of what was new in 1.6.0),
@@ -33,7 +34,7 @@ More in [docs/screenshots/v2.0](docs/screenshots/v2.0/README.md) (21 images of t
 and [docs/screenshots/v1.2](docs/screenshots/v1.2/README.md) (26 images of the three older islands),
 1920×1080, each with a contact sheet. Screenshots of earlier versions are kept in the [screenshot history](docs/screenshots/README.md).
 
-- Package id: `com.studio.snake3d`, version 2.0.0 (code 10)
+- Package id: `com.studio.snake3d`, version 2.1.0 (code 11)
 - Android 7.0+ (API 24), arm64-v8a, landscape
 - Renderer: Godot *Mobile* (Vulkan); Godot falls back to OpenGL ES 3 when a device has no usable Vulkan driver at startup
 - 18 languages: English, Français, ខ្មែរ (Khmer), ไทย (Thai), Tiếng Việt (Vietnamese), हिन्दी (Hindi), Español, Português, Deutsch, Italiano, Türkçe,
@@ -136,7 +137,7 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-79 tests cover snake movement and steering, the relief and each sanctuary's island (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
+80 tests cover snake movement and steering, the relief and each sanctuary's island (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
 autopilot run, the real main scene's state machine, camera, and HUD/touch layout around display

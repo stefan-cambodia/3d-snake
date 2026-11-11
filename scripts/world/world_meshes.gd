@@ -70,8 +70,11 @@ static func column(height: float, radius: float, broken: bool, seed_value: int, 
 	return MeshKit.lathe(prof, segments, radial, STONE_TINT, Vector2(3.0, 0.5), false, false)
 
 
-## Standing stone with rune faces (also used for rising obstacles).
-static func monolith(height: float, seed_value: int) -> ArrayMesh:
+## Standing stone with rune faces (also used for rising obstacles). `shape`:
+## 0 plain slab, 1 stele on a plinth with a pediment, 2 obelisk with a pointed
+## top, 3 post under a small roof. All stay inside the slab's footprint (the
+## collision is two circles of 0.5 m at +-0.38 m).
+static func monolith(height: float, seed_value: int, shape: int = 0) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var st := SurfaceTool.new()
@@ -81,20 +84,53 @@ static func monolith(height: float, seed_value: int) -> ArrayMesh:
 	var d := 0.42
 	var lean := Vector3(rng.randf_range(-0.12, 0.12), 0, rng.randf_range(-0.06, 0.06))
 	var tw := 0.72
+	var body_top := height
+	if shape == 1:
+		lean = Vector3.ZERO
+		body_top = height - 0.42
+	elif shape == 2:
+		tw = 0.5
+		body_top = height - 0.5
+	elif shape == 3:
+		lean = Vector3.ZERO
+		tw = 0.86
+		body_top = height - 0.5
+	var slant := 0.18 if shape == 0 else 0.0
+	# The decorated shapes have a slimmer body, so their plinth and cap can stand
+	# proud of it without leaving the slab's footprint.
+	var full_w := w
+	var full_d := d
+	if shape != 0:
+		w *= 0.86
+		d *= 0.84
 	var c: Array[Vector3] = [
 		Vector3(-w, -0.6, -d), Vector3(w, -0.6, -d), Vector3(w, -0.6, d), Vector3(-w, -0.6, d),
-		Vector3(-w * tw, height, -d * 0.85) + lean, Vector3(w * tw, height - 0.18, -d * 0.85) + lean,
-		Vector3(w * tw, height - 0.18, d * 0.85) + lean, Vector3(-w * tw, height, d * 0.85) + lean,
+		Vector3(-w * tw, body_top, -d * 0.85) + lean, Vector3(w * tw, body_top - slant, -d * 0.85) + lean,
+		Vector3(w * tw, body_top - slant, d * 0.85) + lean, Vector3(-w * tw, body_top, d * 0.85) + lean,
 	]
 	MeshKit.add_hexahedron(st, c, STONE_TINT, 0.5)
+	var dark := STONE_TINT * 0.88
+	dark.a = 1.0
+	if shape == 1:
+		# Plinth and a stepped pediment.
+		MeshKit.add_hexahedron(st, _box(Vector3(0, -0.6, 0), Vector3(full_w * 2.0, 0.95, full_d * 2.0), 1.0), dark, 0.5)
+		MeshKit.add_hexahedron(st, _box(Vector3(0, body_top, 0), Vector3(w * tw * 2.3, 0.14, full_d * 2.0), 1.0), dark, 0.5)
+		MeshKit.add_hexahedron(st, _box(Vector3(0, body_top + 0.14, 0), Vector3(w * tw * 2.0, 0.28, d * 1.6), 0.3), STONE_TINT, 0.5)
+	elif shape == 2:
+		MeshKit.add_hexahedron(st, _box(Vector3(0, -0.6, 0), Vector3(full_w * 2.0, 0.9, full_d * 2.0), 1.0), dark, 0.5)
+		MeshKit.add_hexahedron(st, _box(lean + Vector3(0, body_top, 0), Vector3(w * tw * 2.0, 0.5, d * 1.7), 0.04), STONE_TINT, 0.5)
+	elif shape == 3:
+		MeshKit.add_hexahedron(st, _box(Vector3(0, -0.6, 0), Vector3(full_w * 2.0, 0.85, full_d * 2.0), 1.0), dark, 0.5)
+		MeshKit.add_hexahedron(st, _box(Vector3(0, body_top, 0), Vector3(full_w * 2.0, 0.12, full_d * 2.0), 1.0), dark, 0.5)
+		MeshKit.add_hexahedron(st, _box(Vector3(0, body_top + 0.12, 0), Vector3(full_w * 1.9, 0.38, full_d * 1.9), 0.2), STONE_TINT, 0.5)
 	# Rune plates on both broad faces (slightly proud of the surface).
 	for side in [-1.0, 1.0]:
 		var z: float = d * side * 1.02
 		var zt: float = d * 0.85 * side * 1.02
 		var p0 := Vector3(-w * 0.62, 0.35, z)
 		var p1 := Vector3(w * 0.62, 0.35, z)
-		var p2 := Vector3(w * tw * 0.62, height - 0.5, zt) + lean
-		var p3 := Vector3(-w * tw * 0.62, height - 0.38, zt) + lean
+		var p2 := Vector3(w * tw * 0.62, body_top - 0.5, zt) + lean
+		var p3 := Vector3(-w * tw * 0.62, body_top - 0.38 - (0.12 if shape != 0 else 0.0), zt) + lean
 		if side > 0.0:
 			MeshKit.tri(st, p0, p1, p2, Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), RUNE)
 			MeshKit.tri(st, p0, p2, p3, Vector2(0, 0), Vector2(1, 1), Vector2(0, 1), RUNE)
@@ -120,15 +156,45 @@ static func rocks(big: float, height: float, seed_value: int) -> ArrayMesh:
 	return st.commit()
 
 
-## Stone brazier (bowl on a pedestal); the fire is added by the view.
-static func brazier() -> ArrayMesh:
-	var p := PackedVector2Array([
-		Vector2(0.62, -0.2), Vector2(0.62, 0.12), Vector2(0.5, 0.18), Vector2(0.3, 0.3), Vector2(0.24, 0.9),
-		Vector2(0.3, 1.0), Vector2(0.55, 1.12), Vector2(0.68, 1.36), Vector2(0.72, 1.5), Vector2(0.6, 1.5),
-		Vector2(0.48, 1.32), Vector2(0.0, 1.26),
-	])
+## Box corners for MeshKit.add_hexahedron: base centre, size, top scale.
+static func _box(pos: Vector3, size: Vector3, taper: float) -> Array[Vector3]:
+	var hx := size.x * 0.5
+	var hz := size.z * 0.5
+	return [pos + Vector3(-hx, 0, -hz), pos + Vector3(hx, 0, -hz), pos + Vector3(hx, 0, hz), pos + Vector3(-hx, 0, hz),
+		pos + Vector3(-hx * taper, size.y, -hz * taper), pos + Vector3(hx * taper, size.y, -hz * taper),
+		pos + Vector3(hx * taper, size.y, hz * taper), pos + Vector3(-hx * taper, size.y, hz * taper)]
+
+
+## Stone brazier; the fire is added by the view at 1.45 m. `shape`: 0 scalloped
+## bowl on a pedestal, 1 slender chalice, 2 square fire-altar. All within 0.72 m.
+static func brazier(shape: int = 0) -> ArrayMesh:
+	var p: PackedVector2Array
+	match shape:
+		1:
+			p = PackedVector2Array([
+				Vector2(0.5, -0.2), Vector2(0.5, 0.08), Vector2(0.3, 0.16), Vector2(0.14, 0.4), Vector2(0.12, 0.86), Vector2(0.2, 0.92),
+				Vector2(0.14, 0.98), Vector2(0.4, 1.14), Vector2(0.62, 1.4), Vector2(0.66, 1.5), Vector2(0.56, 1.5), Vector2(0.4, 1.3), Vector2(0.0, 1.24),
+			])
+		2:
+			p = PackedVector2Array([
+				Vector2(0.7, -0.2), Vector2(0.7, 0.2), Vector2(0.56, 0.2), Vector2(0.56, 1.0), Vector2(0.7, 1.0), Vector2(0.7, 1.22),
+				Vector2(0.6, 1.22), Vector2(0.66, 1.5), Vector2(0.54, 1.5), Vector2(0.44, 1.3), Vector2(0.0, 1.26),
+			])
+		_:
+			p = PackedVector2Array([
+				Vector2(0.62, -0.2), Vector2(0.62, 0.12), Vector2(0.5, 0.18), Vector2(0.3, 0.3), Vector2(0.24, 0.9),
+				Vector2(0.3, 1.0), Vector2(0.55, 1.12), Vector2(0.68, 1.36), Vector2(0.72, 1.5), Vector2(0.6, 1.5),
+				Vector2(0.48, 1.32), Vector2(0.0, 1.26),
+			])
 	var radial := func(a: float, row: int) -> float:
-		return 1.0 - (0.06 * absf(sin(a * 4.0)) if row >= 6 and row <= 8 else 0.0)
+		if shape == 2:
+			# Square, with softened corners (kept inside the round footprint).
+			var c := absf(cos(a))
+			var s := absf(sin(a))
+			return 1.0 / pow(pow(c, 6.0) + pow(s, 6.0), 1.0 / 6.0) * 0.8
+		if shape == 0:
+			return 1.0 - (0.06 * absf(sin(a * 4.0)) if row >= 6 and row <= 8 else 0.0)
+		return 1.0 - (0.05 * absf(sin(a * 6.0)) if row >= 7 and row <= 9 else 0.0)
 	return MeshKit.lathe(p, 18, radial, STONE_TINT, Vector2(3.0, 0.6))
 
 
@@ -532,15 +598,15 @@ static func fern(seed_value: int) -> ArrayMesh:
 	rng.seed = seed_value
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for f in 7:
-		var a := TAU * float(f) / 7.0 + rng.randf_range(-0.25, 0.25)
+	for f in 6:
+		var a := TAU * float(f) / 6.0 + rng.randf_range(-0.25, 0.25)
 		var dir := Vector3(cos(a), 0, sin(a))
 		var side := Vector3(-sin(a), 0, cos(a))
 		var length := rng.randf_range(0.35, 0.6)
 		var prev := Vector3(0, 0.02, 0)
 		var prev_w := 0.02
-		for sgm in range(1, 5):
-			var t := float(sgm) / 4.0
+		for sgm in range(1, 4):
+			var t := float(sgm) / 3.0
 			var p := dir * length * t + Vector3(0, 0.38 * sin(t * PI * 0.8), 0)
 			var w := 0.13 * sin(t * PI) + 0.01
 			var c := Color(0.07, 0.17, 0.06).lerp(Color(0.17, 0.3, 0.1), t)
@@ -560,14 +626,13 @@ static func flowers(seed_value: int, petal: Color) -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var green := Color(0.2, 0.42, 0.14, 0.3)
-	for s in 4:
+	for s in 3:
 		var base := Vector3(rng.randf_range(-0.22, 0.22), 0, rng.randf_range(-0.22, 0.22))
 		var h := rng.randf_range(0.22, 0.42)
 		var top := base + Vector3(rng.randf_range(-0.06, 0.06), h, rng.randf_range(-0.06, 0.06))
 		var g1 := green
 		g1.a = 0.9
 		_leaf_tri(st, base + Vector3(-0.012, 0, 0), base + Vector3(0.012, 0, 0), top, green, green, g1)
-		_leaf_tri(st, base + Vector3(0, 0, -0.012), base + Vector3(0, 0, 0.012), top, green, green, g1)
 		var pc := petal * rng.randf_range(0.85, 1.1)
 		pc.a = 1.0
 		var centre := Color(1.0, 0.85, 0.3, 1.0)
@@ -575,7 +640,10 @@ static func flowers(seed_value: int, petal: Color) -> ArrayMesh:
 			var a0 := TAU * float(p) / 5.0
 			var a1 := a0 + TAU / 5.0 * 0.8
 			var r := rng.randf_range(0.06, 0.09)
-			_leaf_tri(st, top, top + Vector3(cos(a0) * r, 0.03, sin(a0) * r), top + Vector3(cos(a1) * r, 0.03, sin(a1) * r), centre, pc, pc)
+			# Seen from above only: one side is enough (wound to face up).
+			for v in [[top, centre], [top + Vector3(cos(a1) * r, 0.03, sin(a1) * r), pc], [top + Vector3(cos(a0) * r, 0.03, sin(a0) * r), pc]]:
+				st.set_color(v[1])
+				st.add_vertex(v[0])
 	st.generate_normals()
 	return st.commit()
 
@@ -650,9 +718,9 @@ static func pebbles(seed_value: int) -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var n := _noise(seed_value, 2.4)
-	for i in 4:
-		var s := rng.randf_range(0.06, 0.16)
-		MeshKit.add_blob(st, Vector3(rng.randf_range(-0.3, 0.3), s * 0.3, rng.randf_range(-0.3, 0.3)), Vector3(s * rng.randf_range(1.0, 1.6), s * 0.7, s), 1, n, 0.25, Color(0.86, 0.84, 0.8) * rng.randf_range(0.8, 1.05), -0.02)
+	for i in 3:
+		var s := rng.randf_range(0.07, 0.17)
+		MeshKit.add_blob(st, Vector3(rng.randf_range(-0.3, 0.3), s * 0.3, rng.randf_range(-0.3, 0.3)), Vector3(s * rng.randf_range(1.0, 1.6), s * 0.7, s), 0, n, 0.25, Color(0.86, 0.84, 0.8) * rng.randf_range(0.8, 1.05), -0.02)
 	st.generate_normals()
 	st.generate_tangents()
 	return st.commit()

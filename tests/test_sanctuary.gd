@@ -99,6 +99,28 @@ func test_every_column_order_fits_the_pillar_collision() -> void:
 			check(aabb.end.y <= (2.5 if broken else 5.5) + 0.2, "%s column keeps its height (%.2f m)" % [order, aabb.end.y])
 
 
+## The playfield's own stones change shape with the sanctuary but never outgrow
+## their collision: a monolith is two 0.5 m circles at +-0.38 m, a brazier one of 0.62 m.
+func test_monolith_and_brazier_shapes_fit_their_collision() -> void:
+	for shape in 4:
+		var m := WorldMeshes.monolith(3.2, 40, shape)
+		var worst := 0.0
+		for v: Vector3 in m.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+			var p := Vector2(v.x, v.z)
+			worst = maxf(worst, minf(p.distance_to(Vector2(-0.38, 0)), p.distance_to(Vector2(0.38, 0))))
+			check(v.y <= 3.2 + 0.25, "monolith shape %d keeps its height (%.2f)" % [shape, v.y])
+		# The plain slab's corners have always stuck out to 0.58 m.
+		check(worst <= 0.6, "monolith shape %d stays inside the slab's footprint (%.3f m from a circle centre)" % [shape, worst])
+	for shape in 3:
+		var b := WorldMeshes.brazier(shape)
+		var ext := _horizontal_extent(b)
+		check(ext.y <= 0.73, "brazier shape %d is no wider than the bowl (%.3f m)" % [shape, ext.y])
+		check(absf(b.get_aabb().end.y - 1.5) < 0.02, "brazier shape %d keeps the fire at the same height" % shape)
+	for t in WorldThemes.THEMES:
+		var s := SanctuaryStyles.get_style(t["id"])
+		check(int(s["monolith"]) >= 0 and int(s["monolith"]) < 4 and int(s["brazier"]) >= 0 and int(s["brazier"]) < 3, "%s names real shapes" % t["id"])
+
+
 func test_the_island_wears_its_sanctuarys_style() -> void:
 	var main := make_main()
 	var world: WorldView = main.world

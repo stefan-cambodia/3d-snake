@@ -15,7 +15,9 @@ const SECOND_POS := Vector2(74.0, 10.0)
 const KEEP_OUT := GameConfig.ARENA_RADIUS + 1.6
 const SHORE_STATIONS := 16
 const MIN_GAP := 1.0
-const SHORE_SECTORS := 6
+## The shore is cut into sectors so the camera and the shadow pass only draw the
+## stretch in view.
+const SHORE_SECTORS := 12
 
 ## Footprint radius of each kind at scale 1.
 const RADII := {
