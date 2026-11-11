@@ -12,6 +12,8 @@ const STONE_SHADER := preload("res://assets/shaders/stone.gdshader")
 const GLOW_SHADER := preload("res://assets/shaders/glow_billboard.gdshader")
 const RUNE_DISC_SHADER := preload("res://assets/shaders/rune_disc.gdshader")
 const BARRIER_SHADER := preload("res://assets/shaders/barrier.gdshader")
+const EMISSIVE_SHADER := preload("res://assets/shaders/emissive.gdshader")
+const SHAFT_SHADER := preload("res://assets/shaders/shaft.gdshader")
 
 const TEX_DETAIL := preload("res://assets/textures/ground_detail.png")
 const TEX_DETAIL_N := preload("res://assets/textures/ground_normal.png")
@@ -29,6 +31,11 @@ const GRASS_CHUNKS := 4
 
 var terrain: TerrainField
 var theme: Dictionary
+## The sanctuary's architectural style (SanctuaryStyles), chosen by the theme.
+var style: Dictionary
+## Where the architecture stands (SanctuaryBuilder.plan) and what it costs.
+var architecture_plan: Array[Dictionary] = []
+var architecture_triangles: int = 0
 var quality: int = 2
 
 var environment: Environment
@@ -43,6 +50,11 @@ var _grass_mat: ShaderMaterial
 var _foliage_mat: ShaderMaterial
 var _barrier_mat: ShaderMaterial
 var _glow_mat: ShaderMaterial
+var _accent_mat: StandardMaterial3D
+var _emissive_mat: ShaderMaterial
+var _flora_mat: ShaderMaterial
+var _weather: GPUParticles3D
+var _weather_kind: String = ""
 var _lantern_glow: MultiMeshInstance3D
 var _night_lanterns: Node3D
 var _motes: GPUParticles3D
@@ -71,6 +83,7 @@ var _core_n := 0
 func build(p_terrain: TerrainField, p_theme: Dictionary, p_quality: int) -> void:
 	terrain = p_terrain
 	theme = p_theme
+	style = SanctuaryStyles.get_style(theme["id"])
 	quality = p_quality
 	_rng.seed = terrain.seed_value * 31 + 5
 	_soft_tex = _make_soft_texture()
@@ -78,6 +91,7 @@ func build(p_terrain: TerrainField, p_theme: Dictionary, p_quality: int) -> void
 	_build_environment()
 	_build_island()
 	_build_motes()
+	_build_weather()
 	_obstacle_root = Node3D.new()
 	_obstacle_root.name = "Obstacles"
 	add_child(_obstacle_root)
@@ -98,8 +112,11 @@ func _build_island() -> void:
 	_build_water()
 	_build_backdrop()
 	_build_arena_ring()
+	_build_architecture()
 	_build_vegetation()
+	_build_flora()
 	_build_landmarks()
+	_build_shafts()
 
 
 ## Rebuild the island after the terrain was regenerated (another sanctuary).
@@ -112,6 +129,7 @@ func rebuild_island() -> void:
 	_lantern_glow = null
 	_night_lanterns = null
 	_build_island()
+	_build_mesh_cache() # the pillars follow the sanctuary's column order
 	apply_theme(theme)
 	set_quality(quality)
 
@@ -170,6 +188,21 @@ func _make_materials() -> void:
 
 	_glow_mat = ShaderMaterial.new()
 	_glow_mat.shader = GLOW_SHADER
+
+	# Bronze, ceramic, timber: vertex-coloured, a little glossy.
+	_accent_mat = StandardMaterial3D.new()
+	_accent_mat.vertex_color_use_as_albedo = true
+	_accent_mat.roughness = 0.5
+	_accent_mat.metallic = 0.2
+	_accent_mat.metallic_specular = 0.6
+
+	_emissive_mat = ShaderMaterial.new()
+	_emissive_mat.shader = EMISSIVE_SHADER
+
+	# Ferns and flowers: the foliage shader, but never recoloured by a sanctuary.
+	_flora_mat = ShaderMaterial.new()
+	_flora_mat.shader = FOLIAGE_SHADER
+	_flora_mat.set_shader_parameter("wind_strength", 0.35)
 
 
 func stone_material() -> ShaderMaterial:
@@ -237,7 +270,21 @@ func _build_environment() -> void:
 
 func apply_theme(p_theme: Dictionary) -> void:
 	theme = p_theme
+	style = SanctuaryStyles.get_style(theme["id"])
 	var night: bool = theme["night"]
+	_sky_mat.set_shader_parameter("aurora", float(style.get("aurora", 0.0)))
+	_water_mat.set_shader_parameter("sky_col", (theme["sky_horizon"] as Color).lerp(theme["sky_top"], 0.35))
+	# The sanctuary's own stone, paving and terrace walls.
+	_stone_mat.set_shader_parameter("tint_a", style["stone_a"])
+	_stone_mat.set_shader_parameter("tint_b", style["stone_b"])
+	_stone_mat.set_shader_parameter("moss_amount", float(style["moss"]))
+	_stone_mat.set_shader_parameter("rune_col", style.get("rune_col", Color(1.0, 0.62, 0.25)))
+	_terrain_mat.set_shader_parameter("plaza_col", style["paving"])
+	_terrain_mat.set_shader_parameter("sandstone_col", style["wall_a"])
+	_terrain_mat.set_shader_parameter("laterite_col", style["wall_b"])
+	_emissive_mat.set_shader_parameter("intensity", 2.6 if night else 1.7)
+	_flora_mat.set_shader_parameter("tint", Color(0.6, 0.7, 0.85) if night else Color.WHITE)
+	_apply_weather(str(style.get("weather", "")))
 	_sky_mat.set_shader_parameter("sky_top", theme["sky_top"])
 	_sky_mat.set_shader_parameter("sky_horizon", theme["sky_horizon"])
 	_sky_mat.set_shader_parameter("sky_ground", theme["sky_ground"])
@@ -264,7 +311,7 @@ func apply_theme(p_theme: Dictionary) -> void:
 	var boost: float = theme["emissive_boost"]
 	_terrain_mat.set_shader_parameter("rune_glow", 0.35 * boost)
 	_stone_mat.set_shader_parameter("rune_base", 0.25 * boost)
-	_stone_mat.set_shader_parameter("moss_col", (theme["grass_a"] as Color).darkened(0.25))
+	_stone_mat.set_shader_parameter("moss_col", style.get("moss_col", (theme["grass_a"] as Color).darkened(0.25)))
 	_grass_mat.set_shader_parameter("base_col", (theme["grass_a"] as Color).darkened(0.35))
 	_grass_mat.set_shader_parameter("tip_col", (theme["grass_b"] as Color).lightened(0.05))
 	_foliage_mat.set_shader_parameter("tint", Color(0.55, 0.65, 0.8) if night else Color.WHITE)
@@ -297,6 +344,8 @@ func set_quality(q: int) -> void:
 	environment.sky.radiance_size = Sky.RADIANCE_SIZE_256 if q >= 2 else Sky.RADIANCE_SIZE_64
 	if _motes:
 		_motes.amount = [30, 60, 110][q]
+	if _weather:
+		_apply_weather(_weather_kind)
 	for f in _fires:
 		var l := f.get_node_or_null("Light") as OmniLight3D
 		if l:
@@ -647,17 +696,249 @@ func _build_arena_ring() -> void:
 	_terrain_root.add_child(flames)
 
 
+# --- Architecture -----------------------------------------------------------------
+
+## The sanctuary's monument, shrines, ruins and props (SanctuaryBuilder), merged
+## into a few meshes per zone so the camera culls whole zones.
+func _build_architecture() -> void:
+	var result := SanctuaryBuilder.build(terrain, style)
+	architecture_plan = result["plan"]
+	architecture_triangles = result["triangles"]
+	var root := Node3D.new()
+	root.name = "Architecture"
+	_terrain_root.add_child(root)
+	for g: Dictionary in result["groups"]:
+		for key: String in ["stone", "accent", "glow"]:
+			var m: ArrayMesh = g[key]
+			if m == null:
+				continue
+			var mi := MeshInstance3D.new()
+			mi.name = "%s_%s" % [g["name"], key]
+			mi.mesh = m
+			match key:
+				"stone":
+					mi.material_override = _stone_mat
+				"accent":
+					mi.material_override = _accent_mat
+				_:
+					mi.material_override = _emissive_mat
+			var shadows: bool = g["shadows"] and key != "glow"
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			root.add_child(mi)
+
+
+## True if `p` lies within `margin` of a piece of architecture.
+func in_architecture(p: Vector2, margin: float = 0.0) -> bool:
+	for pl in architecture_plan:
+		if p.distance_to(pl["pos"]) < float(pl["radius"]) + margin:
+			return true
+	return false
+
+
+func _tree_mesh(kind: String, seed_value: int) -> ArrayMesh:
+	var leaf_a := Color(0.24, 0.42, 0.16)
+	match kind:
+		"broadleaf_b":
+			return WorldMeshes.broadleaf_tree(seed_value, Color(0.36, 0.46, 0.14))
+		"cypress":
+			return WorldMeshes.cypress_tree(seed_value, Color(0.16, 0.32, 0.18))
+		"bush":
+			return WorldMeshes.bush(seed_value, leaf_a)
+		"palm":
+			return WorldMeshes.palm_tree(seed_value, Color(0.22, 0.46, 0.16))
+		"pine":
+			return WorldMeshes.pine_tree(seed_value, Color(0.14, 0.32, 0.2))
+		"dead":
+			return WorldMeshes.dead_tree(seed_value)
+	return WorldMeshes.broadleaf_tree(seed_value, leaf_a)
+
+
+## Shafts of sunlight slanting down behind the great monument (day only).
+func _build_shafts() -> void:
+	if not bool(style.get("shafts", false)) or bool(theme["night"]):
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = SHAFT_SHADER
+	mat.set_shader_parameter("color", (theme["sun_color"] as Color).lerp(theme["fog_color"], 0.3))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = terrain.seed_value * 53 + 7
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1, 1)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = quad
+	mm.instance_count = 7
+	var yaw := SanctuaryBuilder.facing_centre(SanctuaryBuilder.FOCAL_POS)
+	for i in 7:
+		var x := (float(i) - 3.0) * 4.2 + rng.randf_range(-1.2, 1.2)
+		var w := rng.randf_range(2.6, 5.5)
+		var h := rng.randf_range(26.0, 36.0)
+		var basis := Basis(Vector3.UP, yaw) * Basis(Vector3(0, 0, 1), rng.randf_range(0.28, 0.4))
+		mm.set_instance_transform(i, Transform3D(basis.scaled(Vector3(w, h, 1.0)), Vector3(SanctuaryBuilder.FOCAL_POS.x + x, h * 0.42, SanctuaryBuilder.FOCAL_POS.y + rng.randf_range(-5.0, 3.0))))
+	var mi := MultiMeshInstance3D.new()
+	mi.name = "SunShafts"
+	mi.multimesh = mm
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_terrain_root.add_child(mi)
+
+
+# --- Ground cover -------------------------------------------------------------------
+
+## Spots on open ground inside the playfield, in loose clusters: no paving, no
+## terrace walls, not under water. Purely visual: the serpent passes through.
+func _flora_spots(rng: RandomNumberGenerator, clusters: int, per_cluster: int, spread: float) -> Array[Transform3D]:
+	var out: Array[Transform3D] = []
+	var tries := 0
+	var made := 0
+	while made < clusters and tries < clusters * 6:
+		tries += 1
+		var r := sqrt(rng.randf()) * (GameConfig.ARENA_RADIUS + 3.5)
+		var a := rng.randf() * TAU
+		var c := Vector2(cos(a), sin(a)) * r
+		if r < TerrainField.PLAZA_RADIUS + 1.5:
+			continue
+		made += 1
+		for i in per_cluster:
+			var p := c + Vector2(rng.randf_range(-spread, spread), rng.randf_range(-spread, spread))
+			var g := ground_info(p.x, p.y)
+			if g.x < GameConfig.WATER_LEVEL + 0.2 or g.y > 0.5 or g.z > 0.15:
+				continue
+			if in_architecture(p, 0.3):
+				continue
+			var s := rng.randf_range(0.75, 1.35)
+			out.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s), Vector3(p.x, g.x, p.y)))
+	return out
+
+
+func _add_flora(node_name: String, mesh: ArrayMesh, spots: Array[Transform3D], mat: Material) -> void:
+	if spots.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = spots.size()
+	for i in spots.size():
+		mm.set_instance_transform(i, spots[i])
+	var mi := MultiMeshInstance3D.new()
+	mi.name = node_name
+	mi.multimesh = mm
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.visibility_range_end = 70.0
+	_terrain_root.add_child(mi)
+
+
+## Ferns, flowers, pebbles and the sanctuary's own ground detail (fallen leaves,
+## ice, glowing mushrooms...).
+func _build_flora() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = terrain.seed_value * 71 + 9
+	var k: float = [0.45, 0.75, 1.0][quality]
+	var ferns := float(style.get("ferns", 0.5))
+	if ferns > 0.0:
+		_add_flora("Ferns", WorldMeshes.fern(11), _flora_spots(rng, int(70.0 * ferns * k), 4, 1.3), _flora_mat)
+	var cols: Array = style.get("flowers", [])
+	for i in cols.size():
+		_add_flora("Flowers%d" % i, WorldMeshes.flowers(20 + i, cols[i]), _flora_spots(rng, int(60.0 * k / float(cols.size())), 6, 1.5), _flora_mat)
+	_add_flora("Pebbles", WorldMeshes.pebbles(31), _flora_spots(rng, int(60.0 * k), 3, 1.0), _stone_mat)
+	match str(style.get("special", "")):
+		"leaves":
+			_add_flora("LeafLitter", WorldMeshes.leaf_litter(41), _flora_spots(rng, int(110.0 * k), 5, 2.0), _flora_mat)
+		"ice":
+			_add_flora("Ice", WorldMeshes.shards(51, Color(0.78, 0.92, 1.0)), _flora_spots(rng, int(70.0 * k), 3, 1.0), _accent_mat)
+		"shells":
+			_add_flora("Shells", WorldMeshes.shards(52, Color(1.0, 0.9, 0.82)), _flora_spots(rng, int(40.0 * k), 3, 0.8), _accent_mat)
+		"mushrooms":
+			_add_flora("Mushrooms", WorldMeshes.mushrooms(61, style["light"]), _flora_spots(rng, int(70.0 * k), 4, 0.9), _emissive_mat)
+
+
+# --- Weather ----------------------------------------------------------------------
+
+## One particle system, re-dressed for each sanctuary: rain, snow, falling leaves,
+## rising embers, drifting mist or pollen. It follows the camera.
+func _build_weather() -> void:
+	_weather = GPUParticles3D.new()
+	_weather.name = "Weather"
+	_weather.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_weather.visible = false
+	add_child(_weather)
+
+
+func _apply_weather(kind: String) -> void:
+	_weather_kind = kind
+	if _weather == null:
+		return
+	# amount, lifetime, quad size, colour, gravity, speed, emitter height, box half height, additive, upright streak
+	var cfg := {
+		"rain": [420, 1.1, Vector2(0.025, 0.7), Color(0.75, 0.86, 0.9, 0.34), -22.0, 4.0, 11.0, 1.0, false, true],
+		"snow": [260, 7.0, Vector2(0.07, 0.07), Color(1.0, 1.0, 1.0, 0.9), -1.1, 0.5, 8.0, 3.0, false, false],
+		"leaves": [70, 8.0, Vector2(0.16, 0.11), Color(0.92, 0.46, 0.1, 1.0), -0.9, 0.7, 8.0, 3.0, false, false],
+		"embers": [70, 5.0, Vector2(0.06, 0.06), Color(1.0, 0.5, 0.16, 1.0), 0.7, 0.4, 0.6, 1.0, true, false],
+		"pollen": [60, 9.0, Vector2(0.05, 0.05), Color(1.0, 0.94, 0.6, 0.8), 0.03, 0.2, 2.0, 2.0, true, false],
+		"mist": [10, 14.0, Vector2(11.0, 5.0), Color(0.86, 0.9, 0.9, 0.1), 0.0, 0.35, 1.2, 0.8, false, false],
+	}
+	if not cfg.has(kind) or quality == 0:
+		_weather.visible = false
+		_weather.emitting = false
+		return
+	var c: Array = cfg[kind]
+	var share: float = [0.0, 0.55, 1.0][quality]
+	_weather.amount = maxi(int(float(c[0]) * share), 4)
+	_weather.lifetime = c[1]
+	_weather.preprocess = c[1]
+	_weather.visibility_aabb = AABB(Vector3(-30, -6, -30), Vector3(60, 24, 60))
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(24, float(c[7]), 24)
+	pm.emission_shape_offset = Vector3(0, float(c[6]), 0)
+	pm.gravity = Vector3(0.6 if kind == "rain" else 0.15, float(c[4]), 0.0)
+	pm.direction = Vector3(0.3, -1.0 if float(c[4]) < 0.0 else 1.0, 0.1)
+	pm.spread = 12.0 if kind == "rain" else 60.0
+	pm.initial_velocity_min = float(c[5]) * 0.5
+	pm.initial_velocity_max = float(c[5])
+	pm.scale_min = 0.7
+	pm.scale_max = 1.4
+	if kind == "leaves" or kind == "snow":
+		pm.angle_min = 0.0
+		pm.angle_max = 360.0
+		pm.angular_velocity_min = -90.0
+		pm.angular_velocity_max = 90.0
+	var fade := Gradient.new()
+	fade.offsets = PackedFloat32Array([0.0, 0.12, 0.85, 1.0])
+	var col: Color = c[3]
+	fade.colors = PackedColorArray([Color(col.r, col.g, col.b, 0.0), col, col, Color(col.r, col.g, col.b, 0.0)])
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = fade
+	pm.color_ramp = ramp
+	_weather.process_material = pm
+	var quad := QuadMesh.new()
+	quad.size = c[2]
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD if c[8] else BaseMaterial3D.BLEND_MODE_MIX
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y if c[9] else BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.disable_receive_shadows = true
+	if kind != "rain" and kind != "leaves":
+		mat.albedo_texture = _soft_tex
+	quad.material = mat
+	_weather.draw_pass_1 = quad
+	_weather.visible = true
+	_weather.emitting = true
+
+
 # --- Vegetation -----------------------------------------------------------------
 
 func _build_vegetation() -> void:
-	var leaf_a := Color(0.24, 0.42, 0.16)
-	var leaf_b := Color(0.16, 0.32, 0.18)
-	var variants: Array[ArrayMesh] = [
-		WorldMeshes.broadleaf_tree(1, leaf_a),
-		WorldMeshes.broadleaf_tree(2, Color(0.36, 0.46, 0.14)),
-		WorldMeshes.cypress_tree(3, leaf_b),
-		WorldMeshes.bush(4, leaf_a),
-	]
+	# Four kinds of tree and shrub, chosen by the sanctuary (the last is the low
+	# one that grows nearest the shore).
+	var kinds: Array = style.get("trees", ["broadleaf", "broadleaf_b", "cypress", "bush"])
+	var variants: Array[ArrayMesh] = []
+	for i in 4:
+		variants.append(_tree_mesh(str(kinds[i]), i + 1))
 	var lists: Array = [[], [], [], []]
 	# Shore band just outside the arena ring, islets and the far shore.
 	for i in 900:
@@ -671,6 +952,9 @@ func _build_vegetation() -> void:
 			continue
 		# Keep landmark islets clear around their monument.
 		if p.distance_to(Vector2(0, -64)) < 9.0 or p.distance_to(Vector2(74, 10)) < 7.5:
+			continue
+		# Nothing grows through the architecture.
+		if in_architecture(p, 1.2):
 			continue
 		var kind := _rng.randi_range(0, 3)
 		if r < 52.0 and kind != 3 and _rng.randf() < 0.35:
@@ -795,47 +1079,6 @@ func _update_grass_density() -> void:
 # --- Landmarks -------------------------------------------------------------------
 
 func _build_landmarks() -> void:
-	var gate := MeshInstance3D.new()
-	gate.name = "TempleGate"
-	gate.mesh = WorldMeshes.temple_gate()
-	gate.material_override = _stone_mat
-	gate.position = Vector3(0, terrain.height(0, -64), -64)
-	_terrain_root.add_child(gate)
-	var statue := MeshInstance3D.new()
-	statue.name = "SerpentStatue"
-	statue.mesh = WorldMeshes.serpent_statue()
-	statue.material_override = _stone_mat
-	statue.position = Vector3(74, terrain.height(74, 10) - 0.2, 10)
-	statue.rotation.y = 2.4
-	_terrain_root.add_child(statue)
-	# Glowing eyes on the statue: a pair of halos high on the head.
-	var halo := QuadMesh.new()
-	var eyes := MeshInstance3D.new()
-	eyes.mesh = halo
-	var em := _glow_mat.duplicate() as ShaderMaterial
-	em.set_shader_parameter("color", Color(1.0, 0.75, 0.3))
-	em.set_shader_parameter("intensity", 1.6)
-	eyes.material_override = em
-	eyes.scale = Vector3.ONE * 2.2
-	statue.add_child(eyes)
-	eyes.position = Vector3(1.0, 10.6, 1.0)
-
-	# Scattered ruins on the beach outside the ring.
-	for i in 12:
-		var a := _rng.randf() * TAU
-		var r := _rng.randf_range(GameConfig.ARENA_RADIUS + 2.4, GameConfig.ARENA_RADIUS + 5.0)
-		var p := Vector2(cos(a), sin(a)) * r
-		var h := terrain.height(p.x, p.y)
-		if h < GameConfig.WATER_LEVEL + 0.15:
-			continue
-		var mi := MeshInstance3D.new()
-		mi.mesh = WorldMeshes.fallen_column(100 + i) if i % 2 == 0 else WorldMeshes.column(_rng.randf_range(1.0, 2.6), 0.6, true, 200 + i, 12)
-		mi.material_override = _stone_mat
-		mi.position = Vector3(p.x, h - 0.05, p.y)
-		mi.rotation.y = _rng.randf() * TAU
-		_rng.randf() # keeps the placement sequence of later decorations unchanged
-		_terrain_root.add_child(mi)
-
 	# Floating lanterns on the lake (night theme only).
 	_night_lanterns = Node3D.new()
 	_night_lanterns.name = "LakeLanterns"
@@ -929,9 +1172,11 @@ func _build_motes() -> void:
 # --- Obstacles -------------------------------------------------------------------
 
 func _build_mesh_cache() -> void:
+	_mesh_cache.clear()
+	var order := str(style.get("order", "classic"))
 	for v in 4:
-		_mesh_cache["%s:%d" % [Obstacle.KIND_PILLAR, v]] = WorldMeshes.column(5.5, 0.55, false, 10 + v, 16 if quality > 0 else 12)
-		_mesh_cache["%s:%d" % [Obstacle.KIND_BROKEN_PILLAR, v]] = WorldMeshes.column(2.5, 0.55, true, 20 + v, 16 if quality > 0 else 12)
+		_mesh_cache["%s:%d" % [Obstacle.KIND_PILLAR, v]] = SanctuaryKit.column_mesh(order, 5.5, 0.55, false, 10 + v, 16 if quality > 0 else 12)
+		_mesh_cache["%s:%d" % [Obstacle.KIND_BROKEN_PILLAR, v]] = SanctuaryKit.column_mesh(order, 2.5, 0.55, true, 20 + v, 16 if quality > 0 else 12)
 		_mesh_cache["%s:%d" % [Obstacle.KIND_ROCKS, v]] = WorldMeshes.rocks(1.25, 1.5, 30 + v)
 		_mesh_cache["%s:%d" % [Obstacle.KIND_MONOLITH, v]] = WorldMeshes.monolith(3.2, 40 + v)
 		_mesh_cache["%s:%d" % [Obstacle.KIND_WALL, v]] = WorldMeshes.wall(1.8, 50 + v)
@@ -1110,6 +1355,8 @@ func update_view(delta: float, head_pos: Vector3, camera_pos: Vector3) -> void:
 	_grass_mat.set_shader_parameter("player_pos", head_pos)
 	if _motes:
 		_motes.global_position = Vector3(camera_pos.x, 0.5, camera_pos.z).lerp(Vector3(head_pos.x, 0.5, head_pos.z), 0.6)
+	if _weather and _weather.visible:
+		_weather.global_position = Vector3(camera_pos.x, 0.0, camera_pos.z).lerp(Vector3(head_pos.x, 0.0, head_pos.z), 0.5)
 	var done: Array = []
 	for id in _rising:
 		var e: Dictionary = _rising[id]

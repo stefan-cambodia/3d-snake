@@ -14,6 +14,11 @@ uniform float rune_base = 0.35;
 // the material). Deliberately not an instance uniform: under OpenGL, Godot
 // caps objects using instance uniforms at 256 in total.
 uniform float rune_glow = 0.0;
+// The sanctuary's own stone: two tones blended in large patches (sandstone,
+// marble, basalt...), and how weathered it is.
+uniform vec3 tint_a : source_color = vec3(1.0);
+uniform vec3 tint_b : source_color = vec3(1.0);
+uniform float wear = 1.0;
 
 varying vec3 v_wnormal;
 varying vec3 v_world;
@@ -37,6 +42,18 @@ void fragment() {
 	// Each stone gets its own tint, from where it stands.
 	col *= 0.9 + 0.2 * hash12(floor(v_origin * 2.3) + 0.5);
 	float d = texture(detail_tex, v_world.xz * 0.21 + v_world.y * 0.13).g;
+	// Two tones of the same stone, in beds a few metres across.
+	// One more read of the detail texture gives both the stone's beds (red) and
+	// the rain streaks down its vertical faces (green).
+	vec2 wear_s = texture(detail_tex, vec2((v_world.x + v_world.z) * 0.33, v_world.y * 0.045)).rg;
+	float bed = wear_s.r;
+	col *= mix(tint_a, tint_b, smoothstep(0.3, 0.7, bed + (hash12(floor(v_origin * 2.3) + 0.5) - 0.5) * 0.3));
+	// Grime under ledges and at the foot.
+	float streak = wear_s.g;
+	float vertical = 1.0 - abs(v_wnormal.y);
+	col *= 1.0 - 0.3 * wear * vertical * smoothstep(0.5, 0.8, streak);
+	col *= mix(0.62, 1.0, smoothstep(-0.9, -0.1, v_wnormal.y));
+	col *= mix(0.8, 1.0, smoothstep(-0.2, 0.9, v_world.y) * 0.5 + 0.5);
 	float up = smoothstep(0.35, 0.85, v_wnormal.y);
 	float low = smoothstep(0.9, 0.0, v_world.y + 0.3);
 	float moss = clamp(up * smoothstep(0.35, 0.65, d) + low * smoothstep(0.45, 0.7, d) * 0.8, 0.0, 1.0) * moss_amount;

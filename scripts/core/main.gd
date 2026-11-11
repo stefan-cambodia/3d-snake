@@ -602,6 +602,38 @@ func _parse_args() -> void:
 			_shots.append([float(times[mini(i, times.size() - 1)]) if times.size() > 0 else at, paths[i]])
 
 
+var _tour_cam: Camera3D
+
+## --tour: hide the menus and move a free camera round the sanctuary's
+## architecture, a new viewpoint every 4 seconds (monument, second landmark,
+## four stretches of shore, the lake, an overview). For checking and screenshots.
+func _tour_update() -> void:
+	if _tour_cam == null:
+		_tour_cam = Camera3D.new()
+		_tour_cam.fov = 62.0
+		_tour_cam.far = 700.0
+		add_child(_tour_cam)
+		_tour_cam.make_current()
+		ui.visible = false
+	var f := SanctuaryBuilder.FOCAL_POS
+	var s := SanctuaryBuilder.SECOND_POS
+	var fd := -f.normalized()
+	var sd := -s.normalized()
+	var stops: Array = [
+		[Vector3(f.x + fd.x * 30.0, 9.0, f.y + fd.y * 30.0), Vector3(f.x, 7.0, f.y)],
+		[Vector3(f.x + fd.x * 15.0 + 9.0, 4.5, f.y + fd.y * 15.0), Vector3(f.x, 6.0, f.y)],
+		[Vector3(s.x + sd.x * 24.0, 8.0, s.y + sd.y * 24.0), Vector3(s.x, 5.0, s.y)],
+	]
+	for a: float in [0.6, 2.2, 3.8, 5.4]:
+		var d := Vector2(cos(a), sin(a))
+		stops.append([Vector3(d.x * 33.0, terrain.height(d.x * 33.0, d.y * 33.0) + 3.0, d.y * 33.0), Vector3(d.x * 47.0 - d.y * 6.0, 1.6, d.y * 47.0 + d.x * 6.0)])
+	stops.append([Vector3(-14.0, 16.0, 24.0), Vector3(-30.0, 0.0, 58.0)])
+	stops.append([Vector3(-78.0, 46.0, 78.0), Vector3(0.0, 0.0, -12.0)])
+	stops.append([Vector3(10.0, terrain.height(10.0, 20.0) + 2.2, 20.0), Vector3(0.0, 6.0, -64.0)])
+	var stop: Array = stops[int(_elapsed_real / 4.0) % stops.size()]
+	_tour_cam.look_at_from_position(stop[0], stop[1])
+
+
 func _run_automation_start() -> void:
 	if _args.has("seed"):
 		_rng.seed = int(_args["seed"])
@@ -620,6 +652,8 @@ func _run_automation_start() -> void:
 
 
 func _run_automation(real_dt: float) -> void:
+	if _args.has("tour"):
+		_tour_update()
 	if _shots.size() > 0 and _elapsed_real >= float(_shots[0][0]):
 		var path: String = _shots[0][1]
 		_shots.pop_front()

@@ -1,6 +1,6 @@
 # Google Play listing — 3D Snake
 
-Everything needed to fill in the Play Console for **3D Snake 1.8.0 (versionCode 9)**.
+Everything needed to fill in the Play Console for **3D Snake 2.0.0 (versionCode 10)**.
 
 | What | File |
 |---|---|

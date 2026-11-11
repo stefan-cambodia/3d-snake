@@ -333,6 +333,7 @@ static func serpent_statue() -> ArrayMesh:
 	var plinth := MeshKit.lathe(PackedVector2Array([Vector2(5.4, -1.0), Vector2(5.4, 0.35), Vector2(5.0, 0.6), Vector2(0.0, 0.6)]), 24, Callable(), STONE_TINT, Vector2(8.0, 0.5))
 	st.generate_normals()
 	st.generate_tangents()
+	st.index() # the plinth below is indexed: a merged surface must be indexed throughout
 	var mesh := st.commit()
 	var st2 := SurfaceTool.new()
 	st2.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -372,6 +373,7 @@ static func temple_gate() -> ArrayMesh:
 		MeshKit.add_hexahedron(st2, stepc, STONE_TINT * 0.95, 0.5)
 	st2.generate_normals()
 	st2.generate_tangents()
+	st2.index()
 	st.append_from(st2.commit(), 0, Transform3D())
 	return st.commit()
 
@@ -414,4 +416,243 @@ static func mountains(seed_value: int, inner: float, outer: float) -> ArrayMesh:
 			st.add_index(i10)
 			st.add_index(i11)
 	st.generate_normals()
+	return st.commit()
+
+
+# --- More vegetation and ground cover --------------------------------------------
+
+## Triangle seen from both sides (the foliage shader culls back faces).
+static func _leaf_tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, ca: Color, cb: Color, cc: Color) -> void:
+	for v in [[a, ca], [b, cb], [c, cc], [a, ca], [c, cc], [b, cb]]:
+		st.set_color(v[1])
+		st.add_vertex(v[0])
+
+
+## Palm with a leaning ringed trunk and a crown of arching fronds.
+static func palm_tree(seed_value: int, leaf: Color) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var bark := Color(0.4, 0.32, 0.22, 0.0)
+	var h := rng.randf_range(6.0, 8.0)
+	var bend := Vector3(rng.randf_range(-1.6, 1.6), 0, rng.randf_range(-1.6, 1.6))
+	var pts := PackedVector3Array()
+	var radii := PackedFloat32Array()
+	for i in 9:
+		var t := float(i) / 8.0
+		pts.append(Vector3(0, t * h, 0) + bend * t * t)
+		radii.append(lerpf(0.3, 0.16, t) * (1.0 + 0.12 * float(i % 2)))
+	MeshKit.add_tube(st, pts, radii, 7, bark, 0.5, false)
+	var top := pts[8]
+	for f in 9:
+		var a := TAU * float(f) / 9.0 + rng.randf_range(-0.2, 0.2)
+		var dir := Vector3(cos(a), 0, sin(a))
+		var side := Vector3(-sin(a), 0, cos(a))
+		var length := rng.randf_range(2.6, 3.4)
+		var prev := top
+		var prev_w := 0.12
+		for sgm in range(1, 6):
+			var t := float(sgm) / 5.0
+			var p := top + dir * length * t + Vector3(0, 0.9 * sin(t * PI * 0.75) - 1.3 * t * t, 0)
+			var w := 0.5 * sin(t * PI) + 0.04
+			var c0 := leaf * lerpf(0.8, 1.1, t)
+			c0.a = clampf(t + 0.2, 0.0, 1.0)
+			_leaf_tri(st, prev - side * prev_w, prev + side * prev_w, p + side * w, c0, c0, c0)
+			_leaf_tri(st, prev - side * prev_w, p + side * w, p - side * w, c0, c0, c0)
+			prev = p
+			prev_w = w
+	st.generate_normals()
+	return st.commit()
+
+
+## Conifer: a straight trunk and tiers of drooping boughs.
+static func pine_tree(seed_value: int, leaf: Color) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var bark := Color(0.28, 0.2, 0.15, 0.0)
+	var h := rng.randf_range(7.0, 9.5)
+	MeshKit.add_tube(st, PackedVector3Array([Vector3.ZERO, Vector3(0, h * 0.5, 0), Vector3(0, h, 0)]), PackedFloat32Array([0.26, 0.16, 0.04]), 6, bark, 0.5, false)
+	var tiers := 6
+	for i in tiers:
+		var t := float(i) / float(tiers - 1)
+		var y := lerpf(h * 0.22, h * 0.9, t)
+		var r := lerpf(2.3, 0.5, t) * rng.randf_range(0.9, 1.1)
+		var top := Vector3(0, y + lerpf(1.7, 1.0, t), 0)
+		var sides := 8
+		var col := leaf * lerpf(0.6, 0.9, t)
+		col.a = clampf(0.3 + t * 0.5, 0.0, 1.0)
+		var tipc := col * 1.15
+		tipc.a = col.a
+		for sgm in sides:
+			var a0 := TAU * float(sgm) / float(sides)
+			var a1 := TAU * float(sgm + 1) / float(sides)
+			var k0 := 1.0 if sgm % 2 == 0 else 0.72
+			var k1 := 1.0 if (sgm + 1) % 2 == 0 else 0.72
+			var p0 := Vector3(cos(a0) * r * k0, y - 0.25 * k0, sin(a0) * r * k0)
+			var p1 := Vector3(cos(a1) * r * k1, y - 0.25 * k1, sin(a1) * r * k1)
+			_leaf_tri(st, top, p1, p0, tipc, col, col)
+	st.generate_normals()
+	return st.commit()
+
+
+## Bare, weathered tree.
+static func dead_tree(seed_value: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var bark := Color(0.34, 0.3, 0.27, 0.0)
+	var h := rng.randf_range(4.0, 5.5)
+	var lean := Vector3(rng.randf_range(-0.6, 0.6), 0, rng.randf_range(-0.6, 0.6))
+	var pts := PackedVector3Array()
+	var radii := PackedFloat32Array()
+	for i in 6:
+		var t := float(i) / 5.0
+		pts.append(Vector3(0, t * h, 0) + lean * t * t)
+		radii.append(lerpf(0.3, 0.08, t))
+	MeshKit.add_tube(st, pts, radii, 6, bark, 0.5, true)
+	for b in 5:
+		var from := pts[2 + b % 4]
+		var a := rng.randf() * TAU
+		var dir := Vector3(cos(a), rng.randf_range(0.5, 1.1), sin(a)).normalized()
+		var len := rng.randf_range(1.4, 2.6)
+		var mid := from + dir * len * 0.5 + Vector3(0, 0.15, 0)
+		var tip := from + dir * len + Vector3(rng.randf_range(-0.4, 0.4), 0.3, rng.randf_range(-0.4, 0.4))
+		MeshKit.add_tube(st, PackedVector3Array([from, mid, tip]), PackedFloat32Array([0.11, 0.07, 0.02]), 5, bark, 0.5, true)
+	st.generate_normals()
+	return st.commit()
+
+
+## Fern: a rosette of arching fronds.
+static func fern(seed_value: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for f in 7:
+		var a := TAU * float(f) / 7.0 + rng.randf_range(-0.25, 0.25)
+		var dir := Vector3(cos(a), 0, sin(a))
+		var side := Vector3(-sin(a), 0, cos(a))
+		var length := rng.randf_range(0.35, 0.6)
+		var prev := Vector3(0, 0.02, 0)
+		var prev_w := 0.02
+		for sgm in range(1, 5):
+			var t := float(sgm) / 4.0
+			var p := dir * length * t + Vector3(0, 0.38 * sin(t * PI * 0.8), 0)
+			var w := 0.13 * sin(t * PI) + 0.01
+			var c := Color(0.07, 0.17, 0.06).lerp(Color(0.17, 0.3, 0.1), t)
+			c.a = t
+			_leaf_tri(st, prev - side * prev_w, prev + side * prev_w, p + side * w, c, c, c)
+			_leaf_tri(st, prev - side * prev_w, p + side * w, p - side * w, c, c, c)
+			prev = p
+			prev_w = w
+	st.generate_normals()
+	return st.commit()
+
+
+## Small flowering plant: a few stems, each with a five-petal bloom.
+static func flowers(seed_value: int, petal: Color) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var green := Color(0.2, 0.42, 0.14, 0.3)
+	for s in 4:
+		var base := Vector3(rng.randf_range(-0.22, 0.22), 0, rng.randf_range(-0.22, 0.22))
+		var h := rng.randf_range(0.22, 0.42)
+		var top := base + Vector3(rng.randf_range(-0.06, 0.06), h, rng.randf_range(-0.06, 0.06))
+		var g1 := green
+		g1.a = 0.9
+		_leaf_tri(st, base + Vector3(-0.012, 0, 0), base + Vector3(0.012, 0, 0), top, green, green, g1)
+		_leaf_tri(st, base + Vector3(0, 0, -0.012), base + Vector3(0, 0, 0.012), top, green, green, g1)
+		var pc := petal * rng.randf_range(0.85, 1.1)
+		pc.a = 1.0
+		var centre := Color(1.0, 0.85, 0.3, 1.0)
+		for p in 5:
+			var a0 := TAU * float(p) / 5.0
+			var a1 := a0 + TAU / 5.0 * 0.8
+			var r := rng.randf_range(0.06, 0.09)
+			_leaf_tri(st, top, top + Vector3(cos(a0) * r, 0.03, sin(a0) * r), top + Vector3(cos(a1) * r, 0.03, sin(a1) * r), centre, pc, pc)
+	st.generate_normals()
+	return st.commit()
+
+
+## A scatter of fallen leaves lying on the ground.
+static func leaf_litter(seed_value: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var cols: Array[Color] = [Color(0.86, 0.36, 0.08), Color(0.74, 0.16, 0.08), Color(0.92, 0.66, 0.14), Color(0.56, 0.26, 0.1)]
+	for i in 9:
+		var c := cols[rng.randi() % cols.size()]
+		c.a = 0.0
+		var o := Vector3(rng.randf_range(-0.5, 0.5), 0.03 + rng.randf() * 0.02, rng.randf_range(-0.5, 0.5))
+		var a := rng.randf() * TAU
+		var u := Vector3(cos(a), 0, sin(a)) * rng.randf_range(0.07, 0.11)
+		var v := Vector3(-sin(a), 0, cos(a)) * rng.randf_range(0.04, 0.06)
+		_leaf_tri(st, o - u, o + v, o + u, c, c, c)
+		_leaf_tri(st, o - u, o + u, o - v, c, c, c)
+	st.generate_normals()
+	return st.commit()
+
+
+## Cluster of small shards (ice, salt, crystal) for the accent material.
+static func shards(seed_value: int, col: Color) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_smooth_group(-1)
+	for i in 4:
+		var o := Vector3(rng.randf_range(-0.2, 0.2), -0.03, rng.randf_range(-0.2, 0.2))
+		var h := rng.randf_range(0.18, 0.5)
+		var w := h * 0.22
+		var lean := Vector3(rng.randf_range(-0.12, 0.12), h, rng.randf_range(-0.12, 0.12))
+		var c: Array[Vector3] = [o + Vector3(-w, 0, -w), o + Vector3(w, 0, -w), o + Vector3(w, 0, w), o + Vector3(-w, 0, w),
+			o + lean + Vector3(-w, 0, -w) * 0.1, o + lean + Vector3(w, 0, -w) * 0.1, o + lean + Vector3(w, 0, w) * 0.1, o + lean + Vector3(-w, 0, w) * 0.1]
+		MeshKit.add_hexahedron(st, c, col * rng.randf_range(0.85, 1.1), 1.0)
+	st.generate_normals()
+	return st.commit()
+
+
+## A few glowing mushrooms (vertex colour = light colour, for the emissive material).
+static func mushrooms(seed_value: int, col: Color) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in 3:
+		var o := Vector3(rng.randf_range(-0.18, 0.18), 0, rng.randf_range(-0.18, 0.18))
+		var h := rng.randf_range(0.1, 0.24)
+		var r := h * rng.randf_range(0.5, 0.7)
+		var stem := col * 0.35
+		var sides := 6
+		for sgm in sides:
+			var a0 := TAU * float(sgm) / float(sides)
+			var a1 := TAU * float(sgm + 1) / float(sides)
+			var d0 := Vector3(cos(a0), 0, sin(a0))
+			var d1 := Vector3(cos(a1), 0, sin(a1))
+			MeshKit.tri(st, o + d0 * r * 0.2, o + d1 * r * 0.2, o + Vector3(0, h, 0), Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, stem)
+			MeshKit.tri(st, o + Vector3(0, h * 0.7, 0) + d0 * r, o + Vector3(0, h * 0.7, 0) + d1 * r, o + Vector3(0, h * 1.25, 0), Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, col)
+			MeshKit.tri(st, o + Vector3(0, h * 0.7, 0) + d1 * r, o + Vector3(0, h * 0.7, 0) + d0 * r, o + Vector3(0, h * 0.8, 0), Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, col * 0.6)
+	st.generate_normals()
+	return st.commit()
+
+
+## A handful of pebbles (stone material).
+static func pebbles(seed_value: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n := _noise(seed_value, 2.4)
+	for i in 4:
+		var s := rng.randf_range(0.06, 0.16)
+		MeshKit.add_blob(st, Vector3(rng.randf_range(-0.3, 0.3), s * 0.3, rng.randf_range(-0.3, 0.3)), Vector3(s * rng.randf_range(1.0, 1.6), s * 0.7, s), 1, n, 0.25, Color(0.86, 0.84, 0.8) * rng.randf_range(0.8, 1.05), -0.02)
+	st.generate_normals()
+	st.generate_tangents()
 	return st.commit()

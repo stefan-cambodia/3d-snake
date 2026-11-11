@@ -8,6 +8,8 @@ uniform vec3 shallow_col : source_color = vec3(0.16, 0.48, 0.46);
 uniform float map_extent = 256.0;
 uniform float water_level = -0.55;
 uniform float wave_speed = 1.0;
+// Colour of the sky near the horizon, mirrored at grazing angles.
+uniform vec3 sky_col : source_color = vec3(0.7, 0.8, 0.9);
 
 varying vec3 v_world;
 
@@ -35,7 +37,7 @@ void fragment() {
 	foam *= step(0.001, depth + 0.001);
 	col = mix(col, vec3(0.9, 0.95, 0.95), clamp(foam, 0.0, 1.0) * 0.7);
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
-	ALBEDO = col * (1.0 - fres * 0.35);
+	ALBEDO = mix(col, sky_col, fres * 0.55);
 	NORMAL_MAP = nm * 0.5 + 0.5;
 	NORMAL_MAP_DEPTH = 0.7;
 	ROUGHNESS = mix(0.06, 0.5, foam);

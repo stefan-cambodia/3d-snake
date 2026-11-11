@@ -5,7 +5,8 @@ overwritten, so this directory shows how the game looked at each release.
 
 | Version | Date | Folder | What it shows |
 |---|---|---|---|
-| **1.8.0** (current) | 2026-11-11 | [v1.8](v1.8/README.md) · [contact sheet](v1.8/overview.jpg) | 22 images of what is new: the Violet Aurora sanctuary and its island, the Nebula Naga skin, the new leaf colours on Amber Autumn and Silver Frost, Malay, Filipino, Khmer |
+| **2.0.0** (current) | 2026-11-11 | [v2.0](v2.0/README.md) · [contact sheet](v2.0/overview.jpg) | 21 images of the environment overhaul: each of the nine sanctuaries' monument and shore, an overview, rain and snow in play |
+| 1.8.0 | 2026-11-11 | [v1.8](v1.8/README.md) · [contact sheet](v1.8/overview.jpg) | 22 images of what is new: the Violet Aurora sanctuary and its island, the Nebula Naga skin, the new leaf colours on Amber Autumn and Silver Frost, Malay, Filipino, Khmer |
 | 1.7.0 | 2026-11-11 | [v1.7](v1.7/README.md) · [contact sheet](v1.7/overview.jpg) | 19 images of what is new: the Amber Autumn sanctuary and its island, the Tiger Python skin, Hindi, the Vietnamese main menu, Khmer |
 | 1.6.0 | 2026-11-11 | [v1.6](v1.6/README.md) · [contact sheet](v1.6/overview.jpg) | 17 images of what is new: the Turquoise Lagoon sanctuary and its island, the Storm Serpent skin, the scrolling Skins & Sanctuaries screen, Vietnamese, Khmer |
 | 1.5.0 | 2026-11-11 | [v1.5](v1.5/README.md) · [contact sheet](v1.5/overview.jpg) | 15 images of what is new: the Silver Frost sanctuary and its island, the Pearl Naga skin, the Skins & Sanctuaries screen in English, Khmer and Thai |
@@ -26,7 +27,9 @@ What changed between versions is listed in [CHANGELOG.md](../../CHANGELOG.md).
    instead with `-- --showcase` added to its `command_line/extra_args` (and the OpenGL renderer it
    already uses), then put the preset back. `--theme=<id>`, `--skin=<id>` and `--lang=<code>` after
    `--showcase` start the game on that sanctuary, with that skin, in that language
-   (for example `-- --showcase --theme=frost --skin=pearl --lang=km`).
+   (for example `-- --showcase --theme=frost --skin=pearl --lang=km`). Adding `--tour` hides the
+   menus and moves a free camera round the sanctuary's architecture, a new viewpoint every
+   4 seconds (monument, second landmark, four stretches of shore, the lake, an overview).
 2. Its first launch fills an empty profile with a demo history (a records table, every skin and
    sanctuary unlocked) and sets graphics quality to high. Every run started with **Play** is played
    by the autopilot, so the snake grows long and reaches later stages without anyone touching it.

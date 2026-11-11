@@ -1,6 +1,6 @@
 # Development status — 3D Snake
 
-_Last updated: 2026-11-11 · version 1.8.0 (code 9) · history in [CHANGELOG.md](CHANGELOG.md)_
+_Last updated: 2026-11-11 · version 2.0.0 (code 10) · history in [CHANGELOG.md](CHANGELOG.md)_
 
 ## Summary
 
@@ -15,11 +15,11 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **74 tests, 42,134 checks, 0 failures** (about 57 s) |
+| Headless test suite (`tools/run_tests.sh`) | **79 tests, 56,104 checks, 0 failures** (about 77 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
-| Manifest | `com.studio.snake3d`, version 1.8.0 (9), minSdk 24, targetSdk 36, only the VIBRATE permission |
+| Manifest | `com.studio.snake3d`, version 2.0.0 (10), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
@@ -463,6 +463,59 @@ them (see Known issues).
   foliage shader has therefore not been compiled by the Vulkan renderer yet.
 - The store listing has no Malay or Filipino text.
 
+## Changes: version 2.0.0, the environment overhaul (2026-11-11)
+
+Before 2.0.0 every island shared one temple gate, one serpent statue, twelve scattered column
+stumps and one kind of column; only the colours and the relief differed.
+
+- **`SanctuaryKit`** (`scripts/world/sanctuary_kit.gd`): modular architecture built in code.
+  Columns in five orders, colonnades, arches and voussoir rings, stairs with rails, stepped and
+  round bases, tiered towers, hip roofs, domes, stupas, obelisks, trilithons, and props: urns in
+  three shapes, bowls, bells in frames, stone lanterns, altars, steles, pedestals, guardian
+  idols, fallen heads, rubble, crystals, fire bowls, vines. Everything in a zone is merged into
+  three surfaces (stone, vertex-coloured accents, emissive), so a zone costs three draw calls.
+- **`SanctuaryStyles`**: one style per sanctuary (column order, monument, second landmark, shore
+  set with weights, lake ruins, far-shore silhouette, roof type, two stone tones, paving and wall
+  colours, ceramics, timber, light colour, four kinds of tree, flowers, ferns, ground special,
+  weather, sun shafts, aurora).
+- **`SanctuaryBuilder`**: seeded layout with footprints. Great monument on the north islet,
+  second landmark on the east islet, a building on each small islet, 16 stations and up to 16
+  prop groups round the shore facing the playfield, up to 9 ruins in the lake where the water is
+  deep enough, 6 silhouettes on the far shore. Rules: nothing nearer the centre than the barrier
+  plus 1.6 m, no two footprints overlap, trees do not grow through buildings.
+- **Playfield**: pillars take the sanctuary's column order (all orders stay inside the classic
+  column's width, so the collision circle is unchanged); stone, paving and terrace walls take
+  its colours. Ground cover placed in clusters on open ground: ferns, flowers, pebbles, and
+  leaf litter, ice shards, shells or glowing mushrooms. None of it collides.
+- **Shaders**: stone (two tones in beds, streaks on vertical faces, darker undersides; one extra
+  texture read), water (mirrors the horizon colour at grazing angles), sky (northern lights),
+  new emissive and sun-shaft shaders. Weather is one particle system re-dressed per sanctuary.
+- **Performance measures**: merged meshes per zone (6 shore sectors, so the camera culls most of
+  the shore); far shore and islets cast no shadows; ground cover is instanced and hidden beyond
+  70 m; weather and ground cover scale with the quality setting and weather is off at low
+  quality. Architecture adds 15,000 to 57,000 triangles depending on the sanctuary (Silver Frost
+  least, Turquoise Lagoon most). An island builds in 0.6 to 0.8 s on the PC (it was 0.5 to 0.6 s).
+- **Fixed on the way**: the old serpent statue's body was never drawn, only its plinth (a merged
+  mesh mixed indexed and non-indexed parts); it is whole now.
+- **Tests** (5 new, 79 in all, 56,104 checks, 0 failed): every sanctuary has a complete style
+  and a monument and landmark of its own; layouts are reproducible, outside the playfield and
+  free of overlaps; no built vertex is nearer than the lantern ring; triangle budget; every
+  column order fits the pillar collision; switching sanctuary swaps monument, pillars, ground
+  cover, weather, stone and sky.
+- **Seen on the emulator** (Android 15, OpenGL): a camera tour of all nine sanctuaries (new
+  `--tour` option) and autopilot runs on Jade Monsoon and Silver Frost, no errors in the log.
+  Frame rate in the menu scene at medium quality: 59.4 fps for 1.8.0, 55 to 58 fps for 2.0.0
+  (before the last two trims: one texture read fewer in the stone shader, half the mist). An
+  autopilot run at high quality: 46.9 fps.
+- **Not done on the phone**: the Galaxy A56 was not connected. Nothing since 1.4.0 has been
+  measured there, and 2.0.0 is the heaviest change yet: the phone's frame rate at medium quality
+  is the main open question.
+- **Limits**: this is stylised, procedural low-poly architecture with one tiling stone texture,
+  not photorealistic scanned assets; there are no interiors; no real-time light from the new
+  fires and lanterns (they glow but do not light their surroundings); the far-shore pieces have
+  no level of detail of their own; islet and shore buildings do not adapt to a steep slope beyond
+  standing on a deep foundation.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -517,8 +570,7 @@ them (see Known issues).
    person should judge whether it is strong enough there.
 7. Play a real run by hand on Jade Monsoon on the phone, and watch for slow stretches there (one
    35 s measurement out of two had 9 % of frames at 33 ms).
-8. Install 1.8.0 on the phone (1.5.0 to 1.8.0 have only run on the emulator): check that the
-   update keeps the profile, look at the four newest sanctuaries and the recoloured trees under
-   Vulkan, measure the
+8. Install 2.0.0 on the phone (1.5.0 to 2.0.0 have only run on the emulator): check that the
+   update keeps the profile, look at the new architecture under Vulkan, and above all measure the
    frame rate there, and try scrolling *Skins & Sanctuaries* with a finger.
 9. Optional: more languages, more sanctuaries and skins; Malay and Filipino store listings.

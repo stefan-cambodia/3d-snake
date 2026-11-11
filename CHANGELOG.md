@@ -2,7 +2,44 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`, `v1.7.0`, `v1.8.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`, `v1.7.0`, `v1.8.0`, `v2.0.0`).
+
+## 2.0.0 (10) — 2026-11-11
+
+Screenshots: [docs/screenshots/v2.0](docs/screenshots/v2.0/README.md)
+
+The environment-art overhaul: every sanctuary now has its own architecture instead of sharing one
+gate, one statue and one kind of column.
+
+### Added
+- **A great monument for each sanctuary**, on the north islet: a temple-mountain with five towers
+  (Golden Dawn), a stone moon gate between stupas (Moonlit Shrine), a five-storey pagoda (Misty
+  Morning), a ruined rotunda around a great fire (Crimson Dusk), a step pyramid with a summit
+  shrine (Jade Monsoon), a henge around an obelisk (Silver Frost), a domed sea temple with piers
+  (Turquoise Lagoon), a path of vermilion gates to a hall (Amber Autumn), and an observatory of
+  stone rings and crystals (Violet Aurora).
+- **A second landmark each** on the east islet (serpent statue, stupas, bell tower, colossus, giant
+  fallen heads, obelisks, lighthouse, great lantern, crystal spires).
+- **A furnished shore**: about thirty shrines, statues, altars, arches, colonnades, bell frames,
+  stone lanterns, urns, steles, cairns, gates and smaller props around every island, chosen from
+  the sanctuary's own set; ruins standing in the lake; a building on every small islet; towers
+  and temples on the far shore.
+- **Each sanctuary's own columns** in the playfield (five orders: fluted, lotus, square, ringed,
+  faceted), its own stone (sandstone, blue-grey, marble, basalt...), paving and terrace walls.
+- **Trees and ground plants per sanctuary**: palms, pines and bare trees join the broadleaf trees;
+  ferns, flowers, pebbles, and fallen leaves, ice shards or glowing mushrooms on the ground.
+- **Weather and light**: rain on Jade Monsoon, snow on Silver Frost, falling leaves on Amber
+  Autumn, embers on Crimson Dusk, drifting mist on Misty Morning, pollen on Golden Dawn; northern
+  lights in the sky of Violet Aurora; shafts of sunlight behind the monument by day; the lake
+  mirrors the sky at grazing angles.
+
+### Changed
+- Stone shows two tones of the sanctuary's rock, rain streaks and grime under ledges; on Silver
+  Frost the "moss" on top of the stones is snow.
+
+### Unchanged
+- Gameplay, collisions and controls. All the new architecture stands outside the playfield and
+  nothing new can be hit; the plants on the ground are passed through like the grass.
 
 ## 1.8.0 (9) — 2026-11-11
 
