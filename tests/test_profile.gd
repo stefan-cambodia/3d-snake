@@ -100,6 +100,22 @@ func test_lagoon_and_storm_unlock_at_their_milestones() -> void:
 	p.free()
 
 
+## The 1.7.0 rewards: Amber Autumn at 60 crystals in total, Tiger Python at 600 fruit in total.
+func test_autumn_and_tiger_unlock_at_their_milestones() -> void:
+	var p := _fresh_profile()
+	p.record_run({"score": 10, "energy": 59, "food": 599})
+	check(not p.is_theme_unlocked("autumn"), "autumn locked at 59 crystals")
+	check(not p.is_skin_unlocked("tiger"), "tiger locked at 599 fruit")
+	var r: Dictionary = p.record_run({"score": 10, "energy": 1, "food": 1})
+	var ids: Array = []
+	for u in r["unlocked"]:
+		ids.append(u["id"])
+	check(ids.has("autumn"), "autumn announced at 60 crystals")
+	check(ids.has("tiger"), "tiger announced at 600 fruit")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(p.save_path))
+	p.free()
+
+
 ## Every unlock rule must have its "how to unlock" sentence.
 func test_every_unlock_rule_has_a_description() -> void:
 	var rules: Array = []

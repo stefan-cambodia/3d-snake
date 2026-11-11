@@ -1,12 +1,12 @@
 # Development status — 3D Snake
 
-_Last updated: 2026-11-11 · version 1.6.0 (code 7) · history in [CHANGELOG.md](CHANGELOG.md)_
+_Last updated: 2026-11-11 · version 1.7.0 (code 8) · history in [CHANGELOG.md](CHANGELOG.md)_
 
 ## Summary
 
 The game (renamed from *Serpent Sanctum* in 1.1.0) is feature-complete for a sideload release. The test suite passes, a signed release
 APK builds reproducibly, and the game has been played on a real phone (Samsung Galaxy A56) with the
-Vulkan renderer at a steady 60 fps. The UI is translated into 15 languages, including Khmer, with
+Vulkan renderer at a steady 60 fps. The UI is translated into 16 languages, including Khmer, with
 fonts, shaping and line breaking checked on that phone. It has been tested on only one phone model
 so far, and the translations other than English and French still need native speakers to review
 them (see Known issues).
@@ -15,11 +15,11 @@ them (see Known issues).
 
 | Check | Result |
 |---|---|
-| Headless test suite (`tools/run_tests.sh`) | **71 tests, 40,819 checks, 0 failures** (about 51 s) |
+| Headless test suite (`tools/run_tests.sh`) | **72 tests, 41,301 checks, 0 failures** (about 57 s) |
 | All scripts compile (`tools/check_scripts.gd`) | OK |
 | Headless autoplay smoke run of the real main scene | OK, no script errors |
 | Release APK `build/android/snake3d.apk` (`tools/build_android.sh`) | **Built, 34 MB, arm64-v8a** (includes 4.8 MB of ICU line-breaking data and 0.7 MB of fallback fonts). Signature verified with apksigner (v2 + v3 schemes) |
-| Manifest | `com.studio.snake3d`, version 1.6.0 (7), minSdk 24, targetSdk 36, only the VIBRATE permission |
+| Manifest | `com.studio.snake3d`, version 1.7.0 (8), minSdk 24, targetSdk 36, only the VIBRATE permission |
 | Emulator APK `build/android/snake3d-x86_64.apk` | Built and installed on an Android 15 (API 35) x86_64 emulator with the OpenGL renderer: title, menu, play, game over, play again and the records update all worked with touch input, at about 45 fps |
 | Physical phone: Samsung Galaxy A56 (SM-A566B), Android 16, Exynos 1580 / Xclipse 540 | Release APK installed over wireless adb. Vulkan 1.3 Mobile renderer. **59.6–59.9 fps** in menus and live play (60 Hz display), worst frame 17–33 ms, no thermal throttling, no errors in the log. Main loop running 2.5 s after launch (warm start). French was picked from the phone's locale. Checked on the device: menu, play, boost and pause touch targets, pause menu, game over, danger vignette and the camera-hole side of the screen. Later: the Quit button closes the app; the main menu, settings, How to play, HUD and game-over screens in Khmer (correct subscript consonants and word-boundary line breaks); the language grid; switching language live. On 2026-11-08: the update installs over the old version and keeps the profile; audio is playing (Android reports the game's stream as started, unmuted, media volume 12/15 on the speaker); haptics fire (Android's vibrator log shows the game's 10 ms pickup and 30 ms stage-up pulses from real play, and the 30 ms test pulse from Settings); swiping the Settings list from a slider or a toggle scrolls it without changing the setting; the Accessibility section in Thai |
 | Launch time on the phone (process start → Godot main loop) | **First launch after clearing app data: 6.3 s** (shaders and Vulkan pipelines compiled and cached; first image after 3.3 s). **Normal launch: 3.0 s.** Measured with the Showcase build, so the owner's profile was not touched |
@@ -58,7 +58,7 @@ them (see Known issues).
 - Haptic feedback, a first-run tutorial, and AI attract mode behind the main menu.
 
 **Meta and UI**
-- Main menu with a **Quit** button (hidden on iOS and the web), Skins & Sanctuaries (12 skins, 7 sanctuaries each with its own island, unlocked through milestones), Records (top 10
+- Main menu with a **Quit** button (hidden on iOS and the web), Skins & Sanctuaries (13 skins, 8 sanctuaries each with its own island, unlocked through milestones), Records (top 10
   plus lifetime stats), Settings, How to play / About, pause menu, and a game-over screen with
   new-best and unlock announcements.
 - 3 steering schemes (drag, tap sides, joystick), sensitivity, left-handed layout, camera distance
@@ -66,7 +66,7 @@ them (see Known issues).
 - Accessibility: a *Reduced motion* option (no camera shake, banking, FOV zoom or speed lines),
   *Larger in-game text* (HUD texts 1.3 times bigger), a choice of colour for the danger glow (red,
   blue or yellow), and off-screen item arrows that differ in shape as well as colour.
-- **15 languages**: English, French, Khmer, Thai, Vietnamese, Spanish, Portuguese (Brazil), German, Italian,
+- **16 languages**: English, French, Khmer, Thai, Vietnamese, Hindi, Spanish, Portuguese (Brazil), German, Italian,
   Turkish, Indonesian, Russian, Japanese, Korean, Simplified Chinese. All text lives in
   `assets/i18n/strings.csv`; the phone's language is picked on first launch and can be changed live
   in Settings. Non-Latin scripts use subsetted Noto fonts (`tools/build_fonts.py`), and Khmer and Thai
@@ -408,6 +408,30 @@ them (see Known issues).
   owner's request to move on; the lagoon's look under Vulkan and its frame rate are unmeasured.
 - The store listing has no Vietnamese text yet (English, French and Khmer only).
 
+## Changes: version 1.7.0 (2026-11-11)
+
+- **Amber Autumn**, an eighth sanctuary (`autumn` in `WorldThemes`, island seed 20241207; unlocked
+  at 60 Surge crystals in total), and **Tiger Python**, a thirteenth skin (orange, black bands;
+  unlocked at 600 fruit in total). One unlock rule is new (`total_energy`, sentence
+  `REQ_TOTAL_ENERGY`). The trees keep their green on the amber ground.
+- **Hindi** (`hi`), the 16th language: 149 strings, AI-written like the others. Devanagari comes
+  from a Noto Sans Devanagari subset used as a fallback (338 KB: the shaping tables for conjuncts
+  are kept whole); Latin letters and digits stay in Cinzel and Outfit.
+- **Fixed**: the main menu's "3D SNAKE" has a font kind of its own (`logo`) that never changes
+  with the language, so it is in Cinzel again in Vietnamese.
+- Store listing: Vietnamese and Hindi texts added, counts updated in the others.
+- 3 new strings in the 16 languages; the fallback fonts were rebuilt (1.6 MB in all).
+- Tests (1 new, 72 in all, 41,301 checks, 0 failed): the two new unlock thresholds; Hindi uses
+  its fallback font and `hi_IN` is detected; the logo keeps Cinzel in Vietnamese. The existing
+  tests cover the Hindi text for fit, fonts and placeholders like every other language.
+- Built: release APK, App Bundle, Showcase APK, emulator APK, all 1.7.0 (8).
+- **Seen on the emulator** (Android 15, OpenGL, Showcase mode): two autopilot runs on Amber Autumn
+  with the Tiger Python (727 points at stage 4, then 1514 at stage 5), no errors in the log; the
+  main menu, *Skins & Sanctuaries* and Settings in Hindi, with conjuncts shaped correctly; the
+  Vietnamese main menu; *Skins & Sanctuaries* in English and Khmer.
+- **Screenshots**: 19 new ones in `docs/screenshots/v1.7/`; older folders untouched.
+- **Not done on the phone**: 1.5.0, 1.6.0 and 1.7.0 have not been installed on the Galaxy A56.
+
 ## Known issues and limitations
 
 - **The translations other than English and French were written by an AI** and have not been
@@ -444,7 +468,7 @@ them (see Known issues).
 1. **Have native speakers review the translations**, Khmer first (including the accessibility
    strings and the newer names: Crimson Dusk, Lotus Cobra, Jade Monsoon, Amethyst Krait,
    Silver Frost, Pearl Naga, Turquoise Lagoon, Storm Serpent), and the whole Vietnamese
-   translation, which is new in 1.6.0.
+   translation (new in 1.6.0) and the whole Hindi one (new in 1.7.0).
 2. **Test on more phones**, especially a low-end one and other GPU families (Qualcomm Adreno, ARM
    Mali). Check frame rate at each quality level, then tune the default quality. The Galaxy A56
    runs the default (medium) at a steady 60 fps with the relief; high drops about one frame in
@@ -462,7 +486,8 @@ them (see Known issues).
    person should judge whether it is strong enough there.
 7. Play a real run by hand on Jade Monsoon on the phone, and watch for slow stretches there (one
    35 s measurement out of two had 9 % of frames at 33 ms).
-8. Install 1.6.0 on the phone (1.5.0 and 1.6.0 have only run on the emulator): check that the
-   update keeps the profile, look at Silver Frost and Turquoise Lagoon under Vulkan, measure the
+8. Install 1.7.0 on the phone (1.5.0 to 1.7.0 have only run on the emulator): check that the
+   update keeps the profile, look at the three newest sanctuaries under Vulkan, measure the
    frame rate there, and try scrolling *Skins & Sanctuaries* with a finger.
-9. Optional: more languages (a Vietnamese store listing first), more sanctuaries and skins.
+9. Optional: more languages, more sanctuaries and skins (the trees could take each sanctuary's
+   colours: they stay green on Silver Frost and Amber Autumn).

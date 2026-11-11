@@ -52,7 +52,7 @@ func _ready() -> void:
 	_col = col
 
 	# The game's name, the same in every language.
-	var title := UiTheme.label("3D SNAKE", 74, "title", UiTheme.GOLD)
+	var title := UiTheme.label("3D SNAKE", 74, "logo", UiTheme.GOLD)
 	title.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	title.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.0, 0.7))
 	title.add_theme_constant_override("outline_size", 10)

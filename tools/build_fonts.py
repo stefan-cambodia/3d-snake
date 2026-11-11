@@ -38,6 +38,7 @@ FONTS = [
     ("NotoSansSC-Subset.ttf", "notosanssc/NotoSansSC%5Bwght%5D.ttf", ["zh_CN"]),
     ("NotoSansJP-Subset.ttf", "notosansjp/NotoSansJP%5Bwght%5D.ttf", ["ja"]),
     ("NotoSansKR-Subset.ttf", "notosanskr/NotoSansKR%5Bwght%5D.ttf", ["ko"]),
+    ("NotoSansDevanagari-Subset.ttf", "notosansdevanagari/NotoSansDevanagari%5Bwdth,wght%5D.ttf", ["hi"]),
 ]
 # Languages whose whole text is drawn with one Noto font instead of Cinzel/Outfit, because
 # those lack many of its letters and a word mixing two fonts looks uneven:

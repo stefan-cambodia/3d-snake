@@ -24,6 +24,7 @@ const FALLBACKS_BY_LANGUAGE := {
 	"ja": ["NotoSansJP-Subset.ttf"],
 	"ko": ["NotoSansKR-Subset.ttf"],
 	"zh": ["NotoSansSC-Subset.ttf"],
+	"hi": ["NotoSansDevanagari-Subset.ttf"],
 }
 ## Languages drawn entirely with one Noto font: Cinzel and Outfit lack many Vietnamese
 ## letters, and a word that mixes two fonts looks uneven.
@@ -32,7 +33,7 @@ const BASE_BY_LANGUAGE := {
 }
 ## Every script at once, for the language picker ("picker" font kind).
 const FALLBACKS_ALL := ["NotoSans-Subset.ttf", "NotoSansKhmer-Subset.ttf", "NotoSansThai-Subset.ttf",
-	"NotoSansSC-Subset.ttf", "NotoSansJP-Subset.ttf", "NotoSansKR-Subset.ttf"]
+	"NotoSansSC-Subset.ttf", "NotoSansJP-Subset.ttf", "NotoSansKR-Subset.ttf", "NotoSansDevanagari-Subset.ttf"]
 
 static var _theme: Theme
 static var _fonts: Dictionary = {}
@@ -53,12 +54,12 @@ static func apply_locale(code: String) -> void:
 ## The font file a kind of text ("title", "body"...) is drawn with in a language.
 static func base_font(kind: String, code: String) -> Font:
 	var own: String = BASE_BY_LANGUAGE.get(code.get_slice("_", 0), "")
-	if own != "":
+	if own != "" and kind != "logo": # the game's name keeps its typeface in every language
 		var f: FontFile = load(FALLBACK_DIR + own)
 		if f != null:
 			return f
 	if not _default_bases.has(kind):
-		_default_bases[kind] = load(FONT_TITLE_PATH if kind.begins_with("title") else FONT_BODY_PATH)
+		_default_bases[kind] = load(FONT_TITLE_PATH if kind.begins_with("title") or kind == "logo" else FONT_BODY_PATH)
 	return _default_bases[kind]
 
 
@@ -88,7 +89,7 @@ static func font(kind: String) -> Font:
 	fv.base_font = base_font(kind, "en" if kind == "picker" else _locale)
 	var weight := 450
 	match kind:
-		"title":
+		"title", "logo":
 			weight = 700
 		"title_light":
 			weight = 500

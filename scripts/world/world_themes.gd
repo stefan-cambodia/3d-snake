@@ -75,6 +75,16 @@ const THEMES: Array[Dictionary] = [
 		"emissive_boost": 0.5, "motes": Color(1.0, 1.0, 0.85), "night": false, "cloud_tint": Color(1.0, 1.0, 1.0),
 		"exposure": 1.0,
 	},
+	{
+		"id": "autumn", "name": "THEME_AUTUMN", "unlock": {"stat": "total_energy", "value": 60}, "terrain_seed": 20241207,
+		"sky_top": Color(0.26, 0.40, 0.62), "sky_horizon": Color(0.96, 0.80, 0.56), "sky_ground": Color(0.24, 0.18, 0.14),
+		"sun_color": Color(1.0, 0.86, 0.62), "sun_energy": 1.35, "sun_pitch": -32.0, "sun_yaw": 300.0,
+		"ambient_energy": 0.6, "fog_color": Color(0.90, 0.74, 0.54), "fog_density": 0.0042,
+		"water_deep": Color(0.05, 0.14, 0.20), "water_shallow": Color(0.30, 0.44, 0.40),
+		"grass_a": Color(0.62, 0.30, 0.10), "grass_b": Color(0.86, 0.58, 0.16),
+		"emissive_boost": 0.7, "motes": Color(1.0, 0.62, 0.22), "night": false, "cloud_tint": Color(1.0, 0.88, 0.74),
+		"exposure": 1.0,
+	},
 ]
 
 

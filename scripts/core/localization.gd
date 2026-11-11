@@ -13,7 +13,7 @@ extends Node
 signal language_changed(code: String)
 
 ## Locale codes in the order the language picker shows them (CSV column names).
-const LOCALES: Array[String] = ["en", "fr", "km", "th", "vi", "es", "pt_BR", "de", "it", "tr", "id", "ru", "ja", "ko", "zh_CN"]
+const LOCALES: Array[String] = ["en", "fr", "km", "th", "vi", "hi", "es", "pt_BR", "de", "it", "tr", "id", "ru", "ja", "ko", "zh_CN"]
 
 var _current: String = "en"
 

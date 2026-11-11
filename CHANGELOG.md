@@ -2,7 +2,24 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`, `v1.6.0`, `v1.7.0`).
+
+## 1.7.0 (8) — 2026-11-11
+
+Screenshots: [docs/screenshots/v1.7](docs/screenshots/v1.7/README.md)
+
+### Added
+- **An eighth sanctuary, Amber Autumn**: a low warm sun, amber and russet grass, and an island of
+  its own. Unlocked after collecting 60 Surge crystals in total.
+- **A thirteenth skin, Tiger Python** (orange with black bands). Unlocked after eating 600 fruit in
+  total.
+- **Hindi** (हिन्दी), the 16th language. It is picked automatically on a phone set to Hindi.
+- The two new names and the new "how to unlock" sentence in the 16 languages.
+- Store listing text in Vietnamese and Hindi (`store/README.md`).
+
+### Fixed
+- In Vietnamese the game's name on the main menu is back in its usual typeface (1.6.0 drew it in
+  the Vietnamese text font).
 
 ## 1.6.0 (7) — 2026-11-11
 

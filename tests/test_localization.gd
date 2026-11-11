@@ -95,7 +95,7 @@ func test_detect_device_language() -> void:
 		"fr_BE": "fr", "fr": "fr", "km_KH": "km", "km": "km", "th_TH": "th", "en_GB": "en",
 		"pt_PT": "pt_BR", "pt_BR": "pt_BR", "zh_TW": "zh_CN", "zh-Hans-CN": "zh_CN",
 		"ja_JP": "ja", "ko_KR": "ko", "in_ID": "id", "id_ID": "id", "ru_RU": "ru",
-		"tr_TR": "tr", "de_AT": "de", "es_MX": "es", "it_IT": "it", "vi_VN": "vi", "vi": "vi", "nl_NL": "en", "": "en",
+		"tr_TR": "tr", "de_AT": "de", "es_MX": "es", "it_IT": "it", "vi_VN": "vi", "vi": "vi", "hi_IN": "hi", "nl_NL": "en", "": "en",
 	}
 	for sys in cases:
 		check_eq(Localization.detect(sys), cases[sys], "device locale '%s'" % sys)
@@ -140,6 +140,8 @@ func test_fonts_cover_every_translation() -> void:
 	check(_missing_chars(picker, names).is_empty(), "picker font shows every language name")
 	check(UiTheme.fallback_names("en").is_empty(), "Latin languages keep the compact primary fonts")
 	check_eq(UiTheme.fallback_names("km"), ["NotoSansKhmer-Subset.ttf"], "Khmer uses Noto Sans Khmer")
+	check_eq(UiTheme.fallback_names("hi"), ["NotoSansDevanagari-Subset.ttf"], "Hindi uses Noto Sans Devanagari")
+	check_eq(UiTheme.base_font("logo", "vi"), UiTheme.base_font("title", "en"), "the game's name keeps Cinzel in Vietnamese")
 	# Vietnamese is drawn with one font, so no word mixes two typefaces.
 	var vi_font := UiTheme.base_font("body", "vi")
 	check(vi_font != UiTheme.base_font("body", "en"), "Vietnamese has a font of its own")

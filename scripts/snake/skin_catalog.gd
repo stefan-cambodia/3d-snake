@@ -90,6 +90,13 @@ const SKINS: Array[Dictionary] = [
 		"pattern_type": Pattern.RUNES, "gloss": 0.7, "metallic": 0.3, "iridescence": 0.2, "emission": 1.2,
 		"unlock": {"stat": "best_combo", "value": 8},
 	},
+	{
+		"id": "tiger", "name": "SKIN_TIGER",
+		"back": Color(0.90, 0.46, 0.08), "side": Color(0.96, 0.62, 0.16), "belly": Color(0.98, 0.93, 0.82),
+		"pattern": Color(0.05, 0.04, 0.03), "accent": Color(1.0, 0.80, 0.30),
+		"pattern_type": Pattern.BANDS, "gloss": 0.5, "metallic": 0.0, "iridescence": 0.0, "emission": 0.0,
+		"unlock": {"stat": "total_food", "value": 600},
+	},
 ]
 
 

@@ -8,7 +8,7 @@ monoliths that rise out of the ground as the stages climb. The island has relief
 and raised stone terraces whose walls block the way but whose paved ramps let the serpent climb up
 and back down. Every model, texture, sound and music track is generated procedurally (see `tools/`). The only third-party assets are the fonts (Cinzel, Outfit and Noto, all under the SIL OFL).
 
-![3D Snake main menu](docs/screenshots/v1.6/01-main-menu-lagoon.jpg)
+![3D Snake main menu](docs/screenshots/v1.7/01-main-menu-autumn.jpg)
 
 | | | |
 |---|---|---|
@@ -17,19 +17,21 @@ and back down. Every model, texture, sound and music track is generated procedur
 | ![Jade Monsoon ramp](docs/screenshots/v1.4/04-monsoon-ramp.jpg) | ![Jade Monsoon, a long Amethyst Krait](docs/screenshots/v1.4/07-monsoon-long-serpent.jpg) | ![Jade Monsoon relic](docs/screenshots/v1.4/03-monsoon-relic.jpg) |
 | ![Silver Frost ramp](docs/screenshots/v1.5/05-frost-ramp.jpg) | ![Silver Frost, a long Pearl Naga](docs/screenshots/v1.5/10-frost-long-serpent.jpg) | ![Skins and sanctuaries](docs/screenshots/v1.5/13-skins-sanctuaries.jpg) |
 | ![Turquoise Lagoon shore](docs/screenshots/v1.6/02-lagoon-shore.jpg) | ![Turquoise Lagoon, a Storm Serpent on a terrace](docs/screenshots/v1.6/09-lagoon-terrace.jpg) | ![Vietnamese](docs/screenshots/v1.6/14-vietnamese-main-menu.jpg) |
+| ![Amber Autumn, the Tiger Python](docs/screenshots/v1.7/04-autumn-tiger-python.jpg) | ![Amber Autumn, Surge on a terrace](docs/screenshots/v1.7/10-autumn-surge-terrace.jpg) | ![Hindi](docs/screenshots/v1.7/15-hindi-main-menu.jpg) |
 | ![Accessibility settings](docs/screenshots/v1.3/10-settings-accessibility.jpg) | ![Khmer](docs/screenshots/v1.2/24-khmer-main-menu.jpg) | ![Skins and sanctuaries in Khmer](docs/screenshots/v1.5/14-khmer-skins-sanctuaries.jpg) |
 
-More in [docs/screenshots/v1.6](docs/screenshots/v1.6/README.md) (17 images of what is new in 1.6.0),
+More in [docs/screenshots/v1.7](docs/screenshots/v1.7/README.md) (19 images of what is new in 1.7.0),
+[docs/screenshots/v1.6](docs/screenshots/v1.6/README.md) (17 images of what was new in 1.6.0),
 [docs/screenshots/v1.5](docs/screenshots/v1.5/README.md) (15 images of what was new in 1.5.0),
 [docs/screenshots/v1.4](docs/screenshots/v1.4/README.md) (14 images of what was new in 1.4.0),
 [docs/screenshots/v1.3](docs/screenshots/v1.3/README.md) (15 images of what was new in 1.3.0)
 and [docs/screenshots/v1.2](docs/screenshots/v1.2/README.md) (26 images of the three older islands),
 1920×1080, each with a contact sheet. Screenshots of earlier versions are kept in the [screenshot history](docs/screenshots/README.md).
 
-- Package id: `com.studio.snake3d`, version 1.6.0 (code 7)
+- Package id: `com.studio.snake3d`, version 1.7.0 (code 8)
 - Android 7.0+ (API 24), arm64-v8a, landscape
 - Renderer: Godot *Mobile* (Vulkan); Godot falls back to OpenGL ES 3 when a device has no usable Vulkan driver at startup
-- 15 languages: English, Français, ខ្មែរ (Khmer), ไทย (Thai), Tiếng Việt (Vietnamese), Español, Português, Deutsch, Italiano, Türkçe,
+- 16 languages: English, Français, ខ្មែរ (Khmer), ไทย (Thai), Tiếng Việt (Vietnamese), हिन्दी (Hindi), Español, Português, Deutsch, Italiano, Türkçe,
   Bahasa Indonesia, Русский, 日本語, 한국어, 简体中文. The phone's language is picked automatically on first launch
 
 ## Install the APK on a phone
@@ -77,7 +79,7 @@ are easier to see with red-blind vision.
 violet relic 150. Pickups within 3.2 s of each other build a combo multiplier up to ×3. Grazing an
 obstacle without touching it gives a *Close Call* bonus. Every 6 fruits moves you up a stage
 (14 in total): the snake gets faster and more monoliths rise. Score, length and stage
-milestones unlock 11 more serpent skins and 6 more sanctuaries, each with its own island.
+milestones unlock 12 more serpent skins and 7 more sanctuaries, each with its own island.
 
 **Relief:** each sanctuary is an island of its own (Golden Dawn, Moonlit Shrine and Misty Morning
 have different terraces, hills and shores). The snake follows the ground over hills and up ramps. Any ground steeper than about 39°
@@ -129,7 +131,7 @@ tools/run_tests.sh                       # whole suite, headless; exit code 0 = 
 tools/run_tests.sh --filter=test_spine   # only matching suites/tests
 ```
 
-71 tests cover snake movement and steering, the relief and each sanctuary's island (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
+72 tests cover snake movement and steering, the relief and each sanctuary's island (walls cover all ground too steep to climb, ramps and hills are climbable, the snake climbs a ramp and is stopped by a wall), the spine (body path) maths, collisions, scoring and
 combos, stage progression, rising obstacles, fair collectible spawning, world generation over many
 seeds (including connectivity of the free space), save/load and corrupt-save recovery, an AI
 autopilot run, the real main scene's state machine, camera, and HUD/touch layout around display
