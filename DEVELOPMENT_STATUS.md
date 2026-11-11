@@ -542,9 +542,11 @@ stumps and one kind of column; only the colours and the relief differed.
 - **Seen on the emulator** (Android 15, OpenGL, Showcase mode): the autopilot played each of the
   nine sanctuaries for about a minute, no errors in the log.
 - Built: release APK, App Bundle, Showcase APK, emulator APK, all 2.1.0 (11).
-- **On the phone now**: the owner's game is still 1.4.0; 2.0.0 is installed beside it as a
-  separate app, *3D Snake 2.0* (`com.studio.snake3d.v2`, its own empty profile), at the owner's
-  request not to replace the old version; the Showcase app is 2.0.0.
+- **On the phone now** (2026-11-12): the owner's game is still 1.4.0; 2.1.0 is installed beside it
+  as a separate app, *3D Snake 2.1* (`com.studio.snake3d.v2`, its own profile, updated in place
+  from 2.0.0), at the owner's request not to replace the old version; the Showcase app is 2.1.0.
+  The side-by-side APK is built from preset "Android" with `package/unique_name` set to
+  `com.studio.snake3d.v2` for that build only (`build/android/snake3d-2.1-side-by-side.apk`).
 
 ## Known issues and limitations
 
