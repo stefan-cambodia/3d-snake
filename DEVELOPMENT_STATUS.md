@@ -495,8 +495,9 @@ stumps and one kind of column; only the colours and the relief differed.
   70 m; weather and ground cover scale with the quality setting and weather is off at low
   quality. Architecture adds 15,000 to 57,000 triangles depending on the sanctuary (Silver Frost
   least, Turquoise Lagoon most). An island builds in 0.6 to 0.8 s on the PC (it was 0.5 to 0.6 s).
-- **Fixed on the way**: the old serpent statue's body was never drawn, only its plinth (a merged
-  mesh mixed indexed and non-indexed parts); it is whole now.
+- **Fixed on the way**: merging a non-indexed mesh into an indexed one drops the non-indexed
+  triangles from the draw list. The old serpent statue was built that way, so its body was
+  probably not being drawn (not checked against an old build); it is indexed throughout now.
 - **Tests** (5 new, 79 in all, 56,104 checks, 0 failed): every sanctuary has a complete style
   and a monument and landmark of its own; layouts are reproducible, outside the playfield and
   free of overlaps; no built vertex is nearer than the lantern ring; triangle budget; every
