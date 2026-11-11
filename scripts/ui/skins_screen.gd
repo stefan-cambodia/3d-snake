@@ -21,7 +21,7 @@ func _ready() -> void:
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(margin)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(700, 0)
+	panel.custom_minimum_size = Vector2(830, 0)
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	margin.add_child(panel)
 	var m := MarginContainer.new()
@@ -39,7 +39,7 @@ func _ready() -> void:
 	serpents.custom_minimum_size.y = 30
 	body.add_child(serpents)
 	_skin_grid = GridContainer.new()
-	_skin_grid.columns = 5
+	_skin_grid.columns = 6
 	_skin_grid.add_theme_constant_override("h_separation", 10)
 	_skin_grid.add_theme_constant_override("v_separation", 10)
 	body.add_child(_skin_grid)
@@ -51,7 +51,7 @@ func _ready() -> void:
 	sanctuaries.custom_minimum_size.y = 30
 	body.add_child(sanctuaries)
 	_theme_row = GridContainer.new()
-	_theme_row.columns = 5
+	_theme_row.columns = 6
 	_theme_row.add_theme_constant_override("h_separation", 10)
 	_theme_row.add_theme_constant_override("v_separation", 10)
 	body.add_child(_theme_row)

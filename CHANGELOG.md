@@ -2,7 +2,22 @@
 
 What changed in each version of the game. Version numbers are the Android app's `versionName`
 (the `versionCode` is in brackets). Screenshots of every version are kept in
-[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`).
+[docs/screenshots](docs/screenshots/README.md), and each version is tagged in git (`v1.0.0`, `v1.1.0`, `v1.2.0`, `v1.3.0`, `v1.4.0`, `v1.5.0`).
+
+## 1.5.0 (6) — 2026-11-11
+
+Screenshots: [docs/screenshots/v1.5](docs/screenshots/v1.5/README.md)
+
+### Added
+- **A sixth sanctuary, Silver Frost**: a clear blue winter sky, pale frosted grass, cold dark water
+  and an island of its own. Unlocked by scoring 2000 points in one run.
+- **An eleventh skin, Pearl Naga** (pearl white with a rose sheen). Unlocked by growing the serpent
+  to 60 m in one run.
+- Both names in the 14 languages.
+
+### Changed
+- *Skins & Sanctuaries* shows the skins and the sanctuaries six to a row (the panel is a little
+  wider), so everything still fits on one screen.
 
 ## 1.4.0 (5) — 2026-11-11
 

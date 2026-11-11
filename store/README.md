@@ -1,6 +1,6 @@
 # Google Play listing — 3D Snake
 
-Everything needed to fill in the Play Console for **3D Snake 1.4.0 (versionCode 5)**.
+Everything needed to fill in the Play Console for **3D Snake 1.5.0 (versionCode 6)**.
 
 | What | File |
 |---|---|
@@ -37,8 +37,8 @@ Guide a living serpent across an ancient island of terraces and ruins.
 > • Surge crystals for speed and double points, rare relics marked by a beam of light, combos and
 >   Close Call bonuses
 > • 14 stages: the pace quickens and new monoliths rise from the ground
-> • 10 serpent skins and 5 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
->   Shrine, Misty Morning, Crimson Dusk and Jade Monsoon
+> • 11 serpent skins and 6 sanctuaries to unlock, each on its own island: Golden Dawn, Moonlit
+>   Shrine, Misty Morning, Crimson Dusk, Jade Monsoon and Silver Frost
 > • Records, haptic feedback, a left-handed layout, and accessibility options (reduced motion,
 >   larger in-game text, danger warning colour)
 > • 14 languages, including Khmer and Thai
@@ -63,8 +63,8 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
 > • Cristaux Surge pour la vitesse et les points doublés, reliques rares signalées par un rayon de
 >   lumière, combos et bonus « Close Call »
 > • 14 niveaux : le rythme s'accélère et de nouveaux monolithes surgissent du sol
-> • 10 apparences de serpent et 5 sanctuaires à débloquer, chacun sur son île : Aube dorée,
->   Sanctuaire lunaire, Matin brumeux, Crépuscule pourpre et Mousson de jade
+> • 11 apparences de serpent et 6 sanctuaires à débloquer, chacun sur son île : Aube dorée,
+>   Sanctuaire lunaire, Matin brumeux, Crépuscule pourpre, Mousson de jade et Givre d'argent
 > • Records, retour haptique, disposition pour gauchers et options d'accessibilité
 >   (mouvements réduits, texte de jeu plus grand, couleur de l'alerte de danger)
 > • 14 langues, dont le khmer et le thaï
@@ -87,7 +87,7 @@ Guidez un serpent vivant sur une île ancienne de terrasses et de ruines.
 > • កោះមានភ្នំ និងទីទួល៖ ឡើងលើវេទិកាខ្ពស់ៗ តាមផ្លូវឡើងក្រាលថ្ម ប៉ុន្តែជញ្ជាំងថ្មរឹងដូចសសរដែរ
 > • គ្រីស្តាល់ល្បឿនពិសេស វត្ថុបុរាណកម្រ ពិន្ទុទ្វេដង និងប្រាក់រង្វាន់
 > • ១៤ កម្រិត៖ ល្បឿនកាន់តែលឿន ហើយថ្មធំៗងើបចេញពីដី
-> • រូបរាងពស់ ៩ និងទីសក្ការៈ ៤ សម្រាប់ដោះសោ
+> • រូបរាងពស់ ១១ និងទីសក្ការៈ ៦ សម្រាប់ដោះសោ
 > • មាន ១៤ ភាសា រួមទាំងភាសាខ្មែរ និងភាសាថៃ
 > • គ្មានការផ្សាយពាណិជ្ជកម្ម គ្មានការទិញក្នុងកម្មវិធី មិនត្រូវការអ៊ីនធឺណិត និងមិនប្រមូលទិន្នន័យ
 

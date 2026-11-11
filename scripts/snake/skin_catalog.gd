@@ -76,6 +76,13 @@ const SKINS: Array[Dictionary] = [
 		"pattern_type": Pattern.BANDS, "gloss": 0.8, "metallic": 0.25, "iridescence": 0.5, "emission": 0.0,
 		"unlock": {"stat": "best_stage", "value": 8},
 	},
+	{
+		"id": "pearl", "name": "SKIN_PEARL",
+		"back": Color(0.90, 0.88, 0.84), "side": Color(0.98, 0.95, 0.92), "belly": Color(1.0, 0.94, 0.88),
+		"pattern": Color(0.96, 0.80, 0.82), "accent": Color(1.0, 0.80, 0.35),
+		"pattern_type": Pattern.SOLID, "gloss": 0.95, "metallic": 0.15, "iridescence": 0.9, "emission": 0.0,
+		"unlock": {"stat": "best_length", "value": 60},
+	},
 ]
 
 

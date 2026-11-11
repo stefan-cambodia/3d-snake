@@ -53,6 +53,14 @@ func _ready() -> void:
 	_parse_args()
 	if _args.has("showcase"):
 		_seed_showcase_profile()
+	# Screenshots: --theme=<id> and --skin=<id> pick an unlocked sanctuary and skin,
+	# --lang=<code> the language.
+	if _args.has("lang"):
+		Localization.apply(_args["lang"])
+	if _args.has("theme") and Profile.is_theme_unlocked(_args["theme"]):
+		Profile.selected_theme = WorldThemes.get_theme(_args["theme"])["id"]
+	if _args.has("skin") and Profile.is_skin_unlocked(_args["skin"]):
+		Profile.selected_skin = SkinCatalog.get_skin(_args["skin"])["id"]
 	_quality = int(Profile.get_setting("quality"))
 	if _quality < 0:
 		_quality = 1 if OS.has_feature("mobile") else 2
@@ -570,7 +578,7 @@ func _seed_showcase_profile() -> void:
 	Profile.stats["near_misses"] = 214
 	Profile.stats["play_time"] = 14200.0
 	# score, length, stage, food, relics, seconds
-	for r in [[2480, 58.4, 8, 61, 3, 412.0], [1935, 47.1, 6, 48, 2, 344.0], [1610, 41.8, 5, 42, 2, 301.0],
+	for r in [[2480, 61.2, 8, 61, 3, 412.0], [1935, 47.1, 6, 48, 2, 344.0], [1610, 41.8, 5, 42, 2, 301.0],
 			[1288, 35.0, 5, 36, 1, 266.0], [1040, 30.2, 4, 30, 1, 228.0], [870, 26.9, 4, 27, 1, 197.0],
 			[655, 22.3, 3, 21, 0, 160.0], [520, 19.6, 3, 18, 1, 131.0], [410, 16.4, 2, 15, 0, 104.0],
 			[260, 12.5, 2, 10, 0, 77.0]]:

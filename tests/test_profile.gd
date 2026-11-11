@@ -63,6 +63,24 @@ func test_unlocks_are_announced_once() -> void:
 	p.free()
 
 
+## The 1.5.0 rewards: Silver Frost at 2000 points, Pearl Naga at 60 m.
+func test_frost_and_pearl_unlock_at_their_milestones() -> void:
+	var p := _fresh_profile()
+	p.record_run({"score": 1999, "length": 59.9, "stage": 7})
+	check(not p.is_theme_unlocked("frost"), "frost locked at 1999 points")
+	check(not p.is_skin_unlocked("pearl"), "pearl locked at 59.9 m")
+	var r: Dictionary = p.record_run({"score": 2000, "length": 60.0, "stage": 7})
+	var ids: Array = []
+	for u in r["unlocked"]:
+		ids.append(u["id"])
+	check(ids.has("frost"), "frost announced at 2000 points")
+	check(ids.has("pearl"), "pearl announced at 60 m")
+	check(p.is_theme_unlocked("frost"), "frost usable")
+	check(p.is_skin_unlocked("pearl"), "pearl usable")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(p.save_path))
+	p.free()
+
+
 func test_corrupt_file_falls_back_to_defaults() -> void:
 	var p := _fresh_profile()
 	var f := FileAccess.open(p.save_path, FileAccess.WRITE)

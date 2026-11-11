@@ -55,6 +55,16 @@ const THEMES: Array[Dictionary] = [
 		"emissive_boost": 1.3, "motes": Color(0.7, 1.0, 0.8), "night": false, "cloud_tint": Color(0.42, 0.50, 0.54),
 		"exposure": 1.0,
 	},
+	{
+		"id": "frost", "name": "THEME_FROST", "unlock": {"stat": "best_score", "value": 2000}, "terrain_seed": 20241125,
+		"sky_top": Color(0.30, 0.48, 0.74), "sky_horizon": Color(0.84, 0.90, 0.96), "sky_ground": Color(0.30, 0.34, 0.40),
+		"sun_color": Color(0.94, 0.96, 1.0), "sun_energy": 1.15, "sun_pitch": -28.0, "sun_yaw": 250.0,
+		"ambient_energy": 0.7, "fog_color": Color(0.78, 0.85, 0.93), "fog_density": 0.006,
+		"water_deep": Color(0.04, 0.14, 0.26), "water_shallow": Color(0.42, 0.64, 0.74),
+		"grass_a": Color(0.62, 0.72, 0.78), "grass_b": Color(0.88, 0.92, 0.95),
+		"emissive_boost": 0.9, "motes": Color(1.0, 1.0, 1.0), "night": false, "cloud_tint": Color(0.92, 0.95, 1.0),
+		"exposure": 0.95,
+	},
 ]
 
 
